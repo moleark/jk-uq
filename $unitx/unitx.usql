@@ -1,0 +1,546 @@
+USQ [$unitx] version='1.01' author='henry';
+
+ACCESS a1 (message, user, templet, newMessage, flow,
+    readMessage, actMessage, desk,
+    getDesk, getFolder, getTemplets, getFolderUndone, getMessage,
+    SearchUser,
+);
+
+TUID message (
+    id,
+    fromUser id user,           -- 创建人
+    fromUnit int,               -- 如果null，则是当前unit
+    type char(20),              -- 不同的type，不同的处理方式
+    date datetime,              -- 创建日期
+    subject char(60),           -- 主题
+    discription char(200),      -- 描述
+    content text,               -- JSON内容
+);
+
+-- sheet相关messsage对应关系
+BOOK sheet (
+    key usq int,
+    key sheet bigint,
+    key message id message,
+);
+
+TUID flow (
+    id,
+    base message id message,
+    prev id flow,               -- 上一步操作
+    user id user,               -- 经手人
+    date datetime,              -- 经手时间
+    action char(20),            -- 经手行为
+    data text,                  -- 经手数据json
+    state char(20),             -- $:开始， #:完成
+);
+
+TUID user ver 0.2 GLOBAL (
+    id _,                       -- id 没有 autoinc，从center同步id
+    main name char(100),
+    main nick char(200),
+    main icon char(200),
+    -- main assigned char(50),  -- 不能有assigned，直接写到person里面
+);
+
+MAP userMap (
+    key user ID User,
+);
+
+ACTION SaveUser (
+    id BIGINT,                       -- id 没有 autoinc，从center同步id
+    name char(100),
+    nick char(200),
+    icon char(200),
+) {
+    var userId BIGINT;
+    tuid [user] into userId id [id] set name=name, nick=nick, icon=icon;
+    book [userMap] at(id);
+};
+
+QUERY SearchUser ver 0.9 (
+    key char(50)
+)
+PAGE (
+    id bigint start 0,
+    name char(100),
+    nick char(200),
+    icon char(200)
+) {
+    var k char(50);
+    set k = concat('%', key, '%');
+    page select b.id, b.name, b.nick, b.icon
+        from userMap as a 
+            join user as b on a.user=b.id
+        where (b.name like k or b.nick like k) and b.id>$pageStart
+        order by b.id asc
+        limit $pageSize;
+};
+
+-- 负id不保存在表中，系统默认
+-- -99: to self
+-- -98: to other
+TUID templet (
+    id,
+    name char(50),
+    caption char(100),
+    discription char(200),
+    content text,
+    forAll tinyint default 1,
+    unique (name),
+);
+
+TUID test ver 0.2 (
+    id,
+    name char(50),
+    k dec(10,2),
+    arr prop1 (
+        owner,
+        id,
+        ap1 int,
+        ap2 char(20),
+        ap3 dec(12,2),
+    ),
+);
+
+BOOK testBook ver 0.1 (
+    KEY test_prop1 ID test.prop1,
+    count int,
+);
+
+ACTION writeTestBook ver 0.1 (
+    test_prop1 ID test.prop1,
+    count int,
+) {
+    book testBook at(test_prop1) set count=count;
+};
+
+QUERY queryTestBook ver 0.2 (
+    test_prop1 ID test.prop1,
+)
+returns ret (
+    test0 id test,
+    test_prop1 ID test.prop1,
+    count int
+) {
+    into ret select a.test_prop1 of test.prop1 as test0, a.test_prop1, a.count
+        from testBook as a
+        where a.test_prop1=test_prop1;
+};
+
+BOOK userPeer (
+    key user bigint,
+    key peer bigint,
+    assigned char(50),
+);
+
+BOOK templetOfUser (
+    key me bigint,
+    key templet id templet,
+);
+
+-- 当前可操作
+-- 处理完，从这里消失
+BOOK desk (
+    key me bigint,
+    key message id message,
+    flow id flow,               -- 当前的flow
+    read tinyint,               -- 0=未读，1=已读
+    top int,                    -- 置顶。任何一个项目置顶，都是把top改成max+1
+);
+
+-- 跟我有关的所有消息，各种关系
+-- desk还是需要单独处理。
+BOOK folder (
+    key me bigint,
+    key tag char(8),            -- $me, $pass, $cc, $=all, or tags, or may favorite, or important
+    key message id message,
+);
+
+-- 记录各个分支是不是完成
+BOOK branch (
+    key message id message,
+    key flow id flow,           -- 每一步，都删除原来的，填入新的
+    key to id user,
+    done tinyint,               -- 0: 未完成，1: 完成，2: 拒绝，3: .. >0表示终止
+    state char(20),             -- 当前分支的状态
+);
+
+-- 直接显示是不是已经完成
+BOOK state (
+    key message id message,
+    branchCount smallint,
+    doneCount smallint,
+);
+
+-- 已归档
+BOOK archive (
+    key me bigint,
+    key message id message,
+);
+
+ACTION sheetMessage (
+    subject char(60),
+    discription char(200),
+    content text,
+    usq int,
+    sheet bigint,
+    state char(50),
+    Arr [tos] (
+        to bigint,
+    ),
+) {
+    -- 删去之前的sheet相关的message
+    foreach (var toUser id, oldMsg id message
+        of select b.me, a.message
+        from sheet as a join desk as b on a.message=b.message 
+        where a.usq=usq and a.sheet=sheet)
+    {
+        message oldMsg away toUser;
+        delete from desk where me=toUser and message=oldMsg;
+    }
+
+    if state<>'#' and state<>'-' {
+        -- 构建当下sheet的message
+        var msg id, flowId id, userId id;
+        var startState char(20)='$';
+        set userId=0;
+        tuid message into msg set 
+            fromUser=userId, fromUnit=$unit,
+            type='sheetMsg', 
+            subject=subject, discription=discription, content=content,
+            date=$date;
+        book sheet at(usq, sheet, msg);
+        foreach [tos] {
+            book desk at([to], msg) set read=0, flow=flowId;    -- 待办任务
+            message msg @ to on desk;
+        }
+
+        var mtext text;
+        set mtext = CONCAT_WS('\t', 
+            a.id,a.fromUser,a.fromUnit,a.type,
+            Unix_TimeStamp(a.date),
+            ifnull(a.subject, ''),
+            ifnull(a.discription, ''),
+            ifnull(a.content, ''),
+            '', -- b.branchCount,
+            '', -- b.doneCount,
+            '',
+            '$')
+            from message as a -- join state as b on a.id=b.message
+            where a.id=msg;
+        message msg with mtext;
+    }
+};
+
+ACTION newMessage ver 0.1 (
+    type char(20),
+    subject char(100),
+    discription char(300),
+    content text,
+    meName char(100),
+    meNick char(200),
+    meIcon char(200),
+    Arr [to] (
+        toUser bigint,
+    ),
+    Arr [cc] (
+        ccUser bigint,
+    )
+)
+RETURNS ret(id id)
+{
+    var msg id, flowId id, userId id;
+    var startState char(20)='$';
+    if (not meName is null) {
+        tuid user id($user) set name=meName, nick=meNick, icon=meIcon;
+    }
+    tuid message into msg set 
+        fromUser=$user, fromUnit=$unit,
+        type=type, 
+        subject=subject, discription=discription, content=content,
+        date=$date;
+    book folder at($user, '$me', msg);          -- 我发出的任务
+    message msg to $user on me;
+    book folder at($user, '$', msg);            -- 我的全部任务
+    foreach [to] {
+        if [toUser] is null or [toUser]=0 {
+            set [toUser]=$user;
+        }
+        tuid flow into flowId set message=msg, prev=0, user=toUser, date=$date, state=startState;
+        book desk at([toUser], msg) set read=0, flow=flowId;    -- 待办任务
+        message msg @ toUser on desk;
+        book folder at(toUser, '$pass', msg);   -- to的pass任务
+        message msg to toUser on pass;
+        book folder at(toUser, '$', msg);       -- to的全部任务
+        book branch at(msg, flowId, toUser) set done=0;
+    }
+
+    book state at(msg) set 
+        doneCount=0, 
+        branchCount=(select count(to) from branch where message=msg);
+    var mtext text;
+    set mtext = CONCAT_WS('\t', 
+        a.id,a.fromUser,a.fromUnit,a.type,
+        Unix_TimeStamp(a.date),
+        ifnull(a.subject, ''),
+        ifnull(a.discription, ''),
+        ifnull(a.content, ''),
+        b.branchCount,
+        b.doneCount,
+        '',
+        '$')
+        from message as a join state as b on a.id=b.message
+        where a.id=msg;
+
+    foreach [cc] {
+        book folder at(ccUser, '$cc', msg);
+        message msg @ ccUser on cc;
+        book folder at(ccUser, '$', msg);
+    }
+    message msg with mtext;
+
+    into ret select msg as id;
+};
+
+ACTION readMessage (
+    msg id message,
+) {
+    var state char(20);
+    book desk at ($user, msg) set read=1;
+    message msg read by $user;
+};
+
+ACTION actMessage (
+    msg id message,
+    action char(20),
+    toState char(20),
+    data text,
+    Arr [to] (
+        user bigint,
+    ),
+)
+RETURNS ret(ok tinyint)
+{
+    var flowId bigint, newFlowId bigint;
+    set flowId=flow from desk where me=$user and message=msg;
+    if flowId is null {
+        into ret select 0 as ok;
+    }
+    else {
+        var branchCount smallint, doneCount smallint, prevState char(20);
+        set branchCount=a.branchCount, doneCount=a.doneCount from state as a where a.message=msg;
+        set prevState=state from flow where id=flowId;
+        delete from branch where message=msg and flow=flowId and to=$user;
+        delete from desk where me=$user and message=msg;
+        message msg away $user;
+        tuid flow into newFlowId set message=msg, user=$user, date=$date,
+            prev=flowId, state=toState, action=action, data=data;
+
+        var done tinyint;
+        -- other: 未完成，#: 1=完成，#-: 2=拒绝，3: .. >0表示终止
+        if (toState='#') set done=1;
+        else if (toState='#-') set done=2;
+        if (not done is null) {
+            book branch at(msg, flowId, $user) set done=done;
+            book state at(msg) set doneCount=ifnull(doneCount,0)+1; 
+        }
+        else {
+            foreach [to] {
+                if [user] is null or [user]=0 {
+                    set [user]=$user;
+                }
+                book desk at(user, msg);
+                message msg @ user on desk;
+                book folder at(user, '$pass', msg);
+                book folder at(user, '$', msg);
+                book branch at(msg, newFlowId, user) set done=0;
+            }
+            book state at(msg) set 
+                branchCount=(select count(to) from branch where message=msg);
+        }
+        var mtext text;
+        set mtext = CONCAT_WS('\t', 
+            a.id,a.fromUser,a.fromUnit,a.type,
+            Unix_TimeStamp(a.date),
+            ifnull(a.subject, ''),
+            ifnull(a.discription, ''),
+            ifnull(a.content, ''),
+            b.branchCount,
+            b.doneCount,
+            prevState,
+            toState)
+            from message as a join state as b on a.id=b.message
+            where a.id=msg;
+        message msg with mtext;
+
+        if exists(select a.message from state as a where a.message=msg 
+            and (a.branchCount<>branchCount or a.doneCount<>doneCount))
+        {
+            foreach (var toUser bigint, tag char(8) of 
+                select me, tag 
+                    from folder 
+                    where message=msg and tag in ('$me', '$pass', '$cc')) 
+            {
+                message msg to toUser on tag;
+            }
+        }
+
+        into ret select 1 as ok;
+    }
+};
+
+QUERY getFolderUndone()
+RETURNS ret (
+    unDesk int,
+    unMe int, onMe int, 
+    unPass int, onPass int, 
+    unCc int, onCc int)
+{
+    var vOnMe int, vUnMe int, vOnPass int, vUnPass int, vOnCc int, vUnCc int;
+    set vUnMe=count(a.message), vOnMe=count(c.message)
+        from folder as a 
+            join state as b on a.message=b.message
+            left join desk as c on a.me=c.me and a.message=c.message
+        where a.me=$user and b.doneCount<b.branchCount and a.tag='$me';
+    set vUnPass=count(a.message), vOnPass=count(c.message)
+        from folder as a 
+            join state as b on a.message=b.message
+            left join desk as c on a.me=c.me and a.message=c.message
+        where a.me=$user and b.doneCount<b.branchCount and a.tag='$pass';
+    set vUnCc=count(a.message), vOnCc=count(c.message)
+        from folder as a 
+            join state as b on a.message=b.message
+        left join desk as c on a.me=c.me and a.message=c.message
+        where a.me=$user and b.doneCount<b.branchCount and a.tag='$cc';
+    into ret select
+        (select count(a.message) 
+            from desk as a
+            where a.me=$user) as unDesk,
+        vUnMe as unMe, vOnMe as onMe, 
+        vUnPass as unPass, vOnPass as onPass, 
+        vUnCc as unCc, vOnCc as onCc;
+};
+
+QUERY getDesk()
+PAGE (
+    message id message start 999999999999, 
+    read tinyint,
+    branch smallint,
+    done smallint,
+    top int)
+{
+    page select a.[message] as message, a.read, 
+        c.branchCount as branch, c.doneCount as done, a.top
+        from desk as a
+            left join flow as b on a.flow=b.id
+            left join state as c on a.message=c.message
+        where a.me=$user and a.[message]<$pageStart
+        order by a.message desc
+        limit $pageSize;
+};
+
+QUERY getFolder(
+    tag char(8),
+    undone tinyint)         -- 1: 未完成的， 0: 全部,  -1: 完成的
+PAGE (
+    message id message start 999999999999,
+    branch smallint,
+    done smallint,
+    flow id)
+{
+    if undone>0 {
+        -- 1：未完成的
+        page select a.[message] as [message], 
+            b.branchCount as branch, b.doneCount as done, 
+            c.flow
+            from folder as a
+                join state as b on a.message=b.message
+                left join desk as c on a.me=c.me and a.message=c.message
+            where a.tag=tag 
+                and a.me=$user 
+                and b.doneCount<b.branchCount
+                and a.[message]<$pageStart
+            order by a.message desc
+            limit $pageSize;
+    }
+    else if undone<0 {
+        -- -1：完成的
+        page select a.[message] as [message], 
+            b.branchCount as branch, b.doneCount as done, 
+            c.flow
+            from folder as a
+                join state as b on a.message=b.message
+                left join desk as c on a.me=c.me and a.message=c.message
+            where a.tag=tag and 
+                a.me=$user 
+                and b.doneCount>=b.branchCount
+                and a.[message]<$pageStart
+            order by a.message desc
+            limit $pageSize;
+    } 
+    else {
+        -- 0：全部
+        page select a.[message] as [message], 
+            b.branchCount as branch, b.doneCount as done, 
+            c.flow
+            from folder as a
+                join state as b on a.message=b.message
+                left join desk as c on a.me=c.me and a.message=c.message
+            where a.tag=tag and 
+                a.me=$user 
+                and a.[message]<$pageStart
+            order by a.message desc
+            limit $pageSize;
+    }
+};
+
+QUERY getMessage(msg id message) 
+RETURNS ret (
+    id id,
+    fromUser id user,           -- 创建人
+    fromUnit int,               -- 如果null，则是当前unit
+    type char(20),              -- 不同的type，不同的处理方式
+    date datetime,              -- 创建日期
+    subject char(60),           -- 主题
+    discription char(200),      -- 描述
+    content text,               -- JSON内容
+    flow id                     -- 这里id后面也不能有flow
+)
+RETURNS flow (
+    id id,
+    prev id, -- flow,           -- 上一步操作, 这里不能加flow，否则，每次都会get cache
+    user id user,               -- 经手人
+    date datetime,              -- 经手时间
+    action char(20),            -- 经手行为
+    data text,                  -- 经手数据json
+    state char(20)              -- $:开始， #:完成
+)
+{
+    into ret select a.id, a.fromUser, a.fromUnit,
+        a.type, a.date, a.subject, a.discription, a.content,
+        b.flow
+        from message as a left join desk as b on a.id=b.message and b.me=$user
+        where a.id=msg;
+
+    into flow select a.id, a.prev, a.user, a.date, a.action, a.data, a.state
+        from flow as a
+        where a.message=msg
+        order by a.id asc;
+};
+
+QUERY getTemplets()
+RETURNS ret (
+    id id,
+    name char(50),
+    caption char(100),
+    discription char(200),
+    content text)
+{
+    into ret select
+        a.id, a.name, a.caption, a.discription, a.content
+        from templet as a 
+        where a.forAll=1 or exists(
+            select b.templet from templetOfUser as b where b.me=$user and b.templet=a.id
+        );
+};

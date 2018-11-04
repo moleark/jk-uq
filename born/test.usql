@@ -1,0 +1,35 @@
+"query [customerArticle$page$slave$]([customer] id customer,key char(200))page([article] id article start 0,[num] dec(12,3)){
+page select a.[article] as [article],a.[num] 
+  from [customerarticle] as a left join [article] as b on a.[article]=b.[id] 
+  where 1=1 and (1=0 or b.[name] like concat('%',key,'%') or 
+    b.[discription] like concat('%',key,'%')) and a.[customer]=[_customer] 
+    and a.[article]>$pageStart 
+    order by a.[article] asc 
+    limit $pageSize;
+};
+
+query [customerArticle$all$]() returns ret(
+  [customer] id customer,
+  [article] id article,
+  [num] dec(12,3)
+)
+{
+  into ret select a.[id] as customer,
+    b.[article],
+    b.[num] from customer as a left join customerarticle as b on a.id=b.customer
+    where 1=1 
+    order by a.[id] asc ,b.[article] asc ;
+};
+
+action [customerArticle$add$]([_customer] id customer,Arr arr1 ([_article] id article,[_num] dec(12,3))){
+  foreach arr1 {
+    book [customerarticle] at([_customer],[_article]) set [num]=[_num];
+  }
+};
+
+action [customerArticle$del$](Arr arr1 ([_customer] id customer,[_article] id article,)){foreach arr1 {
+  delete from [customerarticle] where 1=1  and [customer]=[_customer] and ([_article]=-1 or [article]=[_article]);
+}
+};
+
+"

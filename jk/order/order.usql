@@ -1,0 +1,22 @@
+ACCESS accOrder(Order);
+
+SHEET Order (
+    customer ID Customer not null,
+    ARR products (
+        product ID Product not null,
+        pack OF product.Pack not null,
+        price dec(12,2) not null,
+        quantity int not null,
+        amount dec(12,2) not null,
+    )
+)
+Action submit {
+    STATE TO deliver;
+}
+STATE deliver {
+    ACTION finish {
+        STATE TO END;
+    }
+}
+;
+

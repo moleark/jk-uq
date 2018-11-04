@@ -1,0 +1,21 @@
+
+access p (product);
+
+-- tuid类型定义之后的un 表示字段可以按语言录入，可以中文，可以繁体，可以英文，zh-CN，en-US, en-CA
+TUID product (
+    id,
+    discription char(200) un,
+    ARR packs (
+        owner,
+        id,
+        type ID PackType,
+        unit dec(8,3),
+        name char(8),               -- 可以为空，则自动unit+packtType name生成
+    ),
+);
+
+TUID packType (
+    id,
+    name char(8),                   -- g, ml, mg, kg, m, cm, mm, 套，台，个
+    discription char(20),           -- 说明是 重量，长度，面积，提及，单体
+);

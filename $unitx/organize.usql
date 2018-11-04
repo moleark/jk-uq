@@ -1,0 +1,257 @@
+-- unit里面的所有人，按层次方式组织
+
+ACCESS a2 (
+    team, section, 
+    organization, 
+    sectionTeam, 
+    teamOrganization, person, teamPerson, sectionTeam, teamPosts,
+    allTeams, getEntityPost, entityOpPost, saveEntityOpPost,
+);
+
+-- team, 最小的组织单位
+TUID team (
+    id Id,
+    no char(20),                    -- 每一个team编号
+    main name char(50),
+    unique(no),
+);
+
+-- section = team group
+TUID section (
+    id Id,
+    main name char(50),
+    unique(name),
+);
+
+MAP sectionTeam ver 0.1 (
+    KEY section ID Section,
+    KEY team ID Team,
+);
+
+-- 模板。有角色定义，比如，销售一部，二部，或者全国各地分公司，结构大致相同，可以用模板
+-- json格式，不能大于64k字符。
+TUID organization ver 0.9 (
+    id Id,
+    main name char(50),                      -- 组织结构名称
+    unique(name),
+    arr post (
+        owner,
+        id,
+        main title char(50),
+        search(title),
+    ),
+);
+
+-- 一个team可以有多个organization
+MAP teamOrganization ver 0.1 (
+    KEY team ID Team,
+    KEY organization ID Organization,
+);
+
+TUID person (
+    id Id,
+    main name char(100) not null,       -- 如果重名，可以加标识
+    user id user,                       -- 登录用户的对应关系
+    main nick char(50),                      -- 全名，也许会重复
+    main given char(50),                     -- 名
+    main sur char(50),                       -- 姓
+    main gender tinyint,                     -- 0:女  1:男
+    year smallint,                      -- 出生年
+    month tinyint,                      -- 月
+    day tinyint,                        -- 日
+
+    unique(name),
+);
+
+MAP teamPerson ver 0.3 (
+    KEY team ID Team,
+    KEY person ID Person,
+    KEY post ID organization.post,
+    -- organization ID Organization,
+);
+
+QUERY teamPosts ver 0.3 (
+    team ID Team
+)
+returns ret (
+    -- organization ID Organization,
+    -- post ID Post of organization,
+    post ID organization.post
+) {
+    into ret select distinct c.id as post
+        from teamOrganization as a
+            join organization as b on a.organization=b.id
+            join organization.post as c on b.id=c.owner
+        where a.team=team;
+};
+
+QUERY allTeams ver 1.2 ()
+returns teams (
+    id ID,
+    no char(20),
+    name char(50)
+)
+returns teamOrganization (
+    team ID,
+    organization ID
+)
+returns organization (
+    id ID,
+    name char(50)
+)
+returns organizationPost (
+    owner ID,
+    id ID,
+    title char(50)
+)
+returns sections (
+    id ID,
+    name char(50)
+)
+returns sectionTeam (
+    section ID,
+    team ID
+)
+{
+    into teams select id, no, name from team;
+    into teamOrganization select team, organization from teamOrganization;
+    into organization select id, name from organization;
+    into organizationPost select owner, id, title from organization.post;
+    into sections select id, name from section;
+    into sectionTeam select section, team from sectionTeam;
+};
+
+TUID entityOp ver 0.5 (
+    id,
+    usq int,            -- 原来的api id
+    entity char(50),
+    op char(50),
+    unique (usq, entity, op),
+);
+
+MAP entityOpPost ver 0.12 (
+    key entityOp ID EntityOp,
+    key post ID Organization.Post,
+    key team ID Team,
+    key section ID Section,
+);
+
+-- 全功能用户
+MAP entityOpUserFully (
+    key usq int,
+    key user ID User
+);
+
+MAP entityOpForAll (
+    key entityOp ID EntityOp,
+);
+
+QUERY getEntityOpForAll (
+    usq int,
+)
+returns ret (
+    entity char(50)
+)
+{
+    into ret select b.entity
+        from entityOpForAll as a join entityOp as b on a.entityOp=b.id
+        where b.usq=usq;
+};
+
+ACTION saveEntityOpForAll ver 0.3 (
+    usq int,
+    arr entities (
+        entity char(50)
+    )
+) {
+    delete a 
+        from entityOpForAll as a join entityOp as b on a.entityOp=b.id
+        where b.usq=usq;
+    foreach entities {
+        var opId ID;
+        tuid entityOp into opId unique(usq, entity, '$');
+        book entityOpForAll at(opId);
+    }
+};
+
+QUERY getEntityPost(
+    usq int,
+    entityName char(50)
+)
+returns ret (
+    op char(50),
+    post ID,
+    team ID,
+    section ID
+)
+{
+    into ret select b.op, a.post, a.team, a.section
+        from entityOpPost as a join entityOp as b on a.entityOp=b.id
+        where b.usq=usq and b.entity=entityName;
+};
+
+ACTION saveEntityOpPost ver 1.8 (
+    usq int,
+    entityName char(50),
+    opName char(50),
+    arr posts (
+        post ID,
+        team ID,
+        section ID
+    )
+) {
+    var opId ID;
+    tuid entityOp into opId unique(usq, entityName, opName);
+    delete from entityOpPost where entityOp=opId;
+    foreach posts {
+        book entityOpPost at(opId, post, team, section);
+    }
+};
+
+/*
+QUERY getSheetTo (
+    usq int,
+    sheetName char(50),
+    stateName char(50),
+    -- 应该在调用这个存储过程之前就处理好了，所以不需要下面两个参数
+    -- origin id,                  -- 创建单据的人
+    -- reply id                    -- 回复人，上一个状态发送人
+)
+RETURNS ret (
+    to ID                           -- 接收单据状态的人
+)
+{
+    -- var opId ID;
+    -- set id into opId from entityOp where entityName=sheetName and opName=stateName;
+    into ret select distinct c.user as to
+        from entityOpPost as a
+            join teamPerson as b 
+                on a.post=b.post
+                    and (a.team=0 or a.team=b.team)
+                    and (a.section=0 or exists(select section from sectionTeam where section=a.section and (a.team=0 or team=a.team)))
+            join person as c on b.person=c.id
+            join entityOp as e on a.entityOp=e.id
+        where e.usq=usq and e.entity=sheetName and e.op=stateName;
+};
+*/
+
+-- getEntityAccess = getSheetTo 完全相同的两个查询
+QUERY getEntityAccess (
+    usq int,
+    entityName char(50),
+    opName char(50),
+)
+RETURNS ret (
+    to ID                           -- 有操作权力的人
+)
+{
+    into ret select distinct c.user as to
+        from entityOpPost as a
+            join teamPerson as b 
+                on a.post=b.post
+                    and (a.team=0 or a.team=b.team)
+                    and (a.section=0 or exists(select section from sectionTeam where section=a.section and (a.team=0 or team=a.team)))
+            join person as c on b.person=c.id
+            join entityOp as e on a.entityOp=e.id
+        where e.usq=usq and e.entity=entityName and e.op=opName;
+};
