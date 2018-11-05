@@ -1,6 +1,6 @@
 ACCESS accOrder(Order);
 
-SHEET Order (
+SHEET Order ver 0.2 (
     customer ID Customer not null,
     ARR products (
         product ID Product not null,
@@ -11,7 +11,12 @@ SHEET Order (
     )
 )
 Action submit {
+    var recId ID, bbb int;
+    set bbb = 3 + 5;
     STATE TO deliver;
+    PENDING Receivable +(customer:1, product:2, pack:2, price:3.5*bbb) to recId;
+    PENDING Receivable -at recId;
+    PENDING Receivable -(price:2.5+amount) at recId del if 3*2=amount;
 }
 STATE deliver {
     ACTION finish {
