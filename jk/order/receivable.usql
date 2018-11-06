@@ -6,6 +6,7 @@ PENDING Receivable ver 0.6 (
     price dec(12,2),
     quantity int,
     amount dec(12,2),
+    user,
     date,
     sheet,
     type,
