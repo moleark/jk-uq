@@ -1,0 +1,13 @@
+USQ [chemical] version='1.00' author='ligsh'
+
+OPEN TUID Chemical (
+    id,
+    no bigint not null,
+    CAS char(20),
+    description char(1000),
+    descriptoinCN char(1000),
+    molecularFomula char(200),
+    molecularWeight dec(12, 4),
+    mdlNumber char(12),
+    unique (cas),
+);

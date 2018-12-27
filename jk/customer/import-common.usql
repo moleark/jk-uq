@@ -1,0 +1,21 @@
+import JKCommon = 百灵威系统工程部/common;
+
+TUID Address from JKCommon(
+    id,
+    main country ID Country,
+    main province ID Province,
+    main city ID City,
+    main county ID County,
+    main zip char(20),
+    main description char(200),
+    search (description),
+);
+
+TUID SalesRegion from JKCommon (
+    id,
+    no char(10) not null,
+    main name char(10) not null,
+    main currency ID Currency not null,
+    search (name),
+    unique (name),
+);

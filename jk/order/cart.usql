@@ -1,0 +1,54 @@
+BOOK Cart ver 0.1 (
+    key user ID,
+    key product ID Product not null,
+    key pack OF product.Pack not null,
+    price dec(12,2) not null,
+    quantity int not null,
+    date datetime not null,
+);
+
+
+ACTION SetCart (
+    product ID Product,
+    pack OF Product.Pack,
+    price dec(12, 2),
+    quantity int
+) {
+    book Cart at ($user, product, pack) set price = price, quantity = quantity, date = $date;
+};
+
+ACTION AddToCart (
+    product ID Product,
+    pack OF Product.Pack,
+    price dec(12, 2),
+    quantity int
+) {
+    book Cart at ($user, product, pack) set price = price, quantity += quantity, date = $date;
+};
+
+ACTION RemoveFromCart (
+    arr rows(
+        product ID Product,
+        pack OF Product.Pack
+    )
+) {
+    foreach rows {
+        delete a from Cart as a
+        where a.user = $user and a.product = product and a.pack = pack;
+    }
+};
+
+
+QUERY GetCart ()
+PAGE (
+    date datetime start now(),
+    product ID Product,
+    pack OF product.Pack,
+    price dec(12,2),
+    quantity int
+) {
+    PAGE select a.date, a.product, a.pack, a.price, a.quantity
+    from Cart as a
+    where a.user = $user
+    order by date desc;
+};

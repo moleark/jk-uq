@@ -1,0 +1,10 @@
+import JKProduct = 百灵威系统工程部/product;
+
+OPEN TUID ProductX ver 0.5 (
+    id,
+    main brand ID Brand not null,
+    arr PackX (
+        owner,
+        id,
+    ),
+);

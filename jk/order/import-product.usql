@@ -1,0 +1,38 @@
+import JKProduct = 百灵威系统工程部/product;
+
+TUID Brand from JKProduct(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    search (name),
+    unique (name),
+);
+
+-- tuid类型定义之后的un 表示字段可以按语言录入，可以中文，可以繁体，可以英文，zh-CN，en-US, en-CA
+TUID Product from JKProduct(
+    id,
+    no char(20) not null,
+    main brand ID Brand not null,
+    main origin char(50),
+    main description char(200) not null,
+
+    main packType ID PackType not null,
+    ARR Pack (
+        owner,
+        id,
+        ratio dec(8,3),             -- 跟基本单位的换算率
+        radioy dec(8,3),
+        name char(8),               -- 可以为空，则自动unit+packtType name生成
+    ),
+    search (origin, description),
+    unique (brand, origin),
+);
+
+OPEN TUID ProductX ver 0.5 (
+    id,
+    main brand ID Brand not null,
+    arr PackX (
+        owner,
+        id,
+    ),
+);

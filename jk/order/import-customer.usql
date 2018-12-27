@@ -1,0 +1,36 @@
+import JKCustomer = 百灵威系统工程部/customer;
+
+TUID Person from JKCustomer(
+    id,
+    main name char(50) not null,
+    ARR contact (
+        owner,
+        id,
+        type char(8), -- tel,mobile,email,fax,post,address,wechat,qq
+        content char(50),
+        order smallint,
+    ),
+    search (name),
+);
+
+TUID Organization from JKCustomer(
+    id,
+    main name char(50) not null,
+    search (name),
+);
+
+TUID Contact from JKCustomer(
+    id,
+    main name char(50) not null,
+    main mobile char(20) not null,
+    main address ID Address,
+);
+
+OPEN TUID InvoiceInfo (
+    id,
+    title char(50) not null,
+    TaxNo char(50),
+    bank char(50),
+    accountNo char(50),
+    registration char(50),
+);

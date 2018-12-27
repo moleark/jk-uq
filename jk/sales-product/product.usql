@@ -1,0 +1,155 @@
+USQ [product] version='1.00' author='ligsh'
+
+OPEN TUID Brand (
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    search (name),
+    unique (no),
+);
+
+Map BrandSalesRegion (
+    key brand ID Brand,
+    key salesRegion ID SalesRegion,
+    level int not null,
+);
+
+/*
+OPEN TUID BrandSalesLevel (
+    id,
+    no int not null,
+    main description char( 10 ) not null,
+    search (description),
+    unique (description),
+)
+*/
+
+OPEN Map BrandDeliveryTime (
+    key brand ID Brand,
+    key salesRegion ID SalesRegion,
+    minValue int,
+    maxValue int,
+    unit char(10),
+    deliveryTimeDescription char(100),
+    isRestrict tinyint not null default 0,
+);
+
+
+/*
+ * Stuff：品类，就是一种东西
+*/
+TUID Stuff (
+    id,
+    main name char(50) not null,
+    main packType ID PackType not null,
+    unique (name),
+);
+
+Map ProductStuff (
+    key product ID Product,
+    key stuff ID Stuff,
+);
+
+OPEN TUID Product (
+    id,
+    no char(20) not null,
+    main brand ID Brand not null,
+    main origin char(50),
+    main description char(1000) null,
+    main descriptionC char(1000) null,
+    search (origin, description, descriptionC),
+    unique (brand, origin),
+);
+
+OPEN Map ProductChemical (
+    key product ID Product,
+    key chemical ID Chemical,
+    CAS char(20),
+    purity char(80),
+    molecularFomula char(200),
+    molecularWeight char(30),
+);
+
+OPEN MAP ProductSalesRegion (
+    key product ID Product,
+    key salesRegion ID SalesRegion,
+    isValid tinyint not null,
+);
+
+OPEN MAP ProductLegallyProhibited (
+    key product ID Product,
+    key salesRegion ID SalesRegion,
+    reason char(20),
+);
+
+-- tuid类型定义之后的un 表示字段可以按语言录入，可以中文，可以繁体，可以英文，zh-CN，en-US, en-CA
+OPEN TUID ProductPackType ver 0.9 (
+    id,
+    product ID Product not null,
+    main packType ID PackType not null,
+    ARR Pack (
+        owner,
+        id,
+        radiox dec(8,2),             -- 跟基本单位的换算率
+        radioy dec(8,2),
+        name char(8),               -- 可以为空，则自动unit+packtType name生成
+    ),
+    unique(product, packType),
+);
+
+MAP Price ver 0.4 (
+    key productPackType ID ProductPackType not null,
+    key pack OF ProductPackType.Pack not null,
+    key salesRegion ID SalesRegion not null,
+    expireDate date,
+    discountinued tinyint not null default 0,
+    retail dec(10,2) not null,
+);
+
+OPEN TUID ProductX ver 0.5 (
+    id,
+    no char(20) not null,
+    main brand ID Brand not null,
+    main origin char(50),
+    main description char(1000) null,
+    main descriptionC char(1000) null,
+    arr PackX (
+        owner,
+        id,
+        jkcat char(50) not null,
+        radiox dec(8,2),
+        radioy dec(8,2),
+        unit char(10),
+    ),
+    search (origin, description, descriptionC),
+    unique (brand, origin),
+);
+
+MAP Price2 (
+    key productx ID ProductX not null,
+    key packx OF ProductX.PackX not null,
+    key salesRegion ID SalesRegion not null,
+    -- expireDate datetime,
+    discountinued tinyint not null default 0,
+    retail dec(10,2) not null,
+);
+
+OPEN TUID ProductCategory (
+    id,
+    main name char(100),
+    search (name),
+    unique (name),
+);
+
+OPEN Map ProductCategoryTree (
+    key parent ID ProductCategory,
+    key category ID ProductCategory,
+    isLeaf tinyint not null default 0,
+    order,
+);
+
+OPEN Map ProductProductCategory (
+    key product ID Product,
+    key category ID ProductCategory,
+    key salesRegion ID SalesRegion,
+);

@@ -1,0 +1,94 @@
+USQ [common] version='1.00' author='ligsh'
+
+OPEN TUID Country (
+    id,
+    no char(50),
+    main code char(10) not null,
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+    unique (englishName),
+);
+
+OPEN TUID Province (
+    id,
+    no char(50),
+    main country ID Country not null,
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+);
+
+OPEN TUID City (
+    id,
+    no char(50),
+    main province ID Province not null,
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+);
+
+OPEN TUID County (
+    id,
+    no char(50),
+    main city ID City not null,
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+);
+
+OPEN TUID Address (
+    id,
+    main country ID Country,
+    main province ID Province,
+    main city ID City,
+    main county ID County,
+    main description char(200),
+    search (description),
+);
+
+OPEN TUID SalesRegion (
+    id,
+    no char(10) not null,
+    main name char(10) not null,
+    main currency ID Currency not null,
+    search (name),
+    unique (name),
+);
+
+OPEN TUID Currency (
+    id,
+    main name char(5) not null,
+    main suffix char(10),
+    search (name, suffix),
+    unique (name),
+);
+
+OPEN TUID PackType ver 0.2 (
+    id,
+    no int not null,
+    main name char(8) not null,     -- g, ml, mg, kg, m, cm, mm, 套，台，个
+    main description char(20),      --
+    unique (name),
+);
+
+MAP PackTypeMapToStandard(
+    key packType ID PackType,
+    key packTypeStandard ID PackTypeStandard,
+);
+
+OPEN TUID PackTypeStandard (
+    id,
+    no int not null,
+    main name char(20) not null,
+    description char(30),
+    class char(10),
+    search(name),
+    unique(name),
+);
+
+OPEN TUID Language (
+    id,
+    no char(10),
+    description char(30),
+);

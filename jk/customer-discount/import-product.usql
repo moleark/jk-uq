@@ -1,0 +1,9 @@
+import JKProduct = 百灵威系统工程部/product;
+
+TUID Brand from JKProduct(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    search (name),
+    unique (name),
+);

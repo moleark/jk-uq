@@ -1,0 +1,30 @@
+OPEN TUID Promotion (
+    id,
+    no char(20) not null,
+    name char(100) not null,
+    type char(5) not null,
+    status char(2) not null,
+    startDate date not null,
+    endDate date,
+    createTime datetime,
+);
+
+OPEN MAP PromotionSalesRegion(
+    key promotion ID Promotion not null,
+    key salesRegion ID SalesRegion not null,
+);
+
+OPEN MAP PromotionLanguage(
+    key promotion ID Promotion not null,
+    key language ID Language not null,
+    description char(200),
+    url char(100),
+);
+
+OPEN MAP PromotionPack(
+    key promotion ID Promotion not null,
+    key productx ID Product not null,
+    key packx ID Product.Pack not null,
+    discount dec(8,2) not null,
+    whenHasStorage tinyint not null,
+);

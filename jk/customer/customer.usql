@@ -1,0 +1,92 @@
+OPEN TUID Customer (
+    id,
+    no char(30) not null,
+    main name char(50) not null,
+    main firstName char(50),
+    main lastName char(50),
+    gender char(5),
+    salutation char(10),
+    birthDay date,
+    createTime datetime,
+    ARR Contact (
+        owner,
+        id,
+        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq
+        content char(50) not null,
+        order smallint,
+    ),
+    search (name, firstName, lastName),
+    unique(no),
+);
+
+OPEN TUID Organization (
+    id,
+    no char(20) not null,
+    main name char(200) not null,
+    createTime datetime,
+    search (name),
+    unique(no),
+);
+
+OPEN MAP OrganizationCustomer (
+    key organization ID Organization,
+    key customer ID Customer,
+);
+
+/*收货地址、发票要求、收票地址*/
+OPEN MAP CustomerConsigneeContact (
+    key customer ID Customer,
+    name char(50) not null,
+    organizaionName char(50),
+    mobile char(20) null,
+    telephone char(20),
+    email char(50),
+    addressString char(400),
+    address ID Address,
+    -- order,
+);
+
+OPEN MAP CustomerInvoiceContact (
+    key customer ID Customer,
+    name char(50) not null,
+    organizaionName char(50),
+    mobile char(20) null,
+    telephone char(20),
+    email char(50),
+    addressString char(400),
+    address ID Address,
+    -- order,
+);
+
+/*
+OPEN MAP CustomerConsigneeContact (
+    key customer ID Customer,
+    key contact ID Contact,
+    order,
+);
+
+OPEN TUID Contact (
+    id,
+    main name char(50) not null,
+    main organizaionName char(50),
+    main mobile char(20) not null,
+    main telephone char(20),
+    main email char(50),
+    main address ID Address,
+);
+
+OPEN MAP CustomerInvoiceContact (
+    key customer ID Customer,
+    key contact ID Contact,
+    order,
+);
+*/
+
+OPEN MAP CustomerInvoiceInfo (
+    key customer ID Customer not null,
+    title char(50) not null,
+    TaxNo char(50),
+    bank char(50),
+    accountNo char(50),
+    registration char(50),
+);

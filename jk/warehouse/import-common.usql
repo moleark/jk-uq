@@ -1,0 +1,26 @@
+import JKCommon = 百灵威系统工程部/common;
+
+TUID SalesRegion from JKCommon (
+    id,
+    no char(10) not null,
+    main name char(10) not null,
+    main currency ID Currency not null,
+    search (name),
+    unique (name),
+);
+
+TUID Province from JKCommon(
+    id,
+    no char(10),
+    main country ID Country not null,
+    main name char(50) not null,
+    search (name),
+);
+
+TUID City from JKCommon(
+    id,
+    no char(10),
+    main province ID Province not null,
+    main name char(50) not null,
+    search (name),
+);

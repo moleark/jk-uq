@@ -1,0 +1,10 @@
+
+TUID Section (
+    id,
+    main title char(50),
+    main subtitle char(200),
+    main content char(4000),
+    order int,
+    search (title, subtitle),
+    unique (title),
+);

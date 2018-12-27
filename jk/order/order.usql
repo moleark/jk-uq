@@ -1,27 +1,26 @@
 ACCESS accOrder(Order);
 
 SHEET Order ver 0.3 (
-    customer ID Customer not null,
+    organization ID Organization,
+    person ID Person,
+
     ARR products (
         product ID Product not null,
         pack OF product.Pack not null,
         price dec(12,2) not null,
         quantity int not null,
         amount dec(12,2) not null,
-    )
+        minDeliveryDays int,
+        maxDeliveryDays int,
+    ),
+    deliveryContact ID Contact,
+    invoiceAddress ID Contact,
+    invoiceType int not null,
+    invoiceInfo ID InvoiceInfo,
+
+    freightFee dec(12,2),
+    freightFeeRemitted dec(12,2),
 )
 Action submit {
-    var recId ID, bbb int;
-    set bbb = 3 + 5;
-    STATE TO deliver;
-    PENDING Receivable +(customer:1, product:2, pack:2, price:3.5*bbb) to recId;
-    PENDING Receivable -at recId;
-    PENDING Receivable -(price:2.5+amount) at recId del if 3*2=amount;
-}
-STATE deliver {
-    ACTION finish {
-        STATE TO END;
-    }
-}
-;
-
+    STATE TO END;
+};

@@ -1,0 +1,17 @@
+OPEN MAP CustomerDiscount (
+    key customer ID Customer,
+    key brand ID Brand,
+    discount dec(8,3) not null,
+);
+
+/*返回单个值的Query——获取客户的品牌折扣*/
+QUERY GetDiscount(brand ID Brand, customer ID Customer)
+returns ret(
+    brand ID Brand,
+    discount dec(10,2)
+) {
+    Into ret select cd.brand, cd.discount as discount
+    from    CustomerDiscount as cd
+            join customer as ps on ps.id = cd.customer and ps.id = customer
+    where   cd.brand = brand
+};
