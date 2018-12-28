@@ -2,7 +2,7 @@ ACCESS accOrder(Order);
 
 SHEET Order ver 0.3 (
     organization ID Organization,
-    person ID Person,
+    customer ID Customer,
 
     ARR products (
         product ID Product not null,
@@ -13,10 +13,10 @@ SHEET Order ver 0.3 (
         minDeliveryDays int,
         maxDeliveryDays int,
     ),
-    deliveryContact ID Contact,
-    invoiceAddress ID Contact,
+    deliveryOrderContact ID OrderContact,
+    invoiceAddress ID OrderContact,
     invoiceType int not null,
-    invoiceInfo ID InvoiceInfo,
+    invoiceInfo ID OrderInvoiceInfo,
 
     freightFee dec(12,2),
     freightFeeRemitted dec(12,2),
@@ -24,3 +24,23 @@ SHEET Order ver 0.3 (
 Action submit {
     STATE TO END;
 };
+
+OPEN TUID OrderContact (
+    id,
+    main name char(50) not null,
+    main organizaionName char(50),
+    main mobile char(20) not null,
+    main telephone char(20),
+    main email char(50),
+    addressString char(400),
+    main address ID Address,
+);
+
+OPEN TUID OrderInvoiceInfo (
+    id,
+    title char(50) not null,
+    TaxNo char(50),
+    bank char(50),
+    accountNo char(50),
+    registration char(50),
+);

@@ -23,3 +23,13 @@ TUID PackType from JKChemical(
     main description char(20),      -- 说明是 重量，长度，面积，提及，单体
     unique (name),
 );
+
+OPEN TUID Address (
+    id,
+    main country ID Country,
+    main province ID Province,
+    main city ID City,
+    main county ID County,
+    main description char(200),
+    search (description),
+);

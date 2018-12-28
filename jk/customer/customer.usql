@@ -43,7 +43,7 @@ OPEN MAP CustomerConsigneeContact (
     email char(50),
     addressString char(400),
     address ID Address,
-    -- order,
+    isDefault tinyint not null default 0,
 );
 
 OPEN MAP CustomerInvoiceContact (
@@ -55,7 +55,7 @@ OPEN MAP CustomerInvoiceContact (
     email char(50),
     addressString char(400),
     address ID Address,
-    -- order,
+    isDefault tinyint not null default 0,
 );
 
 /*
@@ -72,6 +72,7 @@ OPEN TUID Contact (
     main mobile char(20) not null,
     main telephone char(20),
     main email char(50),
+    addressString char(400),
     main address ID Address,
 );
 

@@ -1,9 +1,9 @@
 import JKCustomer = 百灵威系统工程部/customer;
 
-TUID Person from JKCustomer(
+TUID Customer from JKCustomer(
     id,
     main name char(50) not null,
-    ARR contact (
+    ARR Contact (
         owner,
         id,
         type char(8), -- tel,mobile,email,fax,post,address,wechat,qq
@@ -15,22 +15,6 @@ TUID Person from JKCustomer(
 
 TUID Organization from JKCustomer(
     id,
-    main name char(50) not null,
+    main name char(200) not null,
     search (name),
-);
-
-TUID Contact from JKCustomer(
-    id,
-    main name char(50) not null,
-    main mobile char(20) not null,
-    main address ID Address,
-);
-
-OPEN TUID InvoiceInfo (
-    id,
-    title char(50) not null,
-    TaxNo char(50),
-    bank char(50),
-    accountNo char(50),
-    registration char(50),
 );

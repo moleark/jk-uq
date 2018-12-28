@@ -3,7 +3,7 @@ import JKCustomer = 百灵威系统工程部/customer;
 TUID Customer from JKCustomer(
     id,
     main name char(50) not null,
-    ARR contact (
+    ARR Contact (
         owner,
         id,
         type char(8), -- tel,mobile,email,fax,post,address,wechat,qq
