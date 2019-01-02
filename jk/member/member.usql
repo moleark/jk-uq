@@ -1,0 +1,25 @@
+OPEN TUID Member(
+    id,
+    userId bigint not null,
+    recommendationCode char(10),
+    unique(recommendationCode),
+);
+
+OPEN MAP MemberRecommender(
+    key member ID Member,
+    key referrer ID Member,
+);
+
+BOOK Point(
+    key member ID Member,
+    point dec(10, 0),
+);
+
+/*
+HISTORY PointHistory(
+    date,
+    key member ID Member,
+    source char(100),
+    point dec(10, 0) not null,
+);
+*/

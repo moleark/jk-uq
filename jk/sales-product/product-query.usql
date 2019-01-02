@@ -1,13 +1,13 @@
-/*
 QUERY GetFutureDeliveryTime(product ID Product, salesRegion ID SalesRegion)
 returns ret(
-    minDeliveryDays int,
-    maxDeliveryDays int,
+    minValue int,
+    maxValue int,
+    unit char(10),
     deliveryTimeDescription char(100)
 ) {
-    into ret select bdt.minDeliveryDays, bdt.maxDeliveryDays, bdt.deliveryTimeDescription
-    from product as p
-        join brand as b on p.brand = b.id
+    into ret select bdt.minValue, bdt.maxValue, bdt.unit, bdt.deliveryTimeDescription
+    from ProductX as p
+        join Brand as b on p.brand = b.id
         join BrandDeliveryTime as bdt on bdt.brand = b.id
     where p.id = product
         and bdt.salesRegion = salesRegion
@@ -21,39 +21,42 @@ PAGE (
     origin char(50),
     description char(200),
     chemical ID Chemical,
-    purity char(80)
+    CAS char(20),
+    purity char(80),
+    molecularFomula char(200),
+    molecularWeight char(30)
 ) {
     set key = concat('%', key, '%');
-    PAGE select p.id, p.no, p.brand, p.origin, p.description, pc.chemical, pc.purity
-    from Product as p
+    PAGE select p.id, p.no, p.brand, p.origin, p.description, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
+    from ProductX as p
         left join Brand as b on p.brand = b.id
         left join ProductChemical as pc on p.id = pc.product
-        left join chemical as c on pc.chemical = c.id
     where p.id > $pageStart and (
         p.description like key
         or p.origin like key
         or b.name like key
-        or c.cas like key)
+        or pc.cas like key)
     order by p.id
     limit $pageSize;
 };
 
+/*
 -- 获取包装的目录价、VIP价格等各种价格
-QUERY GetPrice(product ID Product, pack ID Product.Pack, person ID Person, salesRegion ID SalesRegion)
+QUERY GetPrice(product ID Product, pack ID Product.Pack, customer ID Customer, salesRegion ID SalesRegion)
 returns ret(
-    product ID Product,
-    pack ID Product.Pack,
+    product ID ProductX,
+    pack ID ProductX.PackX,
     salesRegion ID SalesRegion,
     retail dec(10,2),
     vipPrice dec(10,2)
 ) {
     Into ret select pr.product, pr.pack, pr.salesRegion, pr.retail, pr.retail * ( 1 - cd.discount ) as vipPrice
-    from    product as p
-            join Product.Pack as pk on p.id = pk.owner
+    from    ProductX as p
+            join ProductX.PackX as pk on p.id = pk.owner
             left join price as pr on pr.pack = pk.id and pr.product = p.id
             left join brand as b on p.brand = b.id
             left join CustomerDiscount as cd on cd.brand = b.id
-            left join person as ps on ps.id = cd.person and ps.id = person
+            left join Customer as ps on ps.id = cd.customer and ps.id = customer
     where   pr.product = product
             and (pr.pack = pack or pack is null)
             and pr.salesRegion = salesRegion;

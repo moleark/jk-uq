@@ -34,7 +34,7 @@ OPEN MAP OrganizationCustomer (
 );
 
 /*收货地址、发票要求、收票地址*/
-OPEN MAP CustomerConsigneeContact (
+OPEN MAP CustomerConsigneeContact ver 0.2 (
     key customer ID Customer,
     name char(50) not null,
     organizaionName char(50),
@@ -46,7 +46,7 @@ OPEN MAP CustomerConsigneeContact (
     isDefault tinyint not null default 0,
 );
 
-OPEN MAP CustomerInvoiceContact (
+OPEN MAP CustomerInvoiceContact ver 0.2 (
     key customer ID Customer,
     name char(50) not null,
     organizaionName char(50),
