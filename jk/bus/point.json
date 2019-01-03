@@ -1,0 +1,6 @@
+{
+    "point": [
+        { "name": "member", "type": "id" },
+        { "name": "point", "type": "number" }
+    ]
+}

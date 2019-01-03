@@ -1,0 +1,73 @@
+OPEN TUID WebUser (
+    id _,
+    no bigint not null,
+    main name char(50) not null,
+    password char(50) not null,
+    icon char(100),
+    search(name),
+    unique(name),
+);
+
+OPEN MAP WebUserInfo(
+    key webUser ID WebUser,
+    name char(50) not null,
+    firstName char(50),
+    lastName char(50),
+    gender char(5),
+    salutation char(10),
+    organizaionName char(50),
+    departmentName char(50),
+    -- createTime datetime,
+);
+
+OPEN MAP WebUserContact(
+    key webUser ID WebUser,
+    organizaionName char(50),
+    telephone char(20),
+    mobile char(20) null,
+    email char(50),
+    fax char(20),
+    zipCode char(20),
+    wechatId char(50),
+    addressString char(400),
+    address ID Address,
+);
+
+/*收货地址、发票要求、收票地址*/
+OPEN MAP WebUserConsigneeContact ver 0.2 (
+    key webUser ID WebUser,
+    name char(50) not null,
+    organizaionName char(50),
+    mobile char(20) null,
+    telephone char(20),
+    email char(50),
+    addressString char(400),
+    address ID Address,
+    isDefault tinyint not null default 0,
+);
+
+OPEN MAP WebUserInvoiceContact(
+    key webUser ID WebUser,
+    name char(50) not null,
+    organizaionName char(50),
+    mobile char(20) null,
+    telephone char(20),
+    email char(50),
+    addressString char(400),
+    address ID Address,
+    isDefault tinyint not null default 0,
+);
+
+OPEN MAP WebUserInvoiceInfo (
+    key webUser ID WebUser not null,
+    title char(50) not null,
+    TaxNo char(50),
+    bank char(50),
+    accountNo char(50),
+    registration char(50),
+);
+
+OPEN MAP WebUserCustomer(
+    key webUser ID WebUser,
+    key customer ID Customer,
+);

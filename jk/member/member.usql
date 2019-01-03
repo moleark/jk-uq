@@ -12,12 +12,12 @@ OPEN MAP MemberRecommender(
 
 BOOK Point(
     key member ID Member,
-    point dec(10, 0),
+    point bigint,
 );
 
 HISTORY PointHistory(
     date,
     key member ID Member,
     source char(100),
-    point dec(10, 0) not null,
+    point bigint not null,
 );
