@@ -23,8 +23,8 @@ OPEN MAP PromotionLanguage(
 
 OPEN MAP PromotionPack(
     key promotion ID Promotion not null,
-    key productx ID Product not null,
-    key packx ID Product.Pack not null,
+    key product ID Product not null,
+    key pack ID product.Pack not null,
     discount dec(8,2) not null,
     whenHasStorage tinyint not null,
 );

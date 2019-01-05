@@ -1,0 +1,20 @@
+OPEN TUID Customer (
+    id,
+    no char(30) not null,
+    main name char(50) not null,
+    main firstName char(50),
+    main lastName char(50),
+    gender char(5),
+    salutation char(10),
+    birthDay date,
+    createTime datetime,
+    ARR Contact (
+        owner,
+        id,
+        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq
+        content char(50) not null,
+        order smallint,
+    ),
+    search (name, firstName, lastName),
+    unique(no),
+);

@@ -126,8 +126,8 @@ OPEN TUID ProductX ver 0.5 (
 );
 
 MAP Price2 (
-    key productx ID ProductX not null,
-    key packx OF ProductX.PackX not null,
+    key product ID ProductX not null,
+    key pack OF product.PackX not null,
     key salesRegion ID SalesRegion not null,
     -- expireDate datetime,
     discountinued tinyint not null default 0,

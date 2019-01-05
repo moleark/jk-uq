@@ -1,16 +1,15 @@
 BOOK Cart ver 0.1 (
     key user ID,
-    key product ID Product not null,
-    key pack OF product.Pack not null,
+    key product ID ProductX not null,
+    key pack OF product.PackX not null,
     price dec(12,2) not null,
     quantity int not null,
     date datetime not null,
 );
 
-
 ACTION SetCart (
-    product ID Product,
-    pack OF Product.Pack,
+    product ID ProductX,
+    pack OF product.PackX,
     price dec(12, 2),
     quantity int
 ) {
@@ -18,8 +17,8 @@ ACTION SetCart (
 };
 
 ACTION AddToCart (
-    product ID Product,
-    pack OF Product.Pack,
+    product ID ProductX,
+    pack OF product.PackX,
     price dec(12, 2),
     quantity int
 ) {
@@ -32,8 +31,8 @@ ACTION AddToCart (
 
 ACTION RemoveFromCart (
     arr rows(
-        product ID Product,
-        pack OF Product.Pack
+        product ID ProductX,
+        pack OF product.PackX
     )
 ) {
     foreach rows {
@@ -46,8 +45,8 @@ ACTION RemoveFromCart (
 QUERY GetCart ()
 PAGE (
     date datetime start now(),
-    product ID Product,
-    pack OF product.Pack,
+    product ID ProductX,
+    pack OF product.PackX,
     price dec(12,2),
     quantity int
 ) {

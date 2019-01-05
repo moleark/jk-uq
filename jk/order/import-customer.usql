@@ -1,13 +1,5 @@
 import JKCustomer = 百灵威系统工程部/customer;
 
-OPEN TUID WebUser (
-    id _,
-    no bigint not null,
-    main name char(50) not null,
-    password char(50) not null,
-    icon char(100),
-);
-
 TUID Customer from JKCustomer(
     id,
     main name char(50) not null,

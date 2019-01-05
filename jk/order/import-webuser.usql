@@ -1,0 +1,11 @@
+import JkWebUser = 百灵威系统工程部/webUser;
+
+TUID WebUser from JkWebUser(
+    id _,
+    no bigint not null,
+    main name char(50) not null,
+    password char(50) not null,
+    icon char(100),
+    search(name),
+    unique(name),
+);

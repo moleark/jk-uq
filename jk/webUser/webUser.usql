@@ -37,7 +37,7 @@ OPEN MAP WebUserContact(
 OPEN MAP WebUserConsigneeContact ver 0.2 (
     key webUser ID WebUser,
     name char(50) not null,
-    organizaionName char(50),
+    organizationName char(50),
     mobile char(20) null,
     telephone char(20),
     email char(50),
@@ -49,7 +49,7 @@ OPEN MAP WebUserConsigneeContact ver 0.2 (
 OPEN MAP WebUserInvoiceContact(
     key webUser ID WebUser,
     name char(50) not null,
-    organizaionName char(50),
+    organizationName char(50),
     mobile char(20) null,
     telephone char(20),
     email char(50),
