@@ -45,7 +45,7 @@ PAGE (
 QUERY GetPrice(product ID Product, pack ID Product.Pack, customer ID Customer, salesRegion ID SalesRegion)
 returns ret(
     product ID ProductX,
-    pack ID ProductX.PackX,
+    pack OF product.PackX,
     salesRegion ID SalesRegion,
     retail dec(10,2),
     vipPrice dec(10,2)
