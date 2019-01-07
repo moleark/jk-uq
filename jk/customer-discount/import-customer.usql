@@ -12,3 +12,12 @@ TUID Customer from JKCustomer(
     ),
     search (name),
 );
+
+TUID Organization (
+    id,
+    no char(20) not null,
+    main name char(200) not null,
+    createTime datetime,
+    search (name),
+    unique(no),
+);

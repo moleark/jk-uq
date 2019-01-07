@@ -4,6 +4,17 @@ OPEN MAP CustomerDiscount (
     discount dec(8,3) not null,
 );
 
+OPEN MAP OrganizationDiscount (
+    key organization ID Organization,
+    key brand ID Brand,
+    discount dec(8,3) not null,
+);
+
+OPEN MAP CustomerMap (
+    key customerSub ID Customer,
+    key customerSup ID Customer,
+);
+
 /*返回单个值的Query——获取客户的品牌折扣*/
 QUERY GetDiscount(brand ID Brand, customer ID Customer)
 returns ret(

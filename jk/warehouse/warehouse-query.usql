@@ -1,0 +1,34 @@
+/*
+query a() {
+    var sum dec(10,2) = 0;
+    set sum = 0;
+    foreach (var a int, b dec(3,2)
+        of select 1, 2 from aa as a join bb as b on a.id = b.d)
+    {
+        set sum = sum+a;
+    }
+
+};
+*/
+
+Query GetInventoryAllocation(product ID ProductX, pack OF product.PackX, salesRegion ID SalesRegion)
+returns ret(
+    product ID ProductX,
+    pack OF product.PackX,
+    salesRegion ID SalesRegion,
+    warehouse ID Warehouse,
+    quantity int,
+    minDeliveryDays int,
+    maxDeliveryDays int,
+    deliveryTimeDescription char(100)
+){
+    into ret select pi.product, pi.pack, srw.salesRegion, pi.warehouse, pi.quantity, srw.minDeliveryDays, srw.maxDeliveryDays
+            , srw.deliveryTimeDescription
+    from    ProductInventory as pi
+            join warehouse as w on w.id = pi.warehouse
+            join salesRegionWarehouse as srw on srw.warehouse = w.id
+    where   pi.product = product
+            and pi.pack = pack
+            and srw.salesRegion = salesRegion
+    -- order by srw.order
+};

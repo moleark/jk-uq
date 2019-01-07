@@ -1,0 +1,16 @@
+TUID ShippingArea(
+    id,
+    main name char(20) not null,
+    search (name),
+    unique (name),
+);
+
+Map ShippingAreaInclusionProvince (
+    key shippingArea ID ShippingArea,
+    key province ID Province,
+);
+
+Map ShippingAreaInclusionCity (
+    key shippingArea ID ShippingArea,
+    key city ID City,
+);

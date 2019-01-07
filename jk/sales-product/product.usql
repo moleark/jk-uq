@@ -14,16 +14,6 @@ Map BrandSalesRegion (
     level int not null,
 );
 
-/*
-OPEN TUID BrandSalesLevel (
-    id,
-    no int not null,
-    main description char( 10 ) not null,
-    search (description),
-    unique (description),
-)
-*/
-
 OPEN Map BrandDeliveryTime (
     key brand ID Brand,
     key salesRegion ID SalesRegion,
@@ -132,24 +122,4 @@ MAP Price2 (
     -- expireDate datetime,
     discountinued tinyint not null default 0,
     retail dec(10,2) not null,
-);
-
-OPEN TUID ProductCategory (
-    id,
-    main name char(100),
-    search (name),
-    unique (name),
-);
-
-OPEN Map ProductCategoryTree (
-    key parent ID ProductCategory,
-    key category ID ProductCategory,
-    isLeaf tinyint not null default 0,
-    order,
-);
-
-OPEN Map ProductProductCategory (
-    key product ID Product,
-    key category ID ProductCategory,
-    key salesRegion ID SalesRegion,
 );

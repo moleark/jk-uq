@@ -1,0 +1,19 @@
+OPEN TUID ProductCategory (
+    id,
+    main name char(100),
+    search (name),
+    unique (name),
+);
+
+OPEN Map ProductCategoryTree (
+    key parent ID ProductCategory,
+    key category ID ProductCategory,
+    isLeaf tinyint not null default 0,
+    order,
+);
+
+OPEN Map ProductProductCategory (
+    key product ID Product,
+    key category ID ProductCategory,
+    key salesRegion ID SalesRegion,
+);

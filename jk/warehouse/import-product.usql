@@ -1,18 +1,5 @@
 import JKProduct = 百灵威系统工程部/product;
 
-TUID Product from JKProduct(
-    id,
-    article ID Article not null,
-    main packType ID PackType not null,
-    ARR Pack (
-        owner,
-        id,
-        ratio dec(8,3),             -- 跟基本单位的换算率
-        radioy dec(8,3),
-        name char(8),               -- 可以为空，则自动unit+packtType name生成
-    ),
-);
-
 OPEN TUID ProductX ver 0.5 (
     id,
     main brand ID Brand not null,
