@@ -34,6 +34,7 @@ OPEN MAP WebUserContact(
 );
 
 /*收货地址、发票要求、收票地址*/
+/*
 OPEN MAP WebUserConsigneeContact ver 0.2 (
     key webUser ID WebUser,
     name char(50) not null,
@@ -56,6 +57,19 @@ OPEN MAP WebUserInvoiceContact(
     addressString char(400),
     address ID Address,
     isDefault tinyint not null default 0,
+);
+*/
+
+OPEN MAP webUserConsigneeContact (
+    key webUser ID WebUser,
+    key contact ID Contact,
+    order,
+);
+
+OPEN MAP webUserInvoiceContact (
+    key webUser ID WebUser,
+    key contact ID Contact,
+    order,
 );
 
 OPEN MAP WebUserInvoiceInfo (

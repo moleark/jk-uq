@@ -1,4 +1,6 @@
-OPEN TUID Customer (
+import JKCustomer = 百灵威系统工程部/customer;
+
+TUID Customer from JKCustomer (
     id,
     no char(30) not null,
     main name char(50) not null,
@@ -17,4 +19,15 @@ OPEN TUID Customer (
     ),
     search (name, firstName, lastName),
     unique(no),
+);
+
+TUID Contact from JKCustomer (
+    id,
+    main name char(50) not null,
+    main organizaionName char(50),
+    main mobile char(20) not null,
+    main telephone char(20),
+    main email char(50),
+    addressString char(400),
+    main address ID Address,
 );

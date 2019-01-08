@@ -28,7 +28,7 @@ TUID Product from JKProduct(
     unique (brand, origin),
 );
 
-OPEN TUID ProductX ver 0.5 (
+OPEN TUID ProductX  from JKProduct (
     id,
     main brand ID Brand not null,
     arr PackX (

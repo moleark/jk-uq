@@ -13,7 +13,7 @@ TUID Customer from JKCustomer(
     search (name),
 );
 
-TUID Organization (
+TUID Organization from JKCustomer (
     id,
     no char(20) not null,
     main name char(200) not null,
