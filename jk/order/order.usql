@@ -14,8 +14,9 @@ SHEET Order ver 0.3 (
         minDeliveryDays int,
         maxDeliveryDays int,
     ),
-    deliveryOrderContact ID OrderContact,
-    invoiceAddress ID OrderContact,
+    deliveryOrderContact ID Contact,
+    invoiceAddress ID Contact,
+
     invoiceType int not null,
     invoiceInfo ID OrderInvoiceInfo,
 
@@ -26,6 +27,7 @@ Action submit {
     STATE TO END;
 };
 
+/*
 OPEN TUID OrderContact (
     id,
     main name char(50) not null,
@@ -45,3 +47,4 @@ OPEN TUID OrderInvoiceInfo (
     accountNo char(50),
     registration char(50),
 );
+*/

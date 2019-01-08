@@ -16,3 +16,14 @@ TUID Organization from JKCustomer(
     id,
     main name char(200) not null,
 );
+
+TUID Contact from JKCustomer (
+    id,
+    main name char(50) not null,
+    main organizaionName char(50),
+    main mobile char(20) not null,
+    main telephone char(20),
+    main email char(50),
+    addressString char(400),
+    main address ID Address,
+);
