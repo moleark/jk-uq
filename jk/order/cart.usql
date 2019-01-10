@@ -3,6 +3,7 @@ BOOK Cart ver 0.1 (
     key product ID ProductX not null,
     key pack OF product.PackX not null,
     price dec(12,2) not null,
+    currency ID Currency not null,
     quantity int not null,
     date datetime not null,
 );
@@ -11,18 +12,20 @@ ACTION SetCart (
     product ID ProductX,
     pack OF product.PackX,
     price dec(12, 2),
+    currency ID Currency,
     quantity int
 ) {
-    book Cart at ($user, product, pack) set price = price, quantity = quantity, date = $date;
+    book Cart at ($user, product, pack) set price = price, currency = currency, quantity = quantity, date = $date;
 };
 
 ACTION AddToCart (
     product ID ProductX,
     pack OF product.PackX,
     price dec(12, 2),
+    currency ID Currency,
     quantity int
 ) {
-    book Cart at ($user, product, pack) set price = price, quantity += quantity, date = $date;
+    book Cart at ($user, product, pack) set price = price, currency = currency, quantity += quantity, date = $date;
 
     -- 以下为测试bus的代码
     bus pointBus.point set member = $user, point = 2;
@@ -48,9 +51,10 @@ PAGE (
     product ID ProductX,
     pack OF product.PackX,
     price dec(12,2),
+    currency ID Currency,
     quantity int
 ) {
-    PAGE select a.date, a.product, a.pack, a.price, a.quantity
+    PAGE select a.date, a.product, a.pack, a.price, a.currency, a.quantity
     from Cart as a
     where a.user = $user
     order by date desc;

@@ -75,7 +75,7 @@ OPEN MAP CustomerInvoiceContact (
 OPEN TUID Contact (
     id,
     main name char(50) not null,
-    main organizaionName char(50),
+    main organizationName char(50),
     main mobile char(20) not null,
     main telephone char(20),
     main email char(50),

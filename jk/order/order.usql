@@ -8,22 +8,39 @@ SHEET Order ver 0.3 (
     ARR orderItems (
         product ID ProductX not null,
         pack OF product.PackX not null,
-        price dec(12,2) not null,
+        price dec(12, 2) not null,
         quantity int not null,
-        amount dec(12,2) not null,
-        minDeliveryDays int,
-        maxDeliveryDays int,
+        subAmount dec(12, 2) not null,
+        refrigerationFee dec(12, 2),
+        freezingFee dec(12, 2),
+        packingFee dec(12, 2),
+        proxyFreightFee dec(12, 2),
     ),
+    /*
+    ARR shippingBatch (
+        quantity int,
+        freightFee dec(12, 2),
+        freightFeeRemitted dec(12, 2),
+        warehouse ID Warehouse,
+    ),
+    */
     deliveryOrderContact ID Contact,
     invoiceAddress ID Contact,
 
     invoiceType int not null,
     invoiceInfo ID OrderInvoiceInfo,
 
-    freightFee dec(12,2),
-    freightFeeRemitted dec(12,2),
+    amount dec(12, 2),
+    currency ID Currency,
 )
 Action submit {
+
+    book webUserAccount at (webUser, currency) set 总应付金额 += amount;
+    foreach orderItems {
+        history OrderHistory of( webUser, product, pack )
+            set price = price, quantity = quantity, amount = amount, currency = currency,
+                freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
+    }
     STATE TO END;
 };
 
@@ -38,6 +55,7 @@ OPEN TUID OrderContact (
     addressString char(400),
     main address ID Address,
 );
+*/
 
 OPEN TUID OrderInvoiceInfo (
     id,
@@ -47,4 +65,40 @@ OPEN TUID OrderInvoiceInfo (
     accountNo char(50),
     registration char(50),
 );
-*/
+
+-- 采购额需要记录其来源——订单或者其明细的id，如何记录
+HISTORY OrderHistory (
+    date,
+    key webUser ID WebUser,
+    key product ID ProductX,
+    key pack OF product.PackX,
+    price dec(12, 2),
+    quantity int,
+    amount dec(12, 2),
+    refrigerationFee dec(12, 2),
+    freezingFee dec(12, 2),
+    packingFee dec(12, 2),
+    proxyFreightFee dec(12, 2),
+    currency ID Currency,
+);
+
+-- 运费需要记录其来源——订单或者其明细的id，如何记录?
+HISTORY OrderFreightHistory (
+    date,
+    key webUser ID WebUser,
+    key currency ID Currency,
+    freightFee dec(12, 2) not null,
+    freightFeeRemitted dec(12, 2) not null,
+);
+
+-- 是否要记一笔客户账户余额的账?
+BOOK WebUserAccount (
+    key webUser ID WebUser,
+    key currency ID Currency,
+    总应付金额 dec(12, 2),
+    总到货金额 dec(12, 2),
+    总开票金额 dec(12, 2),
+    总付款金额 dec(12, 2),
+    总应付欠款额 dec(12, 2),
+    总发票欠款额 dec(12, 2),
+);
