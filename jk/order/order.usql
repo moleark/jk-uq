@@ -1,6 +1,6 @@
 ACCESS accOrder(Order);
 
-SHEET Order ver 0.3 (
+SHEET Order ver 0.4 (
     webUser ID WebUser,
     organization ID Organization,
     customer ID Customer,
@@ -18,14 +18,13 @@ SHEET Order ver 0.3 (
     ),
     /*
     ARR shippingBatch (
-        quantity int,
+        warehouse ID Warehouse,
         freightFee dec(12, 2),
         freightFeeRemitted dec(12, 2),
-        warehouse ID Warehouse,
     ),
     */
-    deliveryOrderContact ID Contact,
-    invoiceAddress ID Contact,
+    shippingContact ID Contact,
+    invoiceContact ID Contact,
 
     invoiceType int not null,
     invoiceInfo ID OrderInvoiceInfo,
@@ -38,7 +37,7 @@ Action submit {
     book webUserAccount at (webUser, currency) set 总应付金额 += amount;
     foreach orderItems {
         history OrderHistory of( webUser, product, pack )
-            set price = price, quantity = quantity, amount = amount, currency = currency,
+            set price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
     }
     STATE TO END;
@@ -80,6 +79,10 @@ HISTORY OrderHistory (
     packingFee dec(12, 2),
     proxyFreightFee dec(12, 2),
     currency ID Currency,
+    user,
+    sheet,
+    type,
+    row,
 );
 
 -- 运费需要记录其来源——订单或者其明细的id，如何记录?

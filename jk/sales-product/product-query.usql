@@ -39,26 +39,3 @@ PAGE (
     order by p.id
     limit $pageSize;
 };
-
-/*
--- 获取包装的目录价、VIP价格等各种价格
-QUERY GetPrice(product ID Product, pack ID Product.Pack, customer ID Customer, salesRegion ID SalesRegion)
-returns ret(
-    product ID ProductX,
-    pack OF product.PackX,
-    salesRegion ID SalesRegion,
-    retail dec(10,2),
-    vipPrice dec(10,2)
-) {
-    Into ret select pr.product, pr.pack, pr.salesRegion, pr.retail, pr.retail * ( 1 - cd.discount ) as vipPrice
-    from    ProductX as p
-            join ProductX.PackX as pk on p.id = pk.owner
-            left join price as pr on pr.pack = pk.id and pr.product = p.id
-            left join brand as b on p.brand = b.id
-            left join CustomerDiscount as cd on cd.brand = b.id
-            left join Customer as ps on ps.id = cd.customer and ps.id = customer
-    where   pr.product = product
-            and (pr.pack = pack or pack is null)
-            and pr.salesRegion = salesRegion;
-};
-*/

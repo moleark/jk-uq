@@ -9,6 +9,16 @@ TUID SalesRegion from JKCommon (
     unique (name),
 );
 
+TUID Address from JKCommon (
+    id,
+    main country ID Country,
+    main province ID Province,
+    main city ID City,
+    main county ID County,
+    main description char(200),
+    search (description),
+);
+
 TUID Province from JKCommon(
     id,
     no char(10),

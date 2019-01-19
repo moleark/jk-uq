@@ -1,19 +1,70 @@
 OPEN TUID ProductCategory (
     id,
-    main name char(100),
-    search (name),
-    unique (name),
+    no int not null,
+    parent ID ProductCategory,
+    isLeaf tinyint not null default 0,
+    orderWithinParent int,
+    arr ProductCategoryLanguage (
+        owner,
+        id,
+        language ID Language,
+        name char(200),
+    )
+);
+
+/*
+Map ProductCategoryLanguage (
+    key category ID ProductCategory,
+    key language ID Language,
+    main name char(200),
 );
 
 OPEN Map ProductCategoryTree (
-    key parent ID ProductCategory,
     key category ID ProductCategory,
+    key parent ID ProductCategory,
     isLeaf tinyint not null default 0,
     order,
 );
+*/
 
 OPEN Map ProductProductCategory (
     key product ID Product,
     key category ID ProductCategory,
-    key salesRegion ID SalesRegion,
 );
+
+Query GetRootCategory (salesRegion ID SalesRegion, language ID Language)
+returns ret(
+    productCategory ID ProductCategory,
+    name char(200)
+)
+returns sub(
+    productCategory ID ProductCategory,
+    parent ID,
+    name char(200)
+) {
+    into ret select pc.id as productCategory, pcl.name
+    from    ProductCategory as pc
+            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
+                and pcl.language = language
+    where   pc.parent is null;
+
+    into sub select pc.id as productCategory, pc.parent, pcl.name
+    from    ProductCategory as pc
+            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
+                and pcl.language = language
+            join ProductCategory as pc2 on pc.parent = pc2.id
+    where   pc2.parent is null;
+};
+
+Query GetChildrenCategory (parent ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
+returns sub(
+    productCategory ID ProductCategory,
+    parent ID,
+    name char(200)
+) {
+    into sub select pc.id as productCategory, pc.parent, pcl.name
+    from    ProductCategory as pc
+            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
+                and pcl.language = language
+    where   pc.parent = parent;
+};

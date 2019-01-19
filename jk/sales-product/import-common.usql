@@ -9,9 +9,15 @@ TUID SalesRegion from JKCommon (
     unique (name),
 );
 
-OPEN TUID PackType from JKCommon (
+TUID PackType from JKCommon (
     id,
     main name char(8) not null,     -- g, ml, mg, kg, m, cm, mm, 套，台，个
     main description char(20),      -- 说明是 重量，长度，面积，提及，单体
     unique (name),
+);
+
+TUID Language from JKCommon (
+    id,
+    no char(10),
+    description char(30),
 );

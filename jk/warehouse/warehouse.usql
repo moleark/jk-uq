@@ -1,3 +1,4 @@
+-- dbs.dbo.SCompany
 TUID Warehouse (
     id,
     no char(10) not null,
@@ -6,6 +7,7 @@ TUID Warehouse (
     unique(name),
 );
 
+-- dbs.dbo.NowStorage
 BOOK ProductInventory (
     key warehouse ID Warehouse,
     key product ID ProductX,
@@ -13,11 +15,12 @@ BOOK ProductInventory (
     quantity int not null,
 );
 
+-- dbs.dbo.CompanyLocation
 Map SalesRegionWarehouse (
     key salesRegion ID SalesRegion,
     key warehouse ID Warehouse,
     minDeliveryDays int,
     maxDeliveryDays int,
     deliveryTimeDescription char(100),
-    order,
+    sequence int,
 );

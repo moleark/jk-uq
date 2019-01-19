@@ -30,5 +30,38 @@ returns ret(
     where   pi.product = product
             and pi.pack = pack
             and srw.salesRegion = salesRegion
-    -- order by srw.order
+    order by srw.sequence
+};
+
+/*
+ *
+*/
+Query GetShippingPlan (product ID ProductX, pack OF product.PackX, city ID City, quantity int)
+returns ret(
+    product ID ProductX,
+    pack OF product.PackX,
+    warehouse ID Warehouse,
+    quantity int
+){
+    var qty int;
+    set qty = quantity;
+
+    foreach ( var product1 bigint, pack1 bigint, warehouse bigint, warehouseQuantity int, order int of
+    select pi.product, pi.pack, pi.warehouse, pi.quantity, wsc.sequence
+    from    ProductInventory as pi
+            join warehouse as w on w.id = pi.warehouse
+            join WarehouseSupportCity as wsc on w.id = wsc.warehouse
+    where   pi.product = product
+            and pi.pack = pack
+            and wsc.city = city
+    order by wsc.sequence) {
+        if (qty > warehouseQuantity) {
+            into ret select product1 as product, pack1 as pack, warehouse, warehouseQuantity as quantity;
+            set qty = qty - warehouseQuantity;
+        }else{
+            into ret select product1 as product, pack1 as pack, warehouse, qty as quantity;
+        }
+        if (qty > 0)
+            into ret select product1 as product, pack1 as pack, null as warehouse, qty as quantity;
+    }
 };

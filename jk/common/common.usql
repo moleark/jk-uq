@@ -17,6 +17,7 @@ OPEN TUID Province (
     main englishName char(50) not null,
     main chineseName char(50) not null,
     search (englishName, chineseName),
+    unique(englishName),
 );
 
 OPEN TUID City (
@@ -26,6 +27,7 @@ OPEN TUID City (
     main englishName char(50) not null,
     main chineseName char(50) not null,
     search (englishName, chineseName),
+    unique(englishName),
 );
 
 OPEN TUID County (
@@ -35,6 +37,7 @@ OPEN TUID County (
     main englishName char(50) not null,
     main chineseName char(50) not null,
     search (englishName, chineseName),
+    unique(englishName),
 );
 
 OPEN TUID Address (

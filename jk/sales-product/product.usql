@@ -5,7 +5,7 @@ OPEN TUID Brand (
     no char(10) not null,
     main name char(50) not null,
     search (name),
-    unique (no),
+    unique (name),
 );
 
 Map BrandSalesRegion (
@@ -91,7 +91,7 @@ MAP Price ver 0.4 (
     key productPackType ID ProductPackType not null,
     key pack OF ProductPackType.Pack not null,
     key salesRegion ID SalesRegion not null,
-    expireDate date,
+    expireDate datetime,
     discountinued tinyint not null default 0,
     retail dec(10,2) not null,
 );
@@ -115,7 +115,7 @@ OPEN TUID ProductX ver 0.5 (
     unique (brand, origin),
 );
 
-MAP Price2 (
+MAP PriceX ver 0.1 (
     key product ID ProductX not null,
     key pack OF product.PackX not null,
     key salesRegion ID SalesRegion not null,
