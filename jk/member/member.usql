@@ -1,6 +1,7 @@
 OPEN TUID Member(
     id _,
-    recommendationCode char(10),
+    recommendationCode char(16),
+    unique(recommendationCode),
 );
 
 OPEN MAP MemberRecommender(
@@ -10,12 +11,29 @@ OPEN MAP MemberRecommender(
 
 BOOK Point(
     key member ID Member,
-    point bigint,
+    point int,
 );
 
 HISTORY PointHistory(
     date,
     key member ID Member,
     source char(100),
-    point bigint not null,
+    point int not null,
 );
+
+ACTION MemberAction()
+returns ret(
+    code char(16),
+    point int
+) {
+    var code char(16);
+    set code = recommendationCode from member where id = $user;
+    if code is null {
+        set code = $user;
+        tuid Member id($user) set recommendationCode = code;
+    }
+    into ret select code as code, a.point
+        from    Member as m
+                left join point as a on a.member = m.id
+        where   m.id = $user;
+};
