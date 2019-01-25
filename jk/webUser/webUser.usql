@@ -1,15 +1,6 @@
 OPEN TUID WebUser (
     id _,
     no bigint not null,
-    main name char(50) not null,
-    password char(50) not null,
-    icon char(100),
-    search(name),
-    unique(name),
-);
-
-OPEN MAP WebUserInfo(
-    key webUser ID WebUser,
     name char(50) not null,
     firstName char(50),
     lastName char(50),
@@ -60,27 +51,31 @@ OPEN MAP WebUserInvoiceContact(
 );
 */
 
-OPEN MAP webUserConsigneeContact (
+--
+OPEN MAP webUserContacts (
     key webUser ID WebUser,
     key contact ID Contact,
-    order,
 );
 
-OPEN MAP webUserInvoiceContact (
+-- WebUser的默认值设置表
+OPEN MAP webUserSetting ver 0.1(
     key webUser ID WebUser,
-    key contact ID Contact,
-    order,
+    shippingContact ID Contact,
+    invoiceContact ID Contact,
 );
 
+-- WebUser的开票信息
 OPEN MAP WebUserInvoiceInfo (
     key webUser ID WebUser not null,
     title char(50) not null,
     TaxNo char(50),
+    address char(50),
+    telephone char(20),
     bank char(50),
     accountNo char(50),
-    registration char(50),
 );
 
+-- WebUser 和 Customer的关联关系
 OPEN MAP WebUserCustomer(
     key webUser ID WebUser,
     key customer ID Customer,

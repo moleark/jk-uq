@@ -1,7 +1,7 @@
-QUERY GetPoint(member ID Member)
+QUERY GetPoint(memberId ID Member)
 returns ret(
     member ID Member,
     point bigint
 ){
-    Into ret select member, point from Point where member = member;
+    Into ret select member, point from Point where member = memberId;
 };

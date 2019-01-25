@@ -16,16 +16,6 @@ ACTION SetCart (
     quantity int
 ) {
     book Cart at ($user, product, pack) set price = price, currency = currency, quantity = quantity, date = $date;
-};
-
-ACTION AddToCart (
-    product ID ProductX,
-    pack OF product.PackX,
-    price dec(12, 2),
-    currency ID Currency,
-    quantity int
-) {
-    book Cart at ($user, product, pack) set price = price, currency = currency, quantity += quantity, date = $date;
 
     -- 以下为测试bus的代码
     bus pointBus.point set member = $user, point = 2;

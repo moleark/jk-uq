@@ -60,16 +60,15 @@ OPEN MAP CustomerInvoiceContact ver 0.2 (
 );
 */
 
-OPEN MAP CustomerConsigneeContact (
+OPEN MAP CustomerContacts (
     key customer ID Customer,
     key contact ID Contact,
-    order,
 );
 
-OPEN MAP CustomerInvoiceContact (
+OPEN MAP CustomerSetting ver 0.1 (
     key customer ID Customer,
-    key contact ID Contact,
-    order,
+    shippingContact ID Contact,
+    invoiceContact ID Contact,
 );
 
 OPEN TUID Contact (
@@ -87,7 +86,8 @@ OPEN MAP CustomerInvoiceInfo (
     key customer ID Customer not null,
     title char(50) not null,
     TaxNo char(50),
+    address char(50),
+    telephone char(20),
     bank char(50),
     accountNo char(50),
-    registration char(50),
 );

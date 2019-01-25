@@ -1,8 +1,6 @@
 OPEN TUID Member(
     id _,
     recommendationCode char(10),
-    icon char(100),
-    unique(recommendationCode),
 );
 
 OPEN MAP MemberRecommender(
