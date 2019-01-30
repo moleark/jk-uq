@@ -2,5 +2,16 @@
     "point": [
         { "name": "member", "type": "id" },
         { "name": "point", "type": "number" }
+    ],
+    "order": [
+        { "name": "webUser", "type": "id" },
+        { "name": "organization", "type": "id" },
+        { "name": "customer", "type": "id" },
+        { "name": "orderItems", "type": "array", "fields": "orderItem" }
+    ],
+    "orderItem": [
+        { "name": "product", "type": "id" },
+        { "name": "pack", "type": "id" },
+        { "name": "quantity", "type": "number1" }
     ]
 }
