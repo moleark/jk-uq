@@ -93,3 +93,26 @@ returns secend(
             join ProductCategory as pc2 on pc.parent = pc2.id
     where   pc2.parent = parent;
 };
+
+QUERY SearchProductByCategory (productCategory ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
+PAGE (
+    id bigint start 0,
+    no char(20),
+    brand ID Brand,
+    origin char(50),
+    description char(200),
+    chemical ID Chemical,
+    CAS char(20),
+    purity char(80),
+    molecularFomula char(200),
+    molecularWeight char(30)
+) {
+    PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
+    from ProductX as p
+        left join Brand as b on p.brand = b.id
+        left join ProductChemical as pc on p.id = pc.product
+        join ProductProductCategory as ppc on ppc.product = p.id
+    where p.id > $pageStart and ppc.category = productCategory
+    order by p.id
+    limit $pageSize;
+};
