@@ -1,6 +1,6 @@
 ACCESS accOrder(Order);
 
-SHEET Order ver 0.4 (
+SHEET Order ver 0.5 (
     webUser ID WebUser,
     organization ID Organization,
     customer ID Customer,
@@ -37,18 +37,39 @@ SHEET Order ver 0.4 (
 Action submit {
 
     book webUserAccount at (webUser, currency) set 总应付金额 += amount;
-    bus pointBus.order set webUser = webUser, organizaion = organizaion, customer = customer;
+    if (not customer IS NULL) {
+        bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
+            shippingContact = shippingContact, invoiceContact = invoiceContact,
+            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
+    }
     foreach orderItems {
         history OrderHistory of( webUser, product, pack )
             set price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
-
-        bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity;
+        if (not customer IS NULL) {
+            bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+        }
     }
 
-    bus pointBus.order send;
+    if (not customer IS NULL) {
+        // bus pointBus.order send;
+        STATE TO END;
+    }else {
+        STATE TO MatchingCustomer;
+    }
+}
+STATE MatchingCustomer {
+    ACTION Pass {
+        bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
+            shippingContact = shippingContact, invoiceContact = invoiceContact,
+            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
+        foreach orderItems {
+            bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+        }
 
-    STATE TO END;
+        bus pointBus.order send;
+        STATE TO END;
+    }
 };
 
 /*

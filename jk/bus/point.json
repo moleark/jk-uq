@@ -4,14 +4,24 @@
         { "name": "point", "type": "number" }
     ],
     "order": [
+        { "name": "id", "type": "id" },
+        { "name": "no", "type": "string" },
         { "name": "webUser", "type": "id" },
         { "name": "organization", "type": "id" },
         { "name": "customer", "type": "id" },
-        { "name": "orderItems", "type": "array", "fields": "orderItem" }
+        { "name": "orderItems", "type": "array", "fields": "orderItem" },
+        { "name": "shippingContact", "type": "id" },
+        { "name": "invoiceContact", "type": "id" },
+        { "name": "freightFee", "type": "number" },
+        { "name": "freightFeeRemitted", "type": "number" },
+        { "name": "currency", "type": "id" },
+        { "name": "createDate", "type": "date" }
     ],
     "orderItem": [
         { "name": "product", "type": "id" },
         { "name": "pack", "type": "id" },
-        { "name": "quantity", "type": "number1" }
+        { "name": "quantity", "type": "number" },
+        { "name": "price", "type": "number" },
+        { "name": "subAmount", "type": "number" }
     ]
 }
