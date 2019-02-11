@@ -1,6 +1,6 @@
 ACCESS accOrder(Order);
 
-SHEET Order ver 0.5 (
+SHEET Order ver 0.6 (
     webUser ID WebUser,
     organization ID Organization,
     customer ID Customer,
@@ -36,23 +36,19 @@ SHEET Order ver 0.5 (
 )
 Action submit {
 
-    book webUserAccount at (webUser, currency) set 总应付金额 += amount;
     if (not customer IS NULL) {
+        book webUserAccount at (webUser, currency) set 总应付金额 += amount;
         bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
             shippingContact = shippingContact, invoiceContact = invoiceContact,
             freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
-    }
-    foreach orderItems {
-        history OrderHistory of( webUser, product, pack )
-            set price = price, quantity = quantity, amount = subAmount, currency = currency,
-                freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
-        if (not customer IS NULL) {
+        foreach orderItems {
+            history OrderHistory of( webUser, product, pack )
+                set price = price, quantity = quantity, amount = subAmount, currency = currency,
+                    freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
+
             bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
         }
-    }
-
-    if (not customer IS NULL) {
-        // bus pointBus.order send;
+        bus pointBus.order send;
         STATE TO END;
     }else {
         STATE TO MatchingCustomer;
@@ -60,10 +56,14 @@ Action submit {
 }
 STATE MatchingCustomer {
     ACTION Pass {
+        book webUserAccount at (webUser, currency) set 总应付金额 += amount;
         bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
             shippingContact = shippingContact, invoiceContact = invoiceContact,
             freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
         foreach orderItems {
+            history OrderHistory of( webUser, product, pack )
+                set price = price, quantity = quantity, amount = subAmount, currency = currency,
+                    freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
             bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
         }
 

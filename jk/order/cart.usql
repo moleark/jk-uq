@@ -18,8 +18,8 @@ ACTION SetCart (
     book Cart at ($user, product, pack) set price = price, currency = currency, quantity = quantity, date = $date;
 
     -- 以下为测试bus的代码
-    bus pointBus.point set member = $user, point = 2;
-    bus pointBus.point send;
+    // bus pointBus.point set member = $user, point = 2;
+    // bus pointBus.point send;
 };
 
 ACTION RemoveFromCart (

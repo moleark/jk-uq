@@ -101,6 +101,7 @@ PAGE (
     brand ID Brand,
     origin char(50),
     description char(200),
+    descriptionC char(200),
     chemical ID Chemical,
     CAS char(20),
     purity char(80),
