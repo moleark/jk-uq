@@ -1,4 +1,5 @@
 BUS pointBus from [百灵威系统工程部]/point
     ACCEPT point {
-        book Point at (member) set point += point;
+        // book Point at (member) set point += point;
+        book PointYears at (member, years) set point = point, pointUsed = pointUsed;
     };

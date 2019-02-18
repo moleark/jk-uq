@@ -14,6 +14,13 @@ BOOK Point(
     point int,
 );
 
+BOOK PointYears(
+    key member ID Member,
+    key years int not null,
+    point int,
+    pointUsed int,
+);
+
 HISTORY PointHistory(
     date,
     key member ID Member,

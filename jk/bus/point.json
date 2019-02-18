@@ -1,7 +1,9 @@
 {
     "point": [
         { "name": "member", "type": "id" },
-        { "name": "point", "type": "number" }
+        { "name": "years", "type": "number" },
+        { "name": "point", "type": "number" },
+        { "name": "pointUsed", "type": "number" }
     ],
     "order": [
         { "name": "id", "type": "id" },
@@ -23,5 +25,11 @@
         { "name": "quantity", "type": "number" },
         { "name": "price", "type": "number" },
         { "name": "subAmount", "type": "number" }
+    ],
+    "productInventory": [
+        { "name": "warehouse", "type": "id" },
+        { "name": "product", "type": "id" },
+        { "name": "pack", "type": "id" },
+        { "name": "quantity", "type": "number" }
     ]
 }

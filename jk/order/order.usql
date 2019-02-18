@@ -37,7 +37,7 @@ SHEET Order ver 0.6 (
 Action submit {
 
     if (not customer IS NULL) {
-        book webUserAccount at (webUser, currency) set 总应付金额 += amount;
+        book webUserAccount at (webUser, currency) set 总订单金额 += amount;
         bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
             shippingContact = shippingContact, invoiceContact = invoiceContact,
             freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
@@ -94,7 +94,6 @@ OPEN TUID OrderInvoiceInfo (
     registration char(50),
 );
 
--- 采购额需要记录其来源——订单或者其明细的id，如何记录
 HISTORY OrderHistory (
     date,
     key webUser ID WebUser,
@@ -114,25 +113,41 @@ HISTORY OrderHistory (
     row,
 );
 
--- 运费需要记录其来源——订单或者其明细的id，如何记录?
+-- 订单运费记录
 HISTORY OrderFreightHistory (
     date,
     key webUser ID WebUser,
     key currency ID Currency,
     freightFee dec(12, 2) not null,
     freightFeeRemitted dec(12, 2) not null,
+    user,
+    sheet,
+    type,
 );
 
--- 是否要记一笔客户账户余额的账?
+-- 订单付款记录
+HISTORY OrderPaymentHistory(
+    date,
+    amount dec(12, 2),
+    currency ID Currency,
+    user,
+    type,
+    sheet,
+    row,
+);
+
+
+--
 BOOK WebUserAccount (
     key webUser ID WebUser,
     key currency ID Currency,
-    总应付金额 dec(12, 2),
-    总到货金额 dec(12, 2),
-    总开票金额 dec(12, 2),
-    总付款金额 dec(12, 2),
-    总应付欠款额 dec(12, 2),
-    总发票欠款额 dec(12, 2),
+    总订单金额 dec(12, 2),      -- 所有有效订单的总金额
+    总到货金额 dec(12, 2),      -- 所有已到货的订单总金额
+    总开票金额 dec(12, 2),      -- 所有发票的总金额
+    总付款金额 dec(12, 2),      -- 所有付款的总金额
+    -- 总订单欠款额 dec(12, 2),    -- 总订单金额 - 总付款金额
+    -- 总到货欠款额 dec(12, 2),    -- 总到货金额 - 总付款金额
+    -- 总发票欠款额 dec(12, 2),     -- 总到货金额 - 总付款金额
 );
 
 /*
