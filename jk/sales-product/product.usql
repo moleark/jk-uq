@@ -119,7 +119,7 @@ MAP PriceX ver 0.1 (
     key product ID ProductX not null,
     key pack OF product.PackX not null,
     key salesRegion ID SalesRegion not null,
-    -- expireDate datetime,
+    expireDate datetime,
     discountinued tinyint not null default 0,
     retail dec(10,2) not null,
 );

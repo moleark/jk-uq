@@ -56,7 +56,7 @@ Action submit {
 }
 STATE MatchingCustomer {
     ACTION Pass {
-        book webUserAccount at (webUser, currency) set 总应付金额 += amount;
+        book webUserAccount at (webUser, currency) set 总订单金额 += amount;
         bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
             shippingContact = shippingContact, invoiceContact = invoiceContact,
             freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
@@ -113,6 +113,7 @@ HISTORY OrderHistory (
     row,
 );
 
+/*
 -- 订单运费记录
 HISTORY OrderFreightHistory (
     date,
@@ -135,7 +136,7 @@ HISTORY OrderPaymentHistory(
     sheet,
     row,
 );
-
+*/
 
 --
 BOOK WebUserAccount (

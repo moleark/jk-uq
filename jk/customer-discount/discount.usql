@@ -2,12 +2,16 @@ OPEN MAP CustomerDiscount (
     key customer ID Customer,
     key brand ID Brand,
     discount dec(8,3) not null,
+    startDate datetime,
+    endDate datetime,
 );
 
 OPEN MAP OrganizationDiscount (
     key organization ID Organization,
     key brand ID Brand,
     discount dec(8,3) not null,
+    startDate datetime,
+    endDate datetime,
 );
 
 OPEN MAP CustomerMap (
@@ -25,4 +29,6 @@ returns ret(
     from    CustomerDiscount as cd
             join Customer as ps on ps.id = cd.customer and ps.id = customer
     where   cd.brand = brand
+            and cd.startDate < now()
+            and ( cd.endDate is null or cd.endDate > now())
 };

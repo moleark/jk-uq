@@ -1,7 +1,7 @@
 OPEN TUID Member(
     id _,
     recommendationCode char(16),
-    unique(recommendationCode),
+    -- unique(recommendationCode),
 );
 
 OPEN MAP MemberRecommender(
@@ -35,12 +35,10 @@ returns ret(
 ) {
     var code char(16);
     set code = recommendationCode from member where id = $user;
-    /*
     if code is null {
         set code = $user;
         tuid Member id($user) set recommendationCode = code;
     }
-    */
     into ret select code as code, a.point
         from    Member as m
                 left join point as a on a.member = m.id
