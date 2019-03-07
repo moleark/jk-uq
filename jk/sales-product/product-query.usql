@@ -1,4 +1,4 @@
-QUERY GetFutureDeliveryTime(product ID Product, salesRegion ID SalesRegion)
+QUERY GetFutureDeliveryTime(product ID ProductX, salesRegion ID SalesRegion)
 returns ret(
     minValue int,
     maxValue int,

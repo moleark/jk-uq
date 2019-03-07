@@ -36,10 +36,11 @@ TUID Stuff (
 );
 
 Map ProductStuff (
-    key product ID Product,
+    key product ID ProductX,
     key stuff ID Stuff,
 );
 
+/*
 OPEN TUID Product (
     id,
     no char(20) not null,
@@ -50,9 +51,40 @@ OPEN TUID Product (
     search (origin, description, descriptionC),
     unique (brand, origin),
 );
+*/
+
+OPEN TUID ProductX ver 0.5 (
+    id,
+    no char(20) not null,
+    main brand ID Brand not null,
+    main origin char(50),
+    main description char(1000) null,
+    main descriptionC char(1000) null,
+    arr PackX (
+        owner,
+        id,
+        jkcat char(50) not null,
+        radiox dec(8,2),
+        radioy dec(8,2),
+        unit char(10),
+    ),
+    imageUrl char(200),
+    isValid tinyint not null default 1,
+    search (origin, description, descriptionC),
+    unique (brand, origin),
+);
+
+MAP PriceX ver 0.2 (
+    key product ID ProductX not null,
+    key pack OF product.PackX not null,
+    key salesRegion ID SalesRegion not null,
+    expireDate datetime,
+    discountinued tinyint not null default 0,
+    retail dec(10,2),
+);
 
 OPEN Map ProductChemical (
-    key product ID Product,
+    key product ID ProductX,
     key chemical ID Chemical,
     CAS char(20),
     purity char(80),
@@ -61,17 +93,18 @@ OPEN Map ProductChemical (
 );
 
 OPEN MAP ProductSalesRegion (
-    key product ID Product,
+    key product ID ProductX,
     key salesRegion ID SalesRegion,
     isValid tinyint not null,
 );
 
 OPEN MAP ProductLegallyProhibited (
-    key product ID Product,
+    key product ID ProductX,
     key salesRegion ID SalesRegion,
     reason char(20),
 );
 
+/*
 -- tuid类型定义之后的un 表示字段可以按语言录入，可以中文，可以繁体，可以英文，zh-CN，en-US, en-CA
 OPEN TUID ProductPackType ver 0.9 (
     id,
@@ -95,31 +128,4 @@ MAP Price ver 0.4 (
     discountinued tinyint not null default 0,
     retail dec(10,2) not null,
 );
-
-OPEN TUID ProductX ver 0.5 (
-    id,
-    no char(20) not null,
-    main brand ID Brand not null,
-    main origin char(50),
-    main description char(1000) null,
-    main descriptionC char(1000) null,
-    arr PackX (
-        owner,
-        id,
-        jkcat char(50) not null,
-        radiox dec(8,2),
-        radioy dec(8,2),
-        unit char(10),
-    ),
-    search (origin, description, descriptionC),
-    unique (brand, origin),
-);
-
-MAP PriceX ver 0.1 (
-    key product ID ProductX not null,
-    key pack OF product.PackX not null,
-    key salesRegion ID SalesRegion not null,
-    expireDate datetime,
-    discountinued tinyint not null default 0,
-    retail dec(10,2) not null,
-);
+*/

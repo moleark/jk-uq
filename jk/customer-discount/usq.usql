@@ -1,1 +1,2 @@
+-- customerDiscount中现在只是记录了客户协议的“帐”，客户协议本身应该是“Sheet”，这个还没有做。
 UQ 百灵威系统工程部/[customerDiscount] version='1.00' author='ligsh'

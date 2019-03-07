@@ -9,7 +9,8 @@ OPEN TUID ProductCategory (
         id,
         language ID Language,
         name char(200),
-    )
+    ),
+    unique(no),
 );
 
 /*
@@ -28,7 +29,7 @@ OPEN Map ProductCategoryTree (
 */
 
 OPEN Map ProductProductCategory (
-    key product ID Product,
+    key product ID ProductX,
     key category ID ProductCategory,
 );
 
