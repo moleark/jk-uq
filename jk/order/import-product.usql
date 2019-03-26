@@ -20,8 +20,8 @@ TUID Product from JKProduct(
     ARR Pack (
         owner,
         id,
-        ratio dec(8,3),             -- 跟基本单位的换算率
-        radioy dec(8,3),
+        ratio dec(12,2),             -- 跟基本单位的换算率
+        radioy dec(12,4),
         name char(8),               -- 可以为空，则自动unit+packtType name生成
     ),
     search (origin, description),

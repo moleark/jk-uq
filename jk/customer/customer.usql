@@ -78,7 +78,7 @@ OPEN TUID Contact (
     main mobile char(20) not null,
     main telephone char(20),
     main email char(50),
-    addressString char(400),
+    main addressString char(400),
     main address ID Address,
 );
 

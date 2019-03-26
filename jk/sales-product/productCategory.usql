@@ -115,6 +115,10 @@ PAGE (
         left join ProductChemical as pc on p.id = pc.product
         join ProductProductCategory as ppc on ppc.product = p.id
     where p.id > $pageStart and ppc.category = productCategory
+        and exists (
+            select  1 from ProductX.PackX as pk join PriceX as pr on pr.pack = pk.id and pr.product = pk.owner
+            where pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
+        )
     order by p.id
     limit $pageSize;
 };

@@ -25,6 +25,6 @@ OPEN MAP PromotionPack(
     key promotion ID Promotion,
     key product ID ProductX not null,
     key pack OF product.PackX,
-    discount dec(8,2) not null,
+    discount dec(12,4) not null,
     MustHasStorage tinyint not null,
 );

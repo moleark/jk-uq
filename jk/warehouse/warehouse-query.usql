@@ -1,8 +1,8 @@
 /*
 query a() {
-    var sum dec(10,2) = 0;
+    var sum dec(12,2) = 0;
     set sum = 0;
-    foreach (var a int, b dec(3,2)
+    foreach (var a int, b dec(12,2)
         of select 1, 2 from aa as a join bb as b on a.id = b.d)
     {
         set sum = sum+a;

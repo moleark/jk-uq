@@ -42,7 +42,7 @@ ACTION MergeCart (
     )
 ) {
     /*
-    var price dec(10, 2);
+    var price dec(12, 2);
     foreach rows {
         set price = pr.retail * ( 1 - ifnull(cd.discount, 0))
         from    ProductX as p

@@ -55,7 +55,7 @@ OPEN TUID Product (
 
 OPEN TUID ProductX ver 0.5 (
     id,
-    no char(20) not null,
+    no char(50) not null,
     main brand ID Brand not null,
     main origin char(50),
     main description char(1000) null,
@@ -64,8 +64,8 @@ OPEN TUID ProductX ver 0.5 (
         owner,
         id,
         jkcat char(50) not null,
-        radiox dec(8,2),
-        radioy dec(8,2),
+        radiox dec(12,2),
+        radioy dec(12,4),
         unit char(10),
     ),
     imageUrl char(200),
@@ -80,7 +80,7 @@ MAP PriceX ver 0.2 (
     key salesRegion ID SalesRegion not null,
     expireDate datetime,
     discountinued tinyint not null default 0,
-    retail dec(10,2),
+    retail dec(12,2),
 );
 
 OPEN Map ProductChemical (
@@ -113,8 +113,8 @@ OPEN TUID ProductPackType ver 0.9 (
     ARR Pack (
         owner,
         id,
-        radiox dec(8,2),             -- 跟基本单位的换算率
-        radioy dec(8,2),
+        radiox dec(12, 2),             -- 跟基本单位的换算率
+        radioy dec(12, 4),
         name char(8),               -- 可以为空，则自动unit+packtType name生成
     ),
     unique(product, packType),
@@ -126,6 +126,6 @@ MAP Price ver 0.4 (
     key salesRegion ID SalesRegion not null,
     expireDate datetime,
     discountinued tinyint not null default 0,
-    retail dec(10,2) not null,
+    retail dec(12,2) not null,
 );
 */

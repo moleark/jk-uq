@@ -1,7 +1,7 @@
 OPEN MAP CustomerDiscount (
     key customer ID Customer,
     key brand ID Brand,
-    discount dec(8,3) not null,
+    discount dec(12,4) not null,
     startDate datetime,
     endDate datetime,
 );
@@ -9,7 +9,7 @@ OPEN MAP CustomerDiscount (
 OPEN MAP OrganizationDiscount (
     key organization ID Organization,
     key brand ID Brand,
-    discount dec(8,3) not null,
+    discount dec(12,4) not null,
     startDate datetime,
     endDate datetime,
 );
@@ -23,7 +23,7 @@ OPEN MAP CustomerMap (
 QUERY GetDiscount(brand ID Brand, customer ID Customer)
 returns ret(
     brand ID Brand,
-    discount dec(10,2)
+    discount dec(12,4)
 ) {
     Into ret select cd.brand, cd.discount as discount
     from    CustomerDiscount as cd
