@@ -34,6 +34,13 @@ SHEET Order ver 0.6 (
     freightFee dec(12, 2),
     freightFeeRemitted dec(12, 2),
 )
+Verify {
+    var discount dec(12,4) = 1;
+    if (not customer IS NULL) {
+        foreach orderItems {
+        }
+    }
+}
 Action submit {
 
     if (not customer IS NULL) {

@@ -101,15 +101,16 @@ PAGE (
     no char(20),
     brand ID Brand,
     origin char(50),
-    description char(200),
-    descriptionC char(200),
+    description char(1000),
+    descriptionC char(1000),
+    imageUrl char(200),
     chemical ID Chemical,
     CAS char(20),
     purity char(80),
     molecularFomula char(200),
     molecularWeight char(30)
 ) {
-    PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
+    PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
     from ProductX as p
         left join Brand as b on p.brand = b.id
         left join ProductChemical as pc on p.id = pc.product

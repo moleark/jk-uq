@@ -19,27 +19,31 @@ PAGE (
     no char(20),
     brand ID Brand,
     origin char(50),
-    description char(200),
+    description char(1000),
+    descriptionC char(1000),
+    imageUrl char(200),
     chemical ID Chemical,
     CAS char(20),
     purity char(80),
     molecularFomula char(200),
     molecularWeight char(30)
 ) {
-    set key = concat('%', key, '%');
-    PAGE select p.id, p.no, p.brand, p.origin, p.description, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
+    var key2 char(100);
+    set key2 = concat(key, '*');
+
+    PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
     from ProductX as p
         left join Brand as b on p.brand = b.id
         left join ProductChemical as pc on p.id = pc.product
     where p.id > $pageStart and (
-        p.description like key
-        or p.origin like key
-        or b.name like key
-        or pc.cas like key)
+        match(p.description, p.descriptionc) against(key in boolean mode)
+        or p.origin = key
+        or pc.cas = key
+        )
         and exists (
             select  1 from ProductX.PackX as pk join PriceX as pr on pr.pack = pk.id and pr.product = pk.owner
             where pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
         )
-    order by p.id
+    -- order by p.id
     limit $pageSize;
 };
