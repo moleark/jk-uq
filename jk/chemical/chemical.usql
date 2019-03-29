@@ -9,5 +9,6 @@ OPEN TUID Chemical (
     molecularFomula char(200),
     molecularWeight dec(12, 4),
     mdlNumber char(12),
-    unique (cas),
+    unique (no),
+    index cas(cas) unique,
 );

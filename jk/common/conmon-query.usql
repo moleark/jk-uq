@@ -1,0 +1,26 @@
+QUERY GetCountryProvinces(country ID Country)
+returns ret(
+    province ID Province
+) {
+    Into ret select p.id as Province
+    from    Province as p
+    where   p.country = country;
+};
+
+QUERY GetProvinceCities(province ID Province)
+returns ret(
+    city ID City
+) {
+    Into ret select c.id as City
+    from    City as c
+    where   c.province = province;
+};
+
+QUERY GetCityCounties(city ID City)
+returns ret(
+    county ID County
+) {
+    Into ret select c.id as County
+    from    County as c
+    where   c.city = city;
+};
