@@ -38,7 +38,7 @@ OPEN MAP OrganizationCustomer (
 OPEN MAP CustomerConsigneeContact ver 0.2 (
     key customer ID Customer,
     name char(50) not null,
-    organizaionName char(50),
+    organizationName char(50),
     mobile char(20) null,
     telephone char(20),
     email char(50),
@@ -50,7 +50,7 @@ OPEN MAP CustomerConsigneeContact ver 0.2 (
 OPEN MAP CustomerInvoiceContact ver 0.2 (
     key customer ID Customer,
     name char(50) not null,
-    organizaionName char(50),
+    organizationName char(50),
     mobile char(20) null,
     telephone char(20),
     email char(50),
