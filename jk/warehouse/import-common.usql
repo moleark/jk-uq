@@ -19,18 +19,42 @@ TUID Address from JKCommon (
     search (description),
 );
 
-TUID Province from JKCommon(
+TUID Country from JKCommon (
     id,
-    no char(10),
-    main country ID Country not null,
-    main name char(50) not null,
-    search (name),
+    no char(50),
+    main code char(10) not null,
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+    unique (englishName),
 );
 
-TUID City from JKCommon(
+TUID Province from JKCommon (
     id,
-    no char(10),
+    no char(50),
+    main country ID Country not null,
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+    unique(englishName),
+);
+
+TUID City from JKCommon (
+    id,
+    no char(50),
     main province ID Province not null,
-    main name char(50) not null,
-    search (name),
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+    unique(englishName),
+);
+
+TUID County from JKCommon (
+    id,
+    no char(50),
+    main city ID City not null,
+    main englishName char(50) not null,
+    main chineseName char(50) not null,
+    search (englishName, chineseName),
+    unique(englishName),
 );
