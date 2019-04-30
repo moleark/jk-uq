@@ -68,7 +68,7 @@ OPEN MAP webUserSetting ver 0.1(
 OPEN MAP WebUserInvoiceInfo (
     key webUser ID WebUser not null,
     title char(50) not null,
-    TaxNo char(50),
+    taxNo char(50),
     address char(50),
     telephone char(20),
     bank char(50),

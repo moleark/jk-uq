@@ -1,0 +1,43 @@
+TUID Task (
+    id,
+    main description char(100),
+    main customer ID Customer,
+    main type ID TaskType,
+
+    sourceID bigint,
+    sourceType char(10),
+    sourceNo char(50),
+
+    priorty int not null,
+    deadline date not null, -- 要求完成时间
+    createTime date not null,
+);
+
+TUID TaskType (
+    id,
+    name char(20),
+    description char(50),
+    unique(name)
+);
+
+BOOK TaskBook (
+    key task ID Task,
+    status ID TaskStatus,
+    principal ID Employee,
+    remindDate  date,
+);
+
+History TaskHistory (
+    date,
+    key task ID Task,
+    status ID TaskStatus,
+    principal ID Employee,
+    resultType char(5),
+    result char(1000),
+);
+
+TUID TaskStatus (
+    id,
+    name char(20),
+    unique(name),
+);

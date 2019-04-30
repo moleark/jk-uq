@@ -1,0 +1,5 @@
+TUID employee (
+    id,
+    firstName char(20),
+    lastName char(20),
+);
