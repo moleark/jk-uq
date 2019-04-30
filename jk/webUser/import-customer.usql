@@ -31,3 +31,13 @@ TUID Contact from JKCustomer (
     addressString char(400),
     main address ID Address,
 );
+
+TUID InvoiceInfo from JKCustomer(
+    id,
+    title char(50) not null,
+    taxNo char(50),
+    address char(50),
+    telephone char(20),
+    bank char(50),
+    accountNo char(50),
+);

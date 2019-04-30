@@ -26,8 +26,8 @@ SHEET Order ver 0.6 (
     shippingContact ID Contact,
     invoiceContact ID Contact,
 
-    invoiceType int not null,
-    invoiceInfo ID OrderInvoiceInfo,
+    invoiceType ID InvoiceType,
+    invoiceInfo ID InvoiceInfo,
 
     amount dec(12, 2),
     currency ID Currency,
@@ -91,15 +91,6 @@ OPEN TUID OrderContact (
     main address ID Address,
 );
 */
-
-OPEN TUID OrderInvoiceInfo (
-    id,
-    title char(50) not null,
-    TaxNo char(50),
-    bank char(50),
-    accountNo char(50),
-    registration char(50),
-);
 
 HISTORY OrderHistory (
     date,

@@ -73,3 +73,9 @@ TUID County from JKCommon (
     search (englishName, chineseName),
     unique(englishName),
 );
+
+TUID InvoiceType from JKCommon (
+    id,
+    description char(30),
+    unique(description),
+);

@@ -67,12 +67,7 @@ OPEN MAP webUserSetting ver 0.1(
 -- WebUser的开票信息
 OPEN MAP WebUserInvoiceInfo (
     key webUser ID WebUser not null,
-    title char(50) not null,
-    taxNo char(50),
-    address char(50),
-    telephone char(20),
-    bank char(50),
-    accountNo char(50),
+    key InvoiceInfo ID InvoiceInfo,
 );
 
 -- WebUser 和 Customer的关联关系

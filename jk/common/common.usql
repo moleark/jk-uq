@@ -97,3 +97,9 @@ OPEN TUID Language (
     description char(30),
     unique(no),
 );
+
+OPEN TUID InvoiceType (
+    id,
+    description char(30),
+    unique(description),
+);

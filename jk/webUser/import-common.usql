@@ -68,3 +68,9 @@ TUID Currency from JKCommon (
     search (name, suffix),
     unique (name),
 );
+
+TUID InvoiceType from JKCommon (
+    id,
+    description char(30),
+    unique(description),
+);
