@@ -62,12 +62,8 @@ OPEN MAP webUserSetting ver 0.1(
     key webUser ID WebUser,
     shippingContact ID Contact,
     invoiceContact ID Contact,
-);
-
--- WebUser的开票信息
-OPEN MAP WebUserInvoiceInfo (
-    key webUser ID WebUser not null,
-    key InvoiceInfo ID InvoiceInfo,
+    invoiceType ID InvoiceType,
+    InvoiceInfo ID InvoiceInfo,
 );
 
 -- WebUser 和 Customer的关联关系

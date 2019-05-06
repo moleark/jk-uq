@@ -70,6 +70,7 @@ OPEN MAP CustomerSetting ver 0.1 (
     shippingContact ID Contact,
     invoiceContact ID Contact,
     invoiceType ID InvoiceType,
+    InvoiceInfo ID InvoiceInfo,
 );
 
 OPEN TUID Contact (
@@ -85,15 +86,10 @@ OPEN TUID Contact (
 
 OPEN TUID InvoiceInfo (
     id,
-    title char(50) not null,
-    taxNo char(50),
+    main title char(50) not null,
+    main taxNo char(50),
     address char(50),
     telephone char(20),
     bank char(50),
     accountNo char(50),
-);
-
-OPEN MAP CustomerInvoiceInfo (
-    key customer ID Customer not null,
-    key InvoiceInfo ID InvoiceInfo,
 );
