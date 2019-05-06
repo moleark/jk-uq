@@ -1,0 +1,23 @@
+QUERY SearchTask (key char(100))
+PAGE (
+    id bigint start 0,
+    description char(100),
+    customer ID Customer,
+    type ID TaskType,
+    sourceID bigint,
+    sourceType char(10),
+    sourceNo char(50),
+    priorty int,
+    deadline date,
+    createTime date
+) {
+    var key2 char(100);
+    set key2 = concat(key, '*');
+
+    PAGE select t.id,to.description, t.customer, t.type, t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, t.createTime
+    from Tssk as t
+    where t.id > $pageStart and (
+        match(t.description) against(key in boolean mode)
+        )
+    limit $pageSize;
+};
