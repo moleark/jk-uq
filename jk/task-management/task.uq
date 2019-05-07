@@ -46,9 +46,10 @@ TUID TaskStatus (
 ACTION CompletionTask(
     taskid ID Task,
     result char(1000)
-
 ){
+    
     history TaskHistory of( taskid )
-    set status = 1, principal = $user, resultType='order', result= result;
+    set status = 1, principal = $user, resultType = 'order', result= result;
+
     delete from TaskBook where task = taskid;
 }
