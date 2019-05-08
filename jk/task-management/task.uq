@@ -15,8 +15,8 @@ TUID Task (
 
 TUID TaskType (
     id,
-    name char(20),
-    description char(50),
+    main name char(20),
+    main description char(50),
     unique(name)
 );
 
