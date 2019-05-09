@@ -1,12 +1,14 @@
 OPEN TUID Promotion (
     id,
     no char(20) not null,
-    name char(100) not null,
-    type char(5) not null,
-    status char(2) not null,
-    startDate date not null,
-    endDate date,
-    createTime datetime,
+    main name char(100) not null,
+    main type ID PromotionType,
+    main status ID PromotionStatus,
+    main startDate datetime not null,
+    main endDate datetime,
+    main createTime datetime,
+    search(name),
+    unique(no),
 );
 
 OPEN MAP PromotionSalesRegion(
@@ -21,10 +23,24 @@ OPEN MAP PromotionLanguage(
     url char(100),
 );
 
-OPEN MAP PromotionPack(
+OPEN MAP PromotionPackDiscount(
     key promotion ID Promotion,
     key product ID ProductX not null,
     key pack OF product.PackX,
     discount dec(12,4) not null,
     MustHasStorage tinyint not null,
+);
+
+TUID PromotionType(
+    id,
+    no char(20) not null,
+    description char(10),
+    unique(description),
+);
+
+TUID PromotionStatus(
+    id,
+    no char(20) not null,
+    description char(10),
+    unique(description),
 );

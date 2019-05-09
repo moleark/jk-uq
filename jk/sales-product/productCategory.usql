@@ -13,113 +13,13 @@ OPEN TUID ProductCategory (
     unique(no),
 );
 
-/*
-Map ProductCategoryLanguage (
-    key category ID ProductCategory,
-    key language ID Language,
-    main name char(200),
-);
-
-OPEN Map ProductCategoryTree (
-    key category ID ProductCategory,
-    key parent ID ProductCategory,
-    isLeaf tinyint not null default 0,
-    order,
-);
-*/
-
 OPEN Map ProductProductCategory (
     key product ID ProductX,
     key category ID ProductCategory,
 );
 
-Query GetRootCategory (salesRegion ID SalesRegion, language ID Language)
-returns first(
-    productCategory ID ProductCategory,
-    name char(200)
-)
-returns secend(
-    productCategory ID ProductCategory,
-    parent ID,
-    name char(200)
-)
-returns third(
-    productCategory ID ProductCategory,
-    parent ID,
-    name char(200)
-) {
-    into first select pc.id as productCategory, pcl.name
-    from    ProductCategory as pc
-            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
-                and pcl.language = language
-    where   pc.parent is null;
-
-    into secend select pc.id as productCategory, pc.parent, pcl.name
-    from    ProductCategory as pc
-            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
-                and pcl.language = language
-            join ProductCategory as pc2 on pc.parent = pc2.id
-    where   pc2.parent is null;
-
-    into third select pc.id as productCategory, pc.parent, pcl.name
-    from    ProductCategory as pc
-            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
-                and pcl.language = language
-            join ProductCategory as pc2 on pc.parent = pc2.id
-            join ProductCategory as pc1 on pc2.parent = pc1.id
-    where   pc1.parent is null;
-};
-
-Query GetChildrenCategory (parent ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
-returns first(
-    productCategory ID ProductCategory,
-    parent ID,
-    name char(200)
-)
-returns secend(
-    productCategory ID ProductCategory,
-    parent ID,
-    name char(200)
-) {
-    into first select pc.id as productCategory, pc.parent, pcl.name
-    from    ProductCategory as pc
-            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
-                and pcl.language = language
-    where   pc.parent = parent;
-
-    into secend select pc.id as productCategory, pc.parent, pcl.name
-    from    ProductCategory as pc
-            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
-                and pcl.language = language
-            join ProductCategory as pc2 on pc.parent = pc2.id
-    where   pc2.parent = parent;
-};
-
-QUERY SearchProductByCategory (productCategory ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
-PAGE (
-    id bigint start 0,
-    no char(20),
-    brand ID Brand,
-    origin char(50),
-    description char(1000),
-    descriptionC char(1000),
-    imageUrl char(200),
-    chemical ID Chemical,
-    CAS char(20),
-    purity char(80),
-    molecularFomula char(200),
-    molecularWeight char(30)
-) {
-    PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
-    from ProductX as p
-        left join Brand as b on p.brand = b.id
-        left join ProductChemical as pc on p.id = pc.product
-        join ProductProductCategory as ppc on ppc.product = p.id
-    where p.id > $pageStart and ppc.category = productCategory
-        and exists (
-            select  1 from ProductX.PackX as pk join PriceX as pr on pr.pack = pk.id and pr.product = pk.owner
-            where pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
-        )
-    order by p.id
-    limit $pageSize;
-};
+Map ProductCategoryInclusion (
+    key category ID ProductCategory,
+    key salesRegion ID SalesRegion,
+    total int not null,
+);

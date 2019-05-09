@@ -31,7 +31,7 @@ PAGE (
     var key2 char(100);
     set key2 = concat(key, '*');
 
-    PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
+    /* PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
     from ProductX as p
         left join Brand as b on p.brand = b.id
         left join ProductChemical as pc on p.id = pc.product
@@ -46,4 +46,131 @@ PAGE (
         )
     -- order by p.id
     limit $pageSize;
+    */
+    /-mysql
+  INSERT INTO `_$page` (`id`,`no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`)
+    SELECT p.`id` AS `id`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`
+    FROM (
+
+        select  p2.`$unit`, p2.`id` AS `id`,p2.`no` AS `no`,p2.`brand` AS `brand`,p2.`origin` AS `origin`
+                ,p2.`description` AS `description`, p2.descriptionc, p2.imageurl
+        from    `tv_productx` as p2
+        where   p2.`$unit` = `_$unit` and p2.origin = `_key`
+        union
+        select  p3.`$unit`, p3.`id` AS `id`,p3.`no` AS `no`,p3.`brand` AS `brand`,p3.`origin` AS `origin`
+                ,p3.`description` AS `description`, p3.descriptionc, p3.imageurl
+        from    `tv_productx` as p3
+                LEFT JOIN `tv_productchemical` AS pc3 ON p3.`id`=pc3.`product` and p3.`$unit` = pc3.`$unit`
+        where   pc3.`$unit` = `_$unit` and pc3.cas = `_key`
+        union
+        select  p4.`$unit`, p4.`id` AS `id`,p4.`no` AS `no`,p4.`brand` AS `brand`,p4.`origin` AS `origin`
+                ,p4.`description` AS `description`, p4.descriptionc, p4.imageurl
+        from    (
+                select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
+                        ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
+                from    `tv_productx` as p1
+                where   match (p1.`description`) against (`_key2_1` in boolean mode )
+                limit 499
+                ) p4
+        union
+        select  p5.`$unit`, p5.`id` AS `id`,p5.`no` AS `no`,p5.`brand` AS `brand`,p5.`origin` AS `origin`
+                ,p5.`description` AS `description`, p5.descriptionc, p5.imageurl
+        from    (
+                select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
+                        ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
+                from    `tv_productx` as p1
+                where   match (p1.`descriptionc`) against (`_key` in boolean mode )
+                limit 499
+                ) p5
+    ) AS p
+
+
+      LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`
+      LEFT JOIN `tv_productchemical` AS pc ON p.`id`=pc.`product` AND pc.`$unit`=`_$unit`
+    WHERE 1=1 AND p.`$unit`=`_$unit` AND p.`id`>`_$pagestart`
+
+    -- AND ((match (p.`description`,p.`descriptionc`) against (`_key` in boolean mode ) OR p.`origin`=`_key`) OR pc.`cas`=`_key`)
+
+    AND exists((SELECT 1
+    FROM `tv_productx_packx` AS pk
+    JOIN `tv_pricex` AS pr ON pr.`pack`=pk.`id` AND pr.`product`=pk.`owner` AND pr.`$unit`=`_$unit`
+    WHERE 1=1 AND pk.`owner`=p.`id` AND pr.`discountinued`=0 AND pr.`expiredate`>UTC_TIMESTAMP()))
+    LIMIT `_$pagesize`;
+    -/
 };
+
+/*
+-- 实际的tv_searchproduct的代码 20190509备份
+CREATE DEFINER=`henry`@`%` PROCEDURE `tv_searchproduct`(
+	IN `_$unit` INT,
+	IN `_$user` BIGINT,
+	IN `_$pageStart` VARCHAR(100),
+	IN `_$pageSize` INT,
+	IN `_key` VARCHAR(100)
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+CONTAINS SQL
+SQL SECURITY DEFINER
+COMMENT ''
+__proc_exit: BEGIN
+  DECLARE `_$row` INT;DECLARE `_key2_1` VARCHAR(100);
+  IF `_$pageStart` IS NULL THEN
+  SET `_$pageStart`=0;
+  END IF;
+  DROP TEMPORARY TABLE IF EXISTS `_$page`;
+  CREATE TEMPORARY TABLE `_$page` (`id` BIGINT NULL,`no` VARCHAR(20) NULL,`brand` BIGINT NULL,`origin` VARCHAR(50) NULL,`description` VARCHAR(1000) NULL,`descriptionc` VARCHAR(1000) NULL,`imageurl` VARCHAR(200) NULL,`chemical` BIGINT NULL,`cas` VARCHAR(20) NULL,`purity` VARCHAR(80) NULL,`molecularfomula` VARCHAR(200) NULL,`molecularweight` VARCHAR(30) NULL) ENGINE=MyISAM;
+  SELECT CONCAT(`_key`,'*') INTO `_key2_1`;
+  INSERT INTO `_$page` (`id`,`no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`)
+    SELECT p.`id` AS `id`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`
+    FROM (
+
+        select  p2.`$unit`, p2.`id` AS `id`,p2.`no` AS `no`,p2.`brand` AS `brand`,p2.`origin` AS `origin`
+                ,p2.`description` AS `description`, p2.descriptionc, p2.imageurl
+        from    `tv_productx` as p2
+        where   p2.`$unit` = `_$unit` and p2.origin = `_key`
+        union
+        select  p3.`$unit`, p3.`id` AS `id`,p3.`no` AS `no`,p3.`brand` AS `brand`,p3.`origin` AS `origin`
+                ,p3.`description` AS `description`, p3.descriptionc, p3.imageurl
+        from    `tv_productx` as p3
+                LEFT JOIN `tv_productchemical` AS pc3 ON p3.`id`=pc3.`product` and p3.`$unit` = pc3.`$unit`
+        where   pc3.`$unit` = `_$unit` and pc3.cas = `_key`
+        union
+        select  p4.`$unit`, p4.`id` AS `id`,p4.`no` AS `no`,p4.`brand` AS `brand`,p4.`origin` AS `origin`
+                ,p4.`description` AS `description`, p4.descriptionc, p4.imageurl
+        from    (
+                select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
+                        ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
+                from    `tv_productx` as p1
+                where   match (p1.`description`) against (`_key2_1` in boolean mode )
+                limit 499
+                ) p4
+        union
+        select  p5.`$unit`, p5.`id` AS `id`,p5.`no` AS `no`,p5.`brand` AS `brand`,p5.`origin` AS `origin`
+                ,p5.`description` AS `description`, p5.descriptionc, p5.imageurl
+        from    (
+                select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
+                        ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
+                from    `tv_productx` as p1
+                where   match (p1.`descriptionc`) against (`_key` in boolean mode )
+                limit 499
+                ) p5
+    ) AS p
+
+
+      LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`
+      LEFT JOIN `tv_productchemical` AS pc ON p.`id`=pc.`product` AND pc.`$unit`=`_$unit`
+    WHERE 1=1 AND p.`$unit`=`_$unit` AND p.`id`>`_$pagestart`
+
+    -- AND ((match (p.`description`,p.`descriptionc`) against (`_key` in boolean mode ) OR p.`origin`=`_key`) OR pc.`cas`=`_key`)
+
+    AND exists((SELECT 1
+    FROM `tv_productx_packx` AS pk
+    JOIN `tv_pricex` AS pr ON pr.`pack`=pk.`id` AND pr.`product`=pk.`owner` AND pr.`$unit`=`_$unit`
+    WHERE 1=1 AND pk.`owner`=p.`id` AND pr.`discountinued`=0 AND pr.`expiredate`>UTC_TIMESTAMP()))
+    LIMIT `_$pagesize`;
+  SELECT `id` AS `id`,`no` AS `no`,`brand` AS `brand`,`origin` AS `origin`,`description` AS `description`,`descriptionc` AS `descriptionC`,`imageurl` AS `imageUrl`,`chemical` AS `chemical`,`cas` AS `CAS`,`purity` AS `purity`,`molecularfomula` AS `molecularFomula`,`molecularweight` AS `molecularWeight`
+    FROM `_$page`
+    WHERE 1=1;
+END
+*/

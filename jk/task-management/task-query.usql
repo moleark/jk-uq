@@ -1,6 +1,7 @@
+/*
 QUERY GetTask ( status ID TaskStatus )
 returns ret (
-    id bigint start 0,
+    id bigint,
     description char(100),
     customer ID Customer,
     type ID TaskType,
@@ -11,10 +12,9 @@ returns ret (
     deadline date,
     createTime date
 ) {
-    into ret select t.id,to.description, t.customer, t.type, t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, t.createTime
+    into ret select t.id, t.description, t.customer, t.type, t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, t.createTime
     from Task as t
-         join TaskBook tb on t.id = tb.task    
+         join TaskBook tb on t.id = tb.task
     where tb.principal = $user and tb.status = status
 };
-
- 
+*/
