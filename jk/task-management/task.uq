@@ -42,7 +42,7 @@ TUID TaskStatus (
     unique(name),
 );
 
-
+/** 完结任务*/
 ACTION CompletionTask(
     taskid ID Task,
     result char(1000)
@@ -52,4 +52,27 @@ ACTION CompletionTask(
     set status = 1, principal = $user, resultType = 'order', result= result;
 
     delete from TaskBook where task = taskid;
-}
+};
+
+/** 添加任务*/
+ACTION AddTask(
+    description char(100),
+    customer ID Customer,
+    type ID TaskType,
+    sourceID bigint,
+    sourceType char(10),
+    sourceNo char(50),
+    priorty int not null,
+    deadline date not null
+)
+RETURNS ret (
+    id ID
+) {
+    var taskId ID;
+    TUID task into taskId set 
+        description=description, customer=customer, type=type, 
+        sourceID=sourceID, sourceType=sourceType, sourceNo=sourceNo, priorty=priorty, deadline=deadline;
+   
+    BOOK TaskBook at taskId set status=1, type=1, principal=1, remindDate=$date;
+    into ret select taskId as id;
+};
