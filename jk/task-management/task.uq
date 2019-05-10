@@ -70,10 +70,10 @@ RETURNS ret (
     id ID
 ) {
     var taskId ID;
-    TUID task into taskId set 
-        description=description, customer=customer, type=type, 
+    TUID task into taskId set
+        description=description, customer=customer, type=type,
         sourceID=sourceID, sourceType=sourceType, sourceNo=sourceNo, priorty=priorty, deadline=deadline, createTime=$date;
-   
-    BOOK TaskBook at taskId set status=1, type=1, principal=1, remindDate=$date;
+
+    BOOK TaskBook at (taskId) set status=1, principal=1, remindDate=$date;
     into ret select taskId as id;
 };
