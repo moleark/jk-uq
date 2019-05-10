@@ -65,7 +65,8 @@ ACTION ExtensionTask(
     history TaskHistory of( taskid )
     set status = 1, principal = $user, resultType = 'exten', result= result;
     
-    update task set deadline = deadline where task = taskid;
+    tuid task into article id(taskid) set deadline=deadline;
+
 };
 
 /** 添加任务*/
