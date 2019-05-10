@@ -15,7 +15,7 @@ OPEN TUID Customer (
         content char(50) not null,
         order smallint,
     ),
-    isValid smallint,
+    isValid smallint not null,
     search (name, firstName, lastName),
     unique(no),
 );
@@ -32,6 +32,12 @@ OPEN TUID Organization (
 OPEN MAP OrganizationCustomer (
     key organization ID Organization,
     key customer ID Customer,
+);
+
+OPEN MAP CustomerHandler (
+    key customer ID Customer,
+    key salesman ID Employee,
+    key customerServiceStuff ID Employee,
 );
 
 OPEN MAP CustomerContacts (
