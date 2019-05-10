@@ -9,8 +9,16 @@ TUID SalesRegion from JKCommon (
     unique (name),
 );
 
-TUID Language (
+TUID Language from JKCommon (
     id,
     no char(10),
     description char(30),
+);
+
+TUID Currency from JKCommon (
+    id,
+    main name char(5) not null,
+    main suffix char(10),
+    search (name, suffix),
+    unique (name),
 );

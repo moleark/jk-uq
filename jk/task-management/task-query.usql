@@ -1,6 +1,6 @@
 QUERY GetTask ( )
 returns ret (
-    id bigint start 0,
+    id bigint,
     description char(100),
     customer ID Customer,
     type ID TaskType,
