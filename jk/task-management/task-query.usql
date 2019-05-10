@@ -9,11 +9,13 @@ returns ret (
     sourceNo char(50),
     priorty int,
     deadline date,
+    remindDate date,
     createTime date
 ) {
     into ret select t.id, t.description, t.customer, t.type, t.sourceID, t.sourceType
-        , t.sourceNo, t.priorty, t.deadline, t.createTime
+        , t.sourceNo, t.priorty, t.deadline, tb.remindDate, t.createTime
     from Task as t
          join TaskBook as tb on t.id = tb.task
     where tb.principal = $user
+    order by tb.remindDate desc; 
 };
