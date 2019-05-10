@@ -13,7 +13,7 @@ returns ret(
         and bdt.salesRegion = salesRegion
 };
 
-QUERY SearchProduct (key char(100))
+QUERY SearchProduct (key char(100), salesRegion ID salesRegion)
 PAGE (
     id bigint start 0,
     no char(20),
@@ -93,7 +93,7 @@ PAGE (
 
     AND exists((SELECT 1
     FROM `tv_productx_packx` AS pk
-    JOIN `tv_pricex` AS pr ON pr.`pack`=pk.`id` AND pr.`product`=pk.`owner` AND pr.`$unit`=`_$unit`
+    JOIN `tv_pricex` AS pr ON pr.`pack`=pk.`id` AND pr.`product`=pk.`owner` AND pr.salesRegion = `_salesRegion` AND pr.`$unit`=`_$unit`
     WHERE 1=1 AND pk.`owner`=p.`id` AND pr.`discountinued`=0 AND pr.`expiredate`>UTC_TIMESTAMP()))
     LIMIT `_$pagesize`;
     -/

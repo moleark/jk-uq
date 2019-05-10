@@ -2,67 +2,73 @@
 Query GetRootCategory (salesRegion ID SalesRegion, language ID Language)
 returns first(
     productCategory ID ProductCategory,
-    name char(200)
+    name char(200),
+    total int
 )
 returns secend(
     productCategory ID ProductCategory,
     parent ID,
-    name char(200)
+    name char(200),
+    total int
 )
 returns third(
     productCategory ID ProductCategory,
     parent ID,
-    name char(200)
+    name char(200),
+    total int
 ) {
-    into first select pc.id as productCategory, pcl.name
+    into first select pc.id as productCategory, pcl.name, ppi.total
     from    ProductCategory as pc
             join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
                 and pcl.language = language
-            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.total > 0
-    where   pc.parent is null and ppi.salesRegion = salesRegion;
+            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.salesRegion = salesRegion and ppi.total > 0
+    where   pc.parent is null;
 
-    into secend select pc.id as productCategory, pc.parent, pcl.name
+    into secend select pc.id as productCategory, pc.parent, pcl.name, ppi.total
     from    ProductCategory as pc
             join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
                 and pcl.language = language
-            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.total > 0
+            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.salesRegion = salesRegion and ppi.total > 0
             join ProductCategory as pc2 on pc.parent = pc2.id
-    where   pc2.parent is null and ppi.salesRegion = salesRegion;
+    where   pc2.parent is null;
 
-    into third select pc.id as productCategory, pc.parent, pcl.name
+    into third select pc.id as productCategory, pc.parent, pcl.name, ppi.total
     from    ProductCategory as pc
             join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
                 and pcl.language = language
-            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.total > 0
+            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.salesRegion = salesRegion and ppi.total > 0
             join ProductCategory as pc2 on pc.parent = pc2.id
             join ProductCategory as pc1 on pc2.parent = pc1.id
-    where   pc1.parent is null and ppi.salesRegion = salesRegion;
+    where   pc1.parent is null;
 };
 
 Query GetChildrenCategory (parent ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
 returns first(
     productCategory ID ProductCategory,
     parent ID,
-    name char(200)
+    name char(200),
+    total int
 )
 returns secend(
     productCategory ID ProductCategory,
     parent ID,
-    name char(200)
+    name char(200),
+    total int
 ) {
-    into first select pc.id as productCategory, pc.parent, pcl.name
+    into first select pc.id as productCategory, pc.parent, pcl.name, ppi.total
     from    ProductCategory as pc
             join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
                 and pcl.language = language
+            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.salesRegion = salesRegion and ppi.total > 0
     where   pc.parent = parent;
 
-    into secend select pc.id as productCategory, pc.parent, pcl.name
+    into secend select pc.id as productCategory, pc.parent, pcl.name, ppi.total
     from    ProductCategory as pc
             join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
                 and pcl.language = language
-            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.total > 0
+            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.salesRegion = salesRegion and ppi.total > 0
             join ProductCategory as pc2 on pc.parent = pc2.id
-    where   pc2.parent = parent and ppi.salesRegion = salesRegion;
+    where   pc2.parent = parent;
 };
 
 QUERY SearchProductByCategory (productCategory ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
@@ -94,18 +100,72 @@ PAGE (
     limit $pageSize;
 };
 
-/*
 ACTION CountProductCategoryInclusion() {
-    insert into ProductCategoryInclusion(category, salesRegion, total)
-    select  pc.id, sr.id, (
-                select count(1) from ProductX p
-                where exists (
-                    select  1 from ProductX.PackX as pk join PriceX as pr on pr.pack = pk.id and pr.salesRegion = sr.salesRegion and pr.product = pk.owner
-                    where pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
-                )
-            )
-    from    productCategory pc
-            , salesRegion sr
-    where   pc.isLeaf = 1
-}
-*/
+    /-mysql
+    begin
+    declare categoryId, parentId, subId, n, ng int default 0;
+	truncate table product.tv_productcategoryinclusion;
+
+	read_loop: LOOP
+		select	id, parent into categoryId, parentId
+		from	product.tv_productcategory
+		where	isleaf = 1 and id > n
+        order by id
+		limit 1;
+
+        select categoryId, parentId;
+		if categoryId is null then
+			leave read_loop;
+		end if;
+
+        set n = categoryId;
+
+        insert 	into product.tv_productcategoryinclusion(`$unit`, category, salesregion, total)
+		select 	ppc.`$unit`, ppc.category, sr.id, count(distinct ppc.product) as con
+		from   	product.tv_productproductcategory ppc
+				inner join product.tv_productx p on ppc.`$unit` = p.`$unit` and ppc.product = p.id
+				inner join product.tv_salesregion sr on ppc.`$unit` = sr.`$unit`
+		where 	exists (
+					select  1
+					from 	product.tv_productx_packx as pk
+							join product.tv_pricex as pr on pr.pack = pk.id and pr.product = pk.owner
+					where 	pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
+							and pr.`$unit` = p.`$unit`
+							and pr.salesRegion = sr.id
+				)
+				and ppc.`$unit` = `_$unit` and p.`$unit` = `_$unit`
+				and ppc.category = categoryId
+		group by ppc.`$unit`, ppc.category, sr.id;
+
+
+        set ng = 5;
+        set subId = categoryId;
+        while parentId is not null and ng > 0 do
+			select parentId, subId, ng;
+			if exists( select 1 from product.tv_productcategoryinclusion where category = parentId ) then
+            	update	product.tv_productcategoryinclusion ppi,
+						product.tv_productcategoryinclusion ppi2
+                set		ppi.total = ppi.total + ppi2.total
+				where	ppi.category = parentId and ppi2.category = categoryId
+						and ppi.`$unit` = ppi2.`$unit` and ppi.salesregion = ppi2.salesregion
+                        and ppi.`$unit` = `_$unit`;
+			else
+				insert 	into product.tv_productcategoryinclusion(`$unit`, category, salesregion, total)
+				select	`$unit`, parentId, salesregion, total
+				from	product.tv_productcategoryinclusion ppi
+				where	ppi.`$unit` = `_$unit` and ppi.category = subId;
+            end if;
+
+            set subId = parentId;
+            select	parent into parentId
+            from	product.tv_productcategory
+            where	`$unit` = `_$unit` and id = subId;
+            set ng = ng - 1;
+        end while;
+
+        set categoryId = null;
+
+	end loop;
+    end;
+    -/
+};

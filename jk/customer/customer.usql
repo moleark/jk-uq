@@ -11,10 +11,11 @@ OPEN TUID Customer (
     ARR Contact (
         owner,
         id,
-        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq
+        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq etc.
         content char(50) not null,
         order smallint,
     ),
+    isValid smallint,
     search (name, firstName, lastName),
     unique(no),
 );
@@ -32,33 +33,6 @@ OPEN MAP OrganizationCustomer (
     key organization ID Organization,
     key customer ID Customer,
 );
-
-/*收货地址、发票要求、收票地址*/
-/*
-OPEN MAP CustomerConsigneeContact ver 0.2 (
-    key customer ID Customer,
-    name char(50) not null,
-    organizationName char(50),
-    mobile char(20) null,
-    telephone char(20),
-    email char(50),
-    addressString char(400),
-    address ID Address,
-    isDefault tinyint not null default 0,
-);
-
-OPEN MAP CustomerInvoiceContact ver 0.2 (
-    key customer ID Customer,
-    name char(50) not null,
-    organizationName char(50),
-    mobile char(20) null,
-    telephone char(20),
-    email char(50),
-    addressString char(400),
-    address ID Address,
-    isDefault tinyint not null default 0,
-);
-*/
 
 OPEN MAP CustomerContacts (
     key customer ID Customer,
