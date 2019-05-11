@@ -19,3 +19,25 @@ returns ret (
     where tb.principal = $user
     order by tb.remindDate desc; 
 };
+
+
+QUERY SearchHistoryTask ( customerid ID Customer )
+returns ret (
+    id bigint,
+    description char(100),
+    customer ID Customer,
+    type ID TaskType,
+    sourceID bigint,
+    sourceType char(10),
+    sourceNo char(50),
+    priorty int,
+    deadline date,
+    status ID TaskStatus,
+    resultType char(5),
+    result char(1000)
+) {    
+    into ret SELECT	t.id, t.description, t.customer,t.TYPE, t.sourceid, t.sourcetype, t.sourceNo, t.priorty, t.deadline, ht.DATE, ht.STATUS, ht.resulttype, ht.result
+    FROM    Task t
+		    JOIN salestask.Taskhistory ht ON t.id = ht.task
+    order by ht.DATE desc; 
+};
