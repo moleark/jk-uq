@@ -20,7 +20,7 @@ returns ret (
     order by tb.remindDate desc; 
 };
 
-
+/** 搜索客户历史沟通记录*/
 QUERY SearchHistoryTask ( customerid ID Customer )
 returns ret (
     id bigint,
@@ -39,5 +39,6 @@ returns ret (
     into ret SELECT	t.id, t.description, t.customer,t.TYPE, t.sourceid, t.sourcetype, t.sourceNo, t.priorty, t.deadline, ht.DATE, ht.STATUS, ht.resulttype, ht.result
     FROM    Task t
 		    JOIN salestask.Taskhistory ht ON t.id = ht.task
+    where   t.customer = customerid
     order by ht.DATE desc; 
 };
