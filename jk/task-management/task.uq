@@ -51,7 +51,7 @@ ACTION CompletionTask(
 
     history TaskHistory of( taskid )
     set status = 1, principal = $user, resultType = resultType, result= result;
-    
+
     delete from TaskBook where task = taskid;
 };
 
@@ -64,8 +64,8 @@ ACTION ExtensionTask(
 
     history TaskHistory of( taskid )
     set status = 1, principal = $user, resultType = 'exten', result= result;
-    
-    tuid task into article id(taskid) set deadline=deadline;
+
+    tuid task id taskid set deadline=deadline;
 
 };
 
@@ -87,7 +87,7 @@ RETURNS ret (
     TUID task into taskId set
         description=description, customer=customer, type=type,
         sourceID=sourceID, sourceType=sourceType, sourceNo=sourceNo, priorty=priorty, deadline=deadline, createTime=$date;
-   
-    BOOK TaskBook at (taskId) set status=1, principal=$user, remindDate=deadline
+
+    BOOK TaskBook at (taskId) set status=1, principal=$user, remindDate=deadline;
     into ret select taskId as id;
 };
