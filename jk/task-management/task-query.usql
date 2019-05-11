@@ -32,13 +32,14 @@ returns ret (
     sourceNo char(50),
     priorty int,
     deadline date,
+    DATE date,
     status ID TaskStatus,
     resultType char(5),
     result char(1000)
 ) {    
     into ret SELECT	t.id, t.description, t.customer,t.TYPE, t.sourceid, t.sourcetype, t.sourceNo, t.priorty, t.deadline, ht.DATE, ht.STATUS, ht.resulttype, ht.result
-    FROM    Task t
-		    JOIN salestask.Taskhistory ht ON t.id = ht.task
+    FROM    Task as t
+		    JOIN salestask.Taskhistory as ht ON t.id = ht.task
     where   t.customer = customerid
     order by ht.DATE desc; 
 };
