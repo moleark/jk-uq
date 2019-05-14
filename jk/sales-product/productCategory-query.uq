@@ -113,7 +113,6 @@ ACTION CountProductCategoryInclusion() {
         order by id
 		limit 1;
 
-        select categoryId, parentId;
 		if categoryId is null then
 			leave read_loop;
 		end if;
@@ -141,7 +140,6 @@ ACTION CountProductCategoryInclusion() {
         set ng = 5;
         set subId = categoryId;
         while parentId is not null and ng > 0 do
-			select parentId, subId, ng;
 			if exists( select 1 from product.tv_productcategoryinclusion where category = parentId ) then
             	update	product.tv_productcategoryinclusion ppi,
 						product.tv_productcategoryinclusion ppi2
