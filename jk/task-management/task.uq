@@ -8,9 +8,9 @@ TUID Task (
     sourceType char(10),
     sourceNo char(50),
 
-    priorty int not null,
-    deadline date not null, -- 要求完成时间
-    createTime date not null,
+    main priorty int not null,
+    main deadline date not null, -- 要求完成时间
+    main createTime date not null,
 );
 
 TUID TaskType (
@@ -50,7 +50,20 @@ ACTION CompletionTask(
 ){
 
     history TaskHistory of( taskid )
-    set status = 1, principal = $user, resultType = resultType, result= result;
+    set status = 4, principal = $user, resultType = resultType, result= result;
+
+    delete from TaskBook where task = taskid;
+};
+
+/** 拒绝任务*/
+ACTION InvalidTask(
+    taskid ID Task,
+    resultType char(5),
+    result char(1000)
+){
+
+    history TaskHistory of( taskid )
+    set status = 3, principal = $user, resultType = resultType, result= result;
 
     delete from TaskBook where task = taskid;
 };
@@ -58,15 +71,13 @@ ACTION CompletionTask(
 /** 延期任务*/
 ACTION ExtensionTask(
     taskid ID Task,
-    deadline date,
+    remindDate date,
     result char(1000)
 ){
-
+    
     history TaskHistory of( taskid )
-    set status = 1, principal = $user, resultType = 'exten', result= result;
-
-    tuid task id taskid set deadline=deadline;
-
+    set status = 2, principal = $user, resultType = 'exten', result= result;
+    book TaskBook at ( taskid ) set remindDate = remindDate;
 };
 
 /** 添加任务*/
@@ -88,6 +99,6 @@ RETURNS ret (
         description=description, customer=customer, type=type,
         sourceID=sourceID, sourceType=sourceType, sourceNo=sourceNo, priorty=priorty, deadline=deadline, createTime=$date;
 
-    BOOK TaskBook at (taskId) set status=1, principal=$user, remindDate=deadline;
+    BOOK TaskBook at (taskId) set status=1, principal=$user;
     into ret select taskId as id;
 };

@@ -1,9 +1,10 @@
-QUERY GetTask ( )
+QUERY SearchTask ( )
 returns ret (
     id bigint,
     description char(100),
     customer ID Customer,
     type ID TaskType,
+    typeName char(50),
     sourceID bigint,
     sourceType char(10),
     sourceNo char(50),
@@ -12,34 +13,66 @@ returns ret (
     remindDate date,
     createTime date
 ) {
-    into ret select t.id, t.description, t.customer, t.type, t.sourceID, t.sourceType
+    into ret select t.id, t.description, t.customer, t.type, tt.name as typeName, t.sourceID, t.sourceType
         , t.sourceNo, t.priorty, t.deadline, tb.remindDate, t.createTime
     from Task as t
          join TaskBook as tb on t.id = tb.task
+         join TaskType as tt on t.type = tt.id
     where tb.principal = $user
     order by tb.remindDate desc; 
 };
 
-/** 搜索客户历史沟通记录*/
-QUERY SearchHistoryTask ( customerid ID Customer )
+/** 搜索本任务的流转过程*/
+QUERY SearchHistoryTask ( taskid ID Task )
 returns ret (
-    id bigint,
-    description char(100),
-    customer ID Customer,
-    type ID TaskType,
-    sourceID bigint,
-    sourceType char(10),
-    sourceNo char(50),
-    priorty int,
-    deadline date,
-    DATE date,
+    date datetime,
+    task ID Task,
     status ID TaskStatus,
+    principal ID Employee,
     resultType char(5),
     result char(1000)
 ) {    
-    into ret SELECT	t.id, t.description, t.customer,t.TYPE, t.sourceid, t.sourcetype, t.sourceNo, t.priorty, t.deadline, ht.DATE, ht.STATUS, ht.resulttype, ht.result
-    FROM    Task as t
-		    JOIN Taskhistory as ht ON t.id = ht.task
-    where   t.customer = customerid
-    order by ht.DATE desc; 
+    into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
+    FROM    Taskhistory as ht 
+    where    ht.task = taskid
+    order by ht.DATE desc
+    limit 200; 
 };
+
+
+/** 搜索客户历史沟通记录*/
+QUERY SearchHistoryTaskByCustomer ( customerid ID Customer )
+returns ret (
+    date datetime,
+    task ID Task,
+    status ID TaskStatus,
+    principal ID Employee,
+    resultType char(5),
+    result char(1000)
+) {    
+    into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
+    FROM    Taskhistory as ht 
+            join Task as t on ht.task = t.id 
+    where   t.customer = customerid
+    order by ht.DATE desc
+    limit 200; 
+};
+
+
+/** 搜索客户历史沟通记录*/
+QUERY SearchHistoryTaskByEmployee ( )
+returns ret (
+    date datetime,
+    task ID Task,
+    status ID TaskStatus,
+    principal ID Employee,
+    resultType char(5),
+    result char(1000)
+) {    
+    into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
+    FROM    Taskhistory as ht
+    where   ht.principal = $user and ht.status in( 3, 4 )
+    order by ht.DATE desc
+    limit 200; 
+};
+
