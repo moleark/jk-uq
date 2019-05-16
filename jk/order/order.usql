@@ -42,19 +42,19 @@ Verify {
     }
 }
 Action submit {
+    book webUserAccount at (webUser, currency) set 总订单金额 += amount;
+    book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
+    bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
+        shippingContact = shippingContact, invoiceContact = invoiceContact,
+        freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
+    foreach orderItems {
+        history OrderHistory of( webUser, product, pack )
+            set price = price, quantity = quantity, amount = subAmount, currency = currency,
+                freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
 
+        bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+    }
     if (not customer IS NULL) {
-        book webUserAccount at (webUser, currency) set 总订单金额 += amount;
-        bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
-            shippingContact = shippingContact, invoiceContact = invoiceContact,
-            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
-        foreach orderItems {
-            history OrderHistory of( webUser, product, pack )
-                set price = price, quantity = quantity, amount = subAmount, currency = currency,
-                    freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
-
-            bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
-        }
         bus pointBus.order send;
         STATE TO END;
     }else {
@@ -63,34 +63,10 @@ Action submit {
 }
 STATE MatchingCustomer {
     ACTION Pass {
-        book webUserAccount at (webUser, currency) set 总订单金额 += amount;
-        bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
-            shippingContact = shippingContact, invoiceContact = invoiceContact,
-            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
-        foreach orderItems {
-            history OrderHistory of( webUser, product, pack )
-                set price = price, quantity = quantity, amount = subAmount, currency = currency,
-                    freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
-            bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
-        }
-
         bus pointBus.order send;
         STATE TO END;
     }
 };
-
-/*
-OPEN TUID OrderContact (
-    id,
-    main name char(50) not null,
-    main organizationName char(50),
-    main mobile char(20) not null,
-    main telephone char(20),
-    main email char(50),
-    addressString char(400),
-    main address ID Address,
-);
-*/
 
 HISTORY OrderHistory (
     date,
@@ -147,6 +123,13 @@ BOOK WebUserAccount (
     -- 总订单欠款额 dec(12, 2),    -- 总订单金额 - 总付款金额
     -- 总到货欠款额 dec(12, 2),    -- 总到货金额 - 总付款金额
     -- 总发票欠款额 dec(12, 2),     -- 总到货金额 - 总付款金额
+);
+
+BOOK OrderState (
+    key Order ID,
+    总金额 dec(12, 2),
+    已付金额 dec(12, 2),
+    发货完成 tinyint,
 );
 
 /*

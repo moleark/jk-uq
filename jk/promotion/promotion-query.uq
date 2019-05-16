@@ -1,0 +1,21 @@
+Query GetPromotionPack(product ID ProductX, pack OF product.PackX, salesRegion ID SalesRegion, language ID Language)
+returns ret(
+    id ID Promotion,
+    salesRegion ID SalesRegion,
+    description char(200),
+    url char(100),
+    product ID ProductX,
+    pack of Product.PackX,
+    discount dec(12, 4)
+) {
+    into ret select p.id, pr.salesRegion, pl.description, pl.url
+            , ppd.product, ppd.pack, ppd.discount
+    from    PromotionPackDiscount as ppd
+            join Promotion as p on ppd.promotion = p.id
+            join PromotionSalesRegion as pr on pr.promotion = p.id
+            join PromotionLanguage as pl on pl.promotion = p.id
+    where   p.startDate < now() and ifnull(p.endDate, '2099-01-01') > now()
+            and ppd.product = product and ppd.pack = pack
+            and pr.salesRegion = salesRegion
+            and pl.language = language;
+};

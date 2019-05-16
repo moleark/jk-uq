@@ -1,0 +1,16 @@
+QUERY GetPendingPayment()
+returns ret(
+    id bigint,
+    no char(30),
+    description char(50),
+    date datetime,
+    amount dec(12,2),
+    amountPayed dec(12,2)
+) {
+    into ret select os.order as id, 'st.no' as no, 'st.discription' as description, '2019-05-13' as date
+            , os.总金额 as amount, os.已付金额 as amountPayed
+    from    orderState as os
+            -- join [$sheet] as st on os.order = st.id
+    where   -- st.user = $user and
+            os.总金额 - os.已付金额 > 0;
+};
