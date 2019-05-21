@@ -63,7 +63,7 @@ OPEN MAP webUserSetting ver 0.1(
     shippingContact ID Contact,
     invoiceContact ID Contact,
     invoiceType ID InvoiceType,
-    InvoiceInfo ID InvoiceInfo,
+    invoiceInfo ID InvoiceInfo,
 );
 
 -- WebUser 和 Customer的关联关系

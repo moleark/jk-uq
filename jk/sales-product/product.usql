@@ -40,19 +40,6 @@ Map ProductStuff (
     key stuff ID Stuff,
 );
 
-/*
-OPEN TUID Product (
-    id,
-    no char(20) not null,
-    main brand ID Brand not null,
-    main origin char(50),
-    main description char(1000) null,
-    main descriptionC char(1000) null,
-    search (origin, description, descriptionC),
-    unique (brand, origin),
-);
-*/
-
 OPEN TUID ProductX ver 0.5 (
     id,
     no char(50) not null,
@@ -64,9 +51,9 @@ OPEN TUID ProductX ver 0.5 (
         owner,
         id,
         jkcat char(50) not null,
-        radiox dec(12,2),
-        radioy dec(12,4),
-        unit char(10),
+        main radiox dec(12,2),
+        main radioy dec(12,4),
+        main unit char(10),
     ),
     imageUrl char(200),
     isValid tinyint not null default 1,
@@ -102,6 +89,13 @@ OPEN MAP ProductLegallyProhibited (
     key product ID ProductX,
     key salesRegion ID SalesRegion,
     reason char(20),
+);
+
+MAP ProductCache (
+    key product ID ProductX,
+    key salesRegion ID SalesRegion,
+    level int not null,
+    hasStock smallint not null,
 );
 
 /*

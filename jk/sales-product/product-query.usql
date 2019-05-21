@@ -16,6 +16,7 @@ returns ret(
 QUERY SearchProduct (key char(100), salesRegion ID salesRegion)
 PAGE (
     id bigint start 0,
+    productid bigint,
     no char(20),
     brand ID Brand,
     origin char(50),
@@ -31,37 +32,23 @@ PAGE (
     var key2 char(100);
     set key2 = concat(key, '*');
 
-    /* PAGE select p.id, p.no, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
-    from ProductX as p
-        left join Brand as b on p.brand = b.id
-        left join ProductChemical as pc on p.id = pc.product
-    where p.id > $pageStart and (
-        match(p.description, p.descriptionc) against(key in boolean mode)
-        or p.origin = key
-        or pc.cas = key
-        )
-        and exists (
-            select  1 from ProductX.PackX as pk join PriceX as pr on pr.pack = pk.id and pr.product = pk.owner
-            where pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
-        )
-    -- order by p.id
-    limit $pageSize;
-    */
     /-mysql
-  INSERT INTO `_$page` (`id`,`no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`)
+
+    /*
+    INSERT INTO `_$page` (`id`,`no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`)
     SELECT p.`id` AS `id`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`
     FROM (
 
-        select  p2.`$unit`, p2.`id` AS `id`,p2.`no` AS `no`,p2.`brand` AS `brand`,p2.`origin` AS `origin`
-                ,p2.`description` AS `description`, p2.descriptionc, p2.imageurl
-        from    `tv_productx` as p2
-        where   p2.`$unit` = `_$unit` and p2.origin = `_key`
+        select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
+                ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
+        from    `tv_productx` as p1
+        where   p1.`$unit` = `_$unit` and p1.origin = `_key`
         union
-        select  p3.`$unit`, p3.`id` AS `id`,p3.`no` AS `no`,p3.`brand` AS `brand`,p3.`origin` AS `origin`
-                ,p3.`description` AS `description`, p3.descriptionc, p3.imageurl
-        from    `tv_productx` as p3
-                LEFT JOIN `tv_productchemical` AS pc3 ON p3.`id`=pc3.`product` and p3.`$unit` = pc3.`$unit`
-        where   pc3.`$unit` = `_$unit` and pc3.cas = `_key`
+        select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
+                ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
+        from    `tv_productx` as p1
+                LEFT JOIN `tv_productchemical` AS pc1 ON p1.`id`=pc1.`product` and p1.`$unit` = pc1.`$unit`
+        where   pc1.`$unit` = `_$unit` and pc1.cas = `_key`
         union
         select  p4.`$unit`, p4.`id` AS `id`,p4.`no` AS `no`,p4.`brand` AS `brand`,p4.`origin` AS `origin`
                 ,p4.`description` AS `description`, p4.descriptionc, p4.imageurl
@@ -79,23 +66,115 @@ PAGE (
                 select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
                         ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
                 from    `tv_productx` as p1
-                -- where   match (p1.`descriptionc`) against (`_key` in boolean mode )
                 where   match (p1.`descriptionc`) against (`_key`)
                 limit 499
                 ) p5
     ) AS p
 
-
-      LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`
-      LEFT JOIN `tv_productchemical` AS pc ON p.`id`=pc.`product` AND pc.`$unit`=`_$unit`
+        LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`
+        LEFT JOIN `tv_productchemical` AS pc ON p.`id`=pc.`product` AND pc.`$unit`=`_$unit`
     WHERE 1=1 AND p.`$unit`=`_$unit` AND p.`id`>`_$pagestart`
-
-    -- AND ((match (p.`description`,p.`descriptionc`) against (`_key` in boolean mode ) OR p.`origin`=`_key`) OR pc.`cas`=`_key`)
 
     AND exists((SELECT 1
     FROM `tv_productx_packx` AS pk
     JOIN `tv_pricex` AS pr ON pr.`pack`=pk.`id` AND pr.`product`=pk.`owner` AND pr.salesRegion = `_salesRegion` AND pr.`$unit`=`_$unit`
     WHERE 1=1 AND pk.`owner`=p.`id` AND pr.`discountinued`=0 AND pr.`expiredate`>UTC_TIMESTAMP()))
+
     LIMIT `_$pagesize`;
+    */
+    DROP TEMPORARY TABLE IF EXISTS `_$page_product`;
+    CREATE TEMPORARY TABLE `_$page_product` (`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `product` BIGINT NOT NULL) ENGINE=MyISAM;
+    insert  into `_$page_product`( product )
+    SELECT p.`id` AS `id`
+    FROM (
+        select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, 1 as score, 1 as sourcerank
+        from    `tv_productcache` as pc
+                inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
+        where   p1.`$unit` = `_$unit` and p1.origin = `_key` and pc.salesRegion = `_salesRegion`
+        union
+        select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, 1 as score, 1 as sourcerank
+        from    `tv_productcache` as pc
+                inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
+                inner JOIN `tv_productchemical` AS pc1 ON p1.`id`=pc1.`product` and p1.`$unit` = pc1.`$unit`
+        where   pc1.`$unit` = `_$unit` and pc1.cas = `_key` and pc.salesRegion = `_salesRegion`
+        union
+        select  p4.`$unit`, p4.`id` AS `id`, p4.level, p4.hasstock, score, 4 as sourcerank
+        from    (
+                select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, match (p1.`description`) against (`_key2_1` in boolean mode ) as score
+                from    `tv_productcache` as pc
+                        inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
+                where   match (p1.`description`) against (`_key2_1` in boolean mode ) and pc.salesRegion = `_salesRegion`
+                order by match (p1.`description`) against (`_key2_1` in boolean mode ) desc
+                limit 499
+                ) p4
+        union
+        select  p5.`$unit`, p5.`id` AS `id`, p5.level, p5.hasstock, score, 5 as sourcerank
+        from    (
+                select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, match (p1.`descriptionc`) against (`_key`) as score
+                from    `tv_productcache` as pc
+                        inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
+                where   match (p1.`descriptionc`) against (`_key`) and pc.salesRegion = `_salesRegion`
+                order by match (p1.`descriptionc`) against (`_key`) desc
+                limit 499
+                ) p5
+        ) AS p
+    WHERE 1=1 AND p.`$unit`=`_$unit`
+    order by p.sourcerank, p.score desc, p.hasstock desc, p.level desc
+    limit 499;
+
+    INSERT  INTO `_$page` (`id`, `productid`, `no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`)
+    SELECT  pp.`id` as `id`, p.`id` AS `productid`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`
+            ,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`
+    from    `_$page_product` as pp
+            inner join tv_productx as p on p.id = pp.product
+            LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`
+            LEFT JOIN `tv_productchemical` AS pc ON p.`id`=pc.`product` AND pc.`$unit`=`_$unit`
+    WHERE   1=1 AND p.`$unit`=`_$unit` and pp.id > `_$pagestart`
+    LIMIT   `_$pagesize`;
     -/
 };
+
+/*
+use product;
+
+# 如果原来存在该名字的任务计划则先删除
+drop event if exists EVT_InitProductCache;
+
+delimiter $$
+ # 每天晚上00:10:00
+create event EVT_InitProductCache
+on schedule every 1 DAY starts timestamp '2019-05-21 00:10:00'
+do
+begin
+    truncate table tv_productcache;
+
+    insert  into tv_productcache(`$unit`, product, salesregion, level, hasStock)
+    select  p.`$unit`, p.id, br.salesregion, br.level, 0
+    from    tv_productx as p
+            inner join tv_brandsalesregion as br on p.`$unit` = br.`$unit` and p.brand = br.brand
+    where   p.isvalid = 1
+            and br.`level` in ( 1000, 100, 50, 10, -10 )
+            and exists(
+                select  1
+                from    tv_productx_packx as pk
+                        inner join tv_pricex as pr on pr.product = pk.owner and pr.pack = pk.id
+                where   pr.`$unit` = p.`$unit`
+                        and pr.product = p.id
+                        and pr.salesregion = br.salesregion
+                        and pr.discountinued = 0
+                        and pr.expiredate > UTC_TIMESTAMP()
+            )
+            and not exists(
+                select  1 from tv_productlegallyprohibited as plb
+                where   plb.`$unit` = p.`$unit` and plb.product = p.id and plb.salesregion = br.salesregion
+            );
+end  $$
+delimiter ;
+
+# 停止
+ALTER EVENT EVT_InitProductCache DISABLE;
+# 开启
+alter event EVT_InitProduct
+# 查看状态
+select * from mysql.eventCache enable;
+*/
