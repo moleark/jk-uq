@@ -55,7 +55,7 @@ OPEN TUID ProductX ver 0.5 (
         main radioy dec(12,4),
         main unit char(10),
     ),
-    imageUrl char(200),
+    main imageUrl char(200),
     isValid tinyint not null default 1,
     search (origin, description, descriptionC),
     unique (brand, origin),

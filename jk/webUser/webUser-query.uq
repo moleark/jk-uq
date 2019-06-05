@@ -1,0 +1,56 @@
+/*
+QUERY getPendingAuditUser()
+returns ret(
+    id bigint,
+    no bigint,
+    name char(50) null,
+    firstName char(50),
+    lastName char(50),
+    gender char(5),
+    salutation char(10),
+    organizationName char(50),
+    departmentName char(50),
+    telephone char(20),
+    mobile char(20) null,
+    email char(50),
+    fax char(20),
+    zipCode char(20)
+) {
+    into ret select u.id, u.no, u.name, u.firstName, u.lastName, u.gender, u.salutation, u.organizationName, u.departmentName
+            , uc.telephone, uc.mobile, uc.email, uc.fax, uc.zipCode
+    from    PendingAuditWebUser as pu
+            join WebUser as u on u.id = pu.webUser
+            join WebUserContact as uc on uc.webUser = u.id;
+};
+*/
+
+QUERY getPendingAuditUser()
+returns ret(
+    webUser ID WebUser
+) {
+    into ret select webUser
+    from    PendingAuditWebUser;
+};
+
+/**/
+ACTION auditPendingUser(
+    id bigint,
+    customerId bigint,
+    teacherId bigint
+) {
+    book WebUserCustomer at (id) set customer = customerId;
+    HISTORY WebUserAuditHistory of(id) set result = 1, customer = customerId;
+    -- bus webUserAuditBus.WebUserAuditPass set webUser = id, customer = customerId;
+
+    delete from PendingAuditWebUser where webUser = id;
+};
+
+/**/
+ACTION auditPendingUserRefuse(
+    id bigint,
+    comments char(200)
+) {
+    HISTORY WebUserAuditHistory of(id) set result = 0, comments = comments;
+
+    delete from PendingAuditWebUser where webUser = id;
+};

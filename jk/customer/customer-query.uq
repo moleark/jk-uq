@@ -15,3 +15,13 @@ PAGE (
     where   c.id > $pageStart and c.name like key2
     limit $pageSize;
 };
+
+
+QUERY getCustomerByNo(customerNo char(30))
+returns ret (
+    customer ID Customer
+) {
+   into ret select id as customer
+   from     customer
+   where    no = customerNo;
+};

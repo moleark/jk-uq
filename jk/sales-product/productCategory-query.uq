@@ -123,17 +123,8 @@ ACTION CountProductCategoryInclusion() {
         insert 	into product.tv_productcategoryinclusion(`$unit`, category, salesregion, total)
 		select 	ppc.`$unit`, ppc.category, sr.id, count(distinct ppc.product) as con
 		from   	product.tv_productproductcategory ppc
-				inner join product.tv_productx p on ppc.`$unit` = p.`$unit` and ppc.product = p.id
-				inner join product.tv_salesregion sr on ppc.`$unit` = sr.`$unit`
-		where 	exists (
-					select  1
-					from 	product.tv_productx_packx as pk
-							join product.tv_pricex as pr on pr.pack = pk.id and pr.product = pk.owner
-					where 	pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
-							and pr.`$unit` = p.`$unit`
-							and pr.salesRegion = sr.id
-				)
-				and ppc.`$unit` = `_$unit` and p.`$unit` = `_$unit`
+                inner join product.tv_productcache as p on ppc.product = p.product
+		where   ppc.`$unit` = `_$unit` and p.`$unit` = `_$unit`
 				and ppc.category = categoryId
 		group by ppc.`$unit`, ppc.category, sr.id;
 
