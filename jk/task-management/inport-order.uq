@@ -1,0 +1,16 @@
+import JKOrder=  百灵威系统工程部/Order;
+ 
+SHEET Order from JKOrder(
+    customer ID Customer,
+    ARR orderItems (
+        product ID ProductX not null,
+        pack OF product.PackX not null,
+        price dec(12, 2) not null,
+        quantity int not null,
+        subAmount dec(12, 2) not null,
+        refrigerationFee dec(12, 2),
+        freezingFee dec(12, 2),
+        packingFee dec(12, 2),
+        proxyFreightFee dec(12, 2),
+    ),
+)

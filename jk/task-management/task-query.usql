@@ -5,6 +5,8 @@ returns ret (
     customer ID Customer,
     type ID TaskType,
     typeName char(50),
+    biz ID BizType,
+    bizName char(50),
     sourceID bigint,
     sourceType char(10),
     sourceNo char(50),
@@ -13,13 +15,14 @@ returns ret (
     remindDate date,
     createTime date
 ) {
-    into ret select t.id, t.description, t.customer, t.type, tt.name as typeName, t.sourceID, t.sourceType
-        , t.sourceNo, t.priorty, t.deadline, tb.remindDate, t.createTime
+    into ret select t.id, t.description, t.customer, t.type, tt.name as typeName, t.biz, bt.name as bizName
+        , t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, tb.remindDate, t.createTime
     from Task as t
          join TaskBook as tb on t.id = tb.task
          join TaskType as tt on t.type = tt.id
+         join BizType  as bt on t.biz = bt.id 
     where tb.principal = $user
-    order by tb.remindDate desc; 
+    order by tb.remindDate; 
 };
 
 /** 搜索本任务的流转过程*/
@@ -76,3 +79,118 @@ returns ret (
     limit 200; 
 };
 
+/** 搜索完结*/
+QUERY SearchTaskCompletion ( taskid ID Task )
+returns ret (
+    task ID Task,
+    field char(100),
+    value bigint,
+    fieldName char(100)
+) {    
+    into ret SELECT	tf.task, tf.field, tf.value, f.name as fieldName
+    FROM    TaskFieldBook as  tf 
+            join Field as f on tf.field = f.id
+    where   tf.task = taskid
+};
+
+/** 搜索任务的产品*/
+QUERY SearchTaskProduct ( taskid ID Task )
+returns ret (
+    task ID Task,
+    product ID ProductX,
+    note text
+) {    
+    into ret SELECT tp.task, tp.product, tp.note
+    FROM    TaskProductBook as tp
+    where   tp.task = taskid
+};
+
+/** 搜索任务的项目*/
+QUERY SearchTaskProject ( taskid ID Task )
+returns ret (
+    task ID Task,
+    project ID Project,
+    note text
+) {    
+    into ret SELECT tp.task, tp.project, tp.note
+    FROM    TaskProjectBook as tp
+    where   tp.task = taskid
+};
+
+
+/** 搜索邀请码*/
+QUERY SearchPosition ()
+returns ret (
+    user ID [$user],
+    post tinyint,
+    code bigint
+) {    
+    into ret select user,post, code from Position where user = $user;
+};
+
+
+/** 搜索业绩*/
+QUERY SearchAchievement (
+     user ID [$user]
+)
+returns ret (
+   user ID [$user],
+   SaleVolume dec(12, 2) not null
+) {    
+    into ret select user, SaleVolume from AchievementBook where user = user;
+};
+
+/** 搜索订单记录*/
+QUERY SearchOrderHistory (
+     user ID [$user]
+)
+returns ret (
+    date datetime,
+    user ID [$user],
+    customer ID Customer,
+    product ID ProductX not null,
+    pack OF product.PackX not null,
+    quantity int not null,
+    price dec(12, 2) not null
+) {    
+    into ret select date, user, customer,product,pack,quantity,price 
+    from    OrderHistory 
+    where user=user;
+};
+
+
+/** 搜索我的团队*/
+QUERY SearchTeam ()
+returns ret (
+    parent ID [$user],
+    children ID [$user],
+    parentcode bigint,
+    childrencode bigint,
+    assigned  char(100)
+) { 
+    into ret select r.parent, r.children, p.code as parentcode, cp.code as childrencode, a.Assigned
+    from    Position as p 
+            join Relation as r on p.user = r.parent
+            join Position as cp on cp.user = r.children
+            left join PeerAssignedBook as a on a.user = p.user and a.peer = r.children
+    where   p.user = $user;
+};
+
+
+QUERY searchMyCustomer(key char(100))
+PAGE (
+    id bigint start 0,
+    no char(30),
+    name char(50),
+    firstName char(50),
+    lastName char(50),
+    gender char(5),
+    salutation char(10)
+) {
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+    PAGE select c.id, c.no, c.name, c.firstName, c.lastName, c.gender, c.salutation
+    from MyCustomer as c
+    where   c.id > $pageStart and c.name like key2
+    limit $pageSize;
+};

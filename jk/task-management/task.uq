@@ -1,18 +1,22 @@
+
+--任务
 TUID Task (
     id,
     main description char(100),
     main customer ID Customer,
     main type ID TaskType,
+    main biz ID BizType,
 
     sourceID bigint,
     sourceType char(10),
     sourceNo char(50),
 
     main priorty int not null,
-    main deadline date not null, -- 要求完成时间
+    main deadline date, -- 要求完成时间
     main createTime date not null,
 );
 
+--任务类型
 TUID TaskType (
     id,
     main name char(20),
@@ -20,6 +24,88 @@ TUID TaskType (
     unique(name)
 );
 
+--业务类型
+TUID BizType (
+    id,
+    main name char(20),
+    main description char(50),
+    unique(name)
+);
+
+--完结内容备选项
+TUID Field (
+    id,
+    main name char(100),
+    main json text,    --备选项
+    unique(name),
+);
+
+--任务状态
+TUID TaskStatus (
+    id,
+    main name char(20),
+    unique(name),
+);
+
+--任务状态
+TUID Project (
+    id,
+    main name char(200),
+);
+
+--客户
+TUID MyCustomer (
+    id,
+    no char(30) not null,
+    main name char(50) not null,
+    main firstName char(50),
+    main lastName char(50),
+    gender char(5),
+    salutation char(10),
+    birthDay date,
+    createTime datetime,
+    ARR Contact (
+        owner,
+        id,
+        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq etc.
+        content char(50) not null,
+        order smallint,
+    ),
+    isValid smallint not null,
+    search (name, firstName, lastName),
+    unique(no),
+);
+
+--业务类型关系
+MAP TaskBiz (
+    key type ID TaskType,
+    key biz ID BizType,
+);
+
+
+--业务类型和完结内容关系
+MAP BizField (
+    key task ID Task,
+    key field ID Field
+);
+
+
+--级别 邀请码
+MAP Position (
+    key user ID [$user],
+    post tinyint,               -- -1：被拒绝，0：待批准，1：销售员，2：轻代理，3: 渠道经理, 90:Admin
+    code bigint,
+);
+
+
+--层级关系树
+MAP Relation (
+    key parent ID [$user],
+    key children ID [$user],
+);
+
+
+--任务状态记录
 BOOK TaskBook (
     key task ID Task,
     status ID TaskStatus,
@@ -27,6 +113,42 @@ BOOK TaskBook (
     remindDate  date,
 );
 
+--任务完结记录
+BOOK TaskFieldBook (
+    key task ID Task,
+    key field ID Field,
+    value bigint,
+);
+
+--任务完结产品
+BOOK TaskProductBook (
+    key task ID Task,
+    key product ID ProductX,
+    note text,
+);
+
+--任务完结项目
+BOOK TaskProjectBook (
+    key task ID Task,
+    key project ID Project,
+    note text,
+);
+
+--粉丝信息自定义
+BOOK PeerAssignedBook(
+    key user ID [$user],
+    key peer ID [$user],
+    Assigned char(100),
+);
+
+
+--销售业绩
+BOOK AchievementBook(
+    key user ID [$user],
+    SaleVolume dec(12, 2) not null,
+);
+
+--任务流转记录
 History TaskHistory (
     date,
     key task ID Task,
@@ -36,23 +158,37 @@ History TaskHistory (
     result char(1000),
 );
 
-TUID TaskStatus (
-    id,
-    main name char(20),
-    unique(name),
+--销售历史记录
+History OrderHistory (
+    date,
+    key user ID [$user],
+    customer ID Customer,
+    product ID ProductX not null,
+    pack OF product.PackX not null,
+    quantity int not null,
+    price dec(12, 2) not null,
 );
 
 /** 完结任务*/
 ACTION CompletionTask(
     taskid ID Task,
     resultType char(5),
-    result char(1000)
-){
-
-    history TaskHistory of( taskid )
-    set status = 4, principal = $user, resultType = resultType, result= result;
+    result char(1000),
+    ARR fields (
+        fieldName char(100),
+        value bigint
+    )
+) {
+    history TaskHistory of (taskid)
+    set status=4, principal=$user, resultType=resultType, result=result;
 
     delete from TaskBook where task = taskid;
+
+    foreach fields {
+        var fieldId ID;
+        tuid Field into fieldId unique(fieldName);
+        book TaskFieldBook at(taskId, fieldId) set value=value;
+    }
 };
 
 /** 拒绝任务*/
@@ -85,6 +221,7 @@ ACTION AddTask(
     description char(100),
     customer ID Customer,
     type ID TaskType,
+    biz ID BizType,
     sourceID bigint,
     sourceType char(10),
     sourceNo char(50),
@@ -96,9 +233,89 @@ RETURNS ret (
 ) {
     var taskId ID;
     TUID task into taskId set
-        description=description, customer=customer, type=type,
+        description=description, customer=customer, type=type, biz=biz,
         sourceID=sourceID, sourceType=sourceType, sourceNo=sourceNo, priorty=priorty, deadline=deadline, createTime=$date;
 
     BOOK TaskBook at (taskId) set status=1, principal=$user;
     into ret select taskId as id;
 };
+
+
+/** 添加任务产品*/
+ACTION CreateTaskProduct(
+    taskid ID Task,
+    productid ID ProductX,
+    note text
+){
+    BOOK TaskProductBook at (taskid,productid) set note=note;
+};
+
+
+/** 添加任务项目*/
+ACTION CreateTaskProject(
+    taskid ID Task,
+    note text
+){
+    var projectId ID;
+    TUID Project into projectId set name=note;
+    BOOK TaskProjectBook at (taskid, projectId);
+};
+
+/** 添加验证码*/
+ACTION CreatePosition (
+    invitacode bigint
+)
+RETURNS ret (
+    succeed tinyint,
+    code bigint
+)
+{
+    var parent ID [$user];
+    set parent =( select user from Position where code=invitacode );
+    if parent is null {
+        into ret select -1 as succeed, 0 as code; 
+    }
+    else{
+        var code bigint;
+        set code = (select user from Position where user = $user);
+        if code is null {
+            set code = rand() * 100000000;
+            BOOK Position at ($user) set post=0, code=code;
+            into ret select 1 as succeed, code as code;
+
+            BOOK Relation at ( parent, $user );
+        }
+        else{
+            into ret select 0 as succeed, code as code;
+        }
+    }
+};
+
+/** 添加客户**/
+ACTION CreateMyCustomer(
+    no char(30) not null,
+    name char(50) not null,
+    firstName char(50),
+    lastName char(50),
+    gender char(5),
+    salutation char(10),
+    birthDay date
+){
+    var customerId ID;
+    TUID MyCustomer into customerId set
+        name=name, firstName=firstName, lastName=lastName, gender=gender,
+        salutation=salutation, birthDay=birthDay
+};
+
+
+/** 修改粉丝的自定义名称*/
+ACTION SavePeerAssigned(
+    peer ID [$user],
+    Assigned char(100)
+){
+    BOOK PeerAssignedBook at ( $user, peer ) set Assigned=Assigned;
+};
+
+
+
+
