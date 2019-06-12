@@ -131,29 +131,3 @@ BOOK OrderState (
     已付金额 dec(12, 2),
     发货完成 tinyint,
 );
-
-/*
-ACTION getFreight(
-    Arr orderItem (
-        product ID Product,
-        pack ID product.pack,
-        quantity int,
-    ),
-    contact ID Contact,
-    salesRegion ID SalesRegion,
-)
-returns freight(
-    value dec(12,2)
-)
-{
-    if not exists(select id from SalesRegion where id = salesRegion and name = 'CN')
-        return;
-    foreach orderItems {
-        var brandId ID;
-        set brandId = p.brand from Product as p where p.id = product;
-        if exists(select id from Brand where id = brandId and name in ('', '')){
-            return;
-        }
-    }
-};
-*/

@@ -19,8 +19,8 @@ TUID StockLocation(
 --文档管理
 TUID Document(
     id,
-    key domain ID DomainType,
-    key documenttype ID DocumentType,
+    main domain ID DomainType,
+    main documenttype ID DocumentType,
     main name char(100) not null,
     code char(10) null,
     main image char(100) null,
@@ -29,7 +29,7 @@ TUID Document(
 --文档出入库记录
 HISTORY DocumentHistory(
     date,
-    key stockLocation ID StockLocation,   
+    key stockLocation ID StockLocation,
     key document ID Document,
     OIType int,  --出入库类型（0出库 1入库）
     Quantity int,
@@ -40,5 +40,5 @@ HISTORY DocumentHistory(
 BOOK DocumentAccount(
     key stockLocation ID StockLocation,
     key document ID Document,
-    Quantity int,       
+    Quantity int,
 );
