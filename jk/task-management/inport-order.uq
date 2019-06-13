@@ -1,7 +1,9 @@
+/**
 import JKOrder=  百灵威系统工程部/Order;
  
 SHEET Order from JKOrder(
-    customer ID Customer,
+    id
+    --customer ID Customer,
     ARR orderItems (
         product ID ProductX not null,
         pack OF product.PackX not null,
@@ -14,3 +16,4 @@ SHEET Order from JKOrder(
         proxyFreightFee dec(12, 2),
     ),
 )
+**/
