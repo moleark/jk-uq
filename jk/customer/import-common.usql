@@ -20,7 +20,7 @@ TUID SalesRegion from JKCommon (
     unique (name),
 );
 
-OPEN TUID Currency (
+TUID Currency from JKCommon (
     id,
     main name char(5) not null,
     main suffix char(10),
