@@ -6,6 +6,10 @@ TUID ProductX ver 0.5 (
     arr PackX (
         owner,
         id,
+        jkcat char(50) not null,
+        main radiox dec(12,2),
+        main radioy dec(12,4),
+        main unit char(10),
     ),
 );
 

@@ -66,7 +66,7 @@ returns ret(
     }
 };
 
-
+/*
 ACTION getFreight(
     Arr orderItem (
         product ID Product,
@@ -81,7 +81,7 @@ returns freight(
 )
 {
     if not exists(select id from SalesRegion where id = salesRegion and name = 'CN')
-        return;
+        return 0 as value;
     foreach orderItems {
         var brandId ID;
         set brandId = p.brand from Product as p where p.id = product;
@@ -90,3 +90,4 @@ returns freight(
         }
     }
 };
+*/

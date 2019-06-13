@@ -6,10 +6,10 @@ OPEN TUID Member(
 
 OPEN MAP MemberRecommender(
     key member ID Member,
-    key referrer ID Member,
+    referrer ID Member,
     memberPoint int not null,
     referrerPoint int not null,
-    createTime datetime not null,
+    createTime datetime,
 );
 
 BOOK Point(
@@ -53,7 +53,6 @@ ACTION setReferrer(code char(16)) {
     var referrer ID Member;
     set referrer = id from member where recommendationCode = code;
     if not code is null {
-        insert into MemberRecommender(member, referrer, memberPoint, referrerPoint, createTime)
-        value($user, referrer, 20, 50, now())
+        BOOK MemberRecommender at($user) set referrer = referrer, memberPoint = 20, referrerPoint = 50, createTime = now();
     }
-}
+};

@@ -8,31 +8,15 @@ TUID Brand from JKProduct(
     unique (name),
 );
 
--- tuid类型定义之后的un 表示字段可以按语言录入，可以中文，可以繁体，可以英文，zh-CN，en-US, en-CA
-TUID Product from JKProduct(
-    id,
-    no char(20) not null,
-    main brand ID Brand not null,
-    main origin char(50),
-    main description char(200) not null,
-
-    main packType ID PackType not null,
-    ARR Pack (
-        owner,
-        id,
-        ratio dec(12,2),             -- 跟基本单位的换算率
-        radioy dec(12,4),
-        name char(8),               -- 可以为空，则自动unit+packtType name生成
-    ),
-    search (origin, description),
-    unique (brand, origin),
-);
-
 TUID ProductX from JKProduct (
     id,
     main brand ID Brand not null,
     arr PackX (
         owner,
         id,
+        jkcat char(50) not null,
+        main radiox dec(12,2),
+        main radioy dec(12,4),
+        main unit char(10),
     ),
 );

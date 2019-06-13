@@ -58,3 +58,11 @@ TUID County from JKCommon (
     search (englishName, chineseName),
     unique(englishName),
 );
+
+TUID Currency from JKCommon (
+    id,
+    main name char(5) not null,
+    main suffix char(10),
+    search (name, suffix),
+    unique (name),
+);
