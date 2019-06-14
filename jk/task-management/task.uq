@@ -122,13 +122,11 @@ TUID Coupon (
     id,
     code bigint,
     user ID [$user],
-    startdate date,
-    enddate date,
-    type  ID CouponType,
-    value dec(12, 2),
+    validitydate date,    
+    discount dec(12, 2),     --折扣
+    preferential dec(12, 2), --优惠额度
     createTime datetime,
     isValid smallint
-
 );
 
 --业务类型关系
@@ -159,6 +157,11 @@ MAP Relation (
     key children ID [$user],
 );
 
+--优惠券客户
+MAP CouponCustomerMap (
+    key coupon ID Coupon,
+    key customer ID MyCustomer,
+);
 
 --任务状态记录
 BOOK TaskBook (
@@ -196,7 +199,6 @@ BOOK PeerAssignedBook(
     Assigned char(100),
 );
 
-
 --销售业绩
 BOOK AchievementBook(
     key user ID [$user],
@@ -208,6 +210,7 @@ BOOK MessageBook (
     key user ID [$user],
     count bigint,
 );
+
 
 --任务流转记录
 History TaskHistory (
@@ -394,22 +397,26 @@ ACTION UpdateNowMessage(){
     BOOK MessageBook at ( $user) set count=0;
 };
 
-
-
-
-/** 添加客户单位*/
+/** 添加优惠码*/
 ACTION CreateCoupon(
-    startdate date,
-    enddate date,
-    type ID CouponType,
-    value dec(12, 2)
+    validitydate date,
+    discount dec(12, 2), 
+    preferential dec(12, 2)
 ){
 
     var code bigint;
     set code = rand() * 100000000;
  
     var couponId ID;
-    TUID Coupon into couponId set user= $user, startdate=startdate, code=code,
-    enddate=enddate, type=type, value=value, createTime=now(), isValid=1;
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate,
+    discount=discount, preferential=preferential, createTime=now(), isValid=1;
 };
 
+
+/** 添加优惠码客户*/
+ACTION CreateCouponCustomer(
+    coupon ID Coupon,
+    customer ID MyCustomer
+){
+    BOOK CouponCustomerMap at (coupon, customer);
+};

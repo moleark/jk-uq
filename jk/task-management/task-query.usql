@@ -252,20 +252,34 @@ returns ret (
 
 
 /** 搜索我的优惠码*/
-QUERY SearchCoupon()
+QUERY SearchCoupon( key char(100))
 PAGE (
     id bigint start 0,
     code bigint,
     user ID [$user],
-    startdate date,
-    enddate date,
-    type  ID CouponType,
-    value dec(12, 2),
+    validitydate date,    
+    discount dec(12, 2),
+    preferential dec(12, 2),
     createTime datetime,
     isValid smallint
 ) {
-    PAGE select m.id, m.code, m.user, m.startdate, m.enddate, m.type, m.value, m.createTime, m.isValid
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+
+    PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid
     from    Coupon as m
-    where   m.user = $user;
+    where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
+    limit $pageSize;
 };
 
+
+/** 搜索我的消息*/
+QUERY SearchCouponCustomer( coupon ID Coupon)
+returns ret (
+    coupon ID Coupon,
+    customer ID MyCustomer
+) {
+    into ret select m.coupon, m.customer
+    from    CouponCustomerMap as m
+    where   m.coupon = coupon;
+};
