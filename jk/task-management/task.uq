@@ -125,6 +125,7 @@ TUID Coupon (
     validitydate date,    
     discount dec(12, 2),     --折扣
     preferential dec(12, 2), --优惠额度
+    customer ID MyCustomer,
     createTime datetime,
     isValid smallint
 );
@@ -401,15 +402,19 @@ ACTION UpdateNowMessage(){
 ACTION CreateCoupon(
     validitydate date,
     discount dec(12, 2), 
-    preferential dec(12, 2)
+    preferential dec(12, 2),
+    customer ID MyCustomer
+)returns ret (
+    code bigint
 ){
 
     var code bigint;
     set code = rand() * 100000000;
  
     var couponId ID;
-    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate,
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
     discount=discount, preferential=preferential, createTime=now(), isValid=1;
+    into ret select code;
 };
 
 
