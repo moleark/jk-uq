@@ -45,7 +45,8 @@ Action submit {
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
     bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
-        shippingContact = shippingContact, invoiceContact = invoiceContact,
+        shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
+        amount = amount, currency = currency,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
     foreach orderItems {
         history OrderHistory of( webUser, product, pack )
