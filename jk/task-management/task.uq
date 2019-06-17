@@ -3,7 +3,7 @@
 TUID Task (
     id,
     main description char(100),
-    main customer ID Customer,
+    main customer ID MyCustomer,
     main type ID TaskType,
     main biz ID BizType,
 
@@ -56,13 +56,20 @@ TUID Project (
 --客户
 TUID MyCustomer (
     id,
+    main unit ID MyCustomerUnit,
     no char(30) not null,
     main name char(50) not null,
     main firstName char(50),
     main lastName char(50),
+    telephone char(20),
     gender char(5),
-    salutation char(10),
     birthDay date,
+    email char(30),
+    wechat char(20),
+    teacher char(20),
+    potential smallint,
+    research smallint,
+    salutation char(10),
     createTime datetime,
     ARR Contact (
         owner,
@@ -74,6 +81,53 @@ TUID MyCustomer (
     isValid smallint not null,
     search (name, firstName, lastName),
     unique(no),
+);
+ 
+--客户
+TUID MyCustomerUnit (
+    id,
+    main no char(30) not null,
+    main name char(50) not null,
+    createTime datetime,
+    ARR Contact (
+        owner,
+        id,
+        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq etc.
+        content char(50) not null,
+        order smallint,
+    ),
+    isValid smallint not null,
+    search (name),
+    unique(no),
+);
+
+
+--消息
+TUID Message (
+    id,
+    date date,
+    user ID [$user],
+    peer ID [$user],
+    main note text,
+);
+
+
+TUID CouponType (
+    id,
+    main name char(20),
+);
+
+--优惠券
+TUID Coupon (
+    id,
+    code bigint,
+    user ID [$user],
+    validitydate date,    
+    discount dec(12, 2),     --折扣
+    preferential dec(12, 2), --优惠额度
+    customer ID MyCustomer,
+    createTime datetime,
+    isValid smallint
 );
 
 --业务类型关系
@@ -104,6 +158,11 @@ MAP Relation (
     key children ID [$user],
 );
 
+--优惠券客户
+MAP CouponCustomerMap (
+    key coupon ID Coupon,
+    key customer ID MyCustomer,
+);
 
 --任务状态记录
 BOOK TaskBook (
@@ -141,12 +200,18 @@ BOOK PeerAssignedBook(
     Assigned char(100),
 );
 
-
 --销售业绩
 BOOK AchievementBook(
     key user ID [$user],
     SaleVolume dec(12, 2) not null,
 );
+
+--消息
+BOOK MessageBook (
+    key user ID [$user],
+    count bigint,
+);
+
 
 --任务流转记录
 History TaskHistory (
@@ -162,7 +227,7 @@ History TaskHistory (
 History OrderHistory (
     date,
     key user ID [$user],
-    customer ID Customer,
+    customer ID MyCustomer,
     product ID ProductX not null,
     pack OF product.PackX not null,
     quantity int not null,
@@ -219,7 +284,7 @@ ACTION ExtensionTask(
 /** 添加任务*/
 ACTION AddTask(
     description char(100),
-    customer ID Customer,
+    customer ID MyCustomer,
     type ID TaskType,
     biz ID BizType,
     sourceID bigint,
@@ -291,8 +356,9 @@ RETURNS ret (
     }
 };
 
-/** 添加客户**/
+/** 添加客户*/
 ACTION CreateMyCustomer(
+    unit ID MyCustomerUnit,
     no char(30) not null,
     name char(50) not null,
     firstName char(50),
@@ -302,9 +368,19 @@ ACTION CreateMyCustomer(
     birthDay date
 ){
     var customerId ID;
-    TUID MyCustomer into customerId set
-        name=name, firstName=firstName, lastName=lastName, gender=gender,
-        salutation=salutation, birthDay=birthDay
+    TUID MyCustomer into customerId unique(no) set
+        name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit,
+        salutation=salutation, birthDay=birthDay,isValid=1,createTime=now();
+};
+
+/** 添加客户单位*/
+ACTION CreateMyCustomerUnit(
+    no char(30) not null,
+    name char(50) not null
+){
+    var customerId ID;
+    TUID MyCustomerUnit into customerId unique(no) set
+        name=name, createTime=now(), isValid=1;
 };
 
 
@@ -317,5 +393,35 @@ ACTION SavePeerAssigned(
 };
 
 
+/** 修改粉丝的自定义名称*/
+ACTION UpdateNowMessage(){
+    BOOK MessageBook at ( $user) set count=0;
+};
+
+/** 添加优惠码*/
+ACTION CreateCoupon(
+    validitydate date,
+    discount dec(12, 2), 
+    preferential dec(12, 2),
+    customer ID MyCustomer
+)returns ret (
+    code bigint
+){
+
+    var code bigint;
+    set code = rand() * 100000000;
+ 
+    var couponId ID;
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
+    discount=discount, preferential=preferential, createTime=now(), isValid=1;
+    into ret select code;
+};
 
 
+/** 添加优惠码客户*/
+ACTION CreateCouponCustomer(
+    coupon ID Coupon,
+    customer ID MyCustomer
+){
+    BOOK CouponCustomerMap at (coupon, customer);
+};
