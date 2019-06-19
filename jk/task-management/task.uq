@@ -56,6 +56,7 @@ TUID Project (
 --客户
 TUID MyCustomer (
     id,
+    user ID [$user],
     main unit ID MyCustomerUnit,
     no char(30) not null,
     main name char(50) not null,
@@ -86,6 +87,7 @@ TUID MyCustomer (
 --客户
 TUID MyCustomerUnit (
     id,
+    user ID [$user],
     main no char(30) not null,
     main name char(50) not null,
     createTime datetime,
@@ -157,12 +159,27 @@ MAP Relation (
     key parent ID [$user],
     key children ID [$user],
 );
+ 
 
---优惠券客户
-MAP CouponCustomerMap (
+--优惠券订单
+MAP CouponOrderMap (
     key coupon ID Coupon,
-    key customer ID MyCustomer,
+    key order ID ,
 );
+
+--我的客户和系统客户关联关系
+MAP WebUserMyCustomerMap (
+    key webuser ID [$user],
+    key myCustomer ID MyCustomer,
+);
+
+--轻代理和客户关系
+BOOK WebuserNowSalesBOOK (
+    key webuser ID [$user],
+    key sales ID [$user],
+    validity date
+);
+
 
 --任务状态记录
 BOOK TaskBook (
@@ -186,12 +203,21 @@ BOOK TaskProductBook (
     note text,
 );
 
+--任务完结产品包装
+BOOK TaskProductPackBook (
+    key task ID Task,
+    key product ID ProductX,
+    key pack OF product.PackX,
+    note text,
+);
+
 --任务完结项目
 BOOK TaskProjectBook (
     key task ID Task,
     key project ID Project,
     note text,
 );
+
 
 --粉丝信息自定义
 BOOK PeerAssignedBook(
@@ -315,6 +341,16 @@ ACTION CreateTaskProduct(
     BOOK TaskProductBook at (taskid,productid) set note=note;
 };
 
+/** 添加任务产品*/
+ACTION CreateTaskProductPack(
+    taskid ID Task,
+    product ID ProductX ,
+    pack OF product.PackX,
+    note text
+){
+    BOOK TaskProductPackBook at (taskid,product,pack) set note=note;
+};
+
 
 /** 添加任务项目*/
 ACTION CreateTaskProject(
@@ -369,7 +405,7 @@ ACTION CreateMyCustomer(
 ){
     var customerId ID;
     TUID MyCustomer into customerId unique(no) set
-        name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit,
+        name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit, user = $user,
         salutation=salutation, birthDay=birthDay,isValid=1,createTime=now();
 };
 
@@ -380,7 +416,7 @@ ACTION CreateMyCustomerUnit(
 ){
     var customerId ID;
     TUID MyCustomerUnit into customerId unique(no) set
-        name=name, createTime=now(), isValid=1;
+        name=name, createTime=now(), isValid=1, user=$user;
 };
 
 
@@ -393,7 +429,7 @@ ACTION SavePeerAssigned(
 };
 
 
-/** 修改粉丝的自定义名称*/
+/** 清空消息*/
 ACTION UpdateNowMessage(){
     BOOK MessageBook at ( $user) set count=0;
 };
@@ -403,7 +439,7 @@ ACTION CreateCoupon(
     validitydate date,
     discount dec(12, 2), 
     preferential dec(12, 2),
-    customer ID MyCustomer
+    customer ID [$user],
 )returns ret (
     code bigint
 ){
@@ -418,10 +454,48 @@ ACTION CreateCoupon(
 };
 
 
-/** 添加优惠码客户*/
-ACTION CreateCouponCustomer(
-    coupon ID Coupon,
-    customer ID MyCustomer
-){
-    BOOK CouponCustomerMap at (coupon, customer);
+/** 添加客户关联关系*/
+ACTION UseCoupon(
+    code bigint, 
+    webuser ID [$user],
+    order ID
+) returns ret (
+    result bigint
+) {
+    var result bigint, validitydate datetime, isValid smallint, mycustomer ID MyCustomer, order_2 char(50), webuser_2 ID [$user], sales ID [$user], nowsales ID [$user];
+
+    set     sales=c.user, --轻代理
+            isValid=c.isValid, --是否有效
+            validitydate=c.validitydate, --有效期
+            mycustomer=c.customer, --MYCID
+            webuser_2=wm.webuser --指定客户
+    from    Coupon as c 
+            join WebUserMyCustomerMap as wm on c.customer = wm.mycustomer
+    where c.code = code;
+ 
+    set order_2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
+
+    set nowsales = ( select c.sales from WebuserNowSalesBOOK as c where c.webuser = webuser); --当前轻代理
+
+   
+    if ( isValid <> 1 and validitydate > now() ) {
+        set result = 2;  --无效的优惠码
+    } else if ( webuser<>webuser_2) {
+        set result = 3; --不是指定的客户
+    } else if (not order_2 is null)  {
+        set result = 4;  --已经被使用
+    } else if ( not nowsales is null and nowsales <> sales )  {
+        set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
+    } else {
+        set result = 1;  --正常
+    };
+
+    into ret select result;
+
+    if( result=1){
+        BOOK CouponOrderMap at ( code, order ); --添加优惠码使用记录
+        BOOK WebUserMyCustomerMap at ( webuser, mycustomer ); --添加系统客户和自己客户的关联关系
+        BOOK WebuserNowSalesBOOK at ( webuser, sales ) set validity = now(); --添加轻代理
+    }    
 };
+ 

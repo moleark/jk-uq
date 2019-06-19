@@ -201,10 +201,10 @@ PAGE (
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
                 c.teacher, c.potential, c.research, c.salutation, c.createTime
     from MyCustomer as c
-    where   c.id > $pageStart and c.name like key2
+    where   c.id > $pageStart and c.user = $user and c.name like key2
     limit $pageSize;
 };
-
+ 
 
 /** 搜索我的客户*/
 QUERY searchMyCustomerUnit(key char(100))
@@ -219,7 +219,7 @@ PAGE (
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.no, c.name, c.createTime, c.isValid
     from MyCustomerUnit as c
-    where   c.id > $pageStart and c.name like key2
+    where  c.user=$user and c.id > $pageStart and c.name like key2
     limit $pageSize;
 };
 
@@ -271,15 +271,78 @@ PAGE (
     where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
     limit $pageSize;
 };
+ 
 
 
-/** 搜索我的消息*/
-QUERY SearchCouponCustomer( coupon ID Coupon)
+/** 搜索待处理的客户信息
+QUERY SearchRelationCustomer( key char(100))
 returns ret (
-    coupon ID Coupon,
-    customer ID MyCustomer
+    id bigint,
+    unit ID MyCustomerUnit,
+    no char(30),
+    name char(50),
+    firstName char(50),
+    lastName char(50),
+    telephone char(20),
+    gender char(5),
+    birthDay date,
+    email char(30),
+    wechat char(20),
+    teacher char(20),
+    potential smallint,
+    research smallint,
+    salutation char(10),
+    createTime date,
+    customer ID Customer
 ) {
-    into ret select m.coupon, m.customer
-    from    CouponCustomerMap as m
-    where   m.coupon = coupon;
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+
+    into ret select  m.id, m.unit, m.no, m.name, m.firstName, m.lastName, m.telephone, m.gender, m.birthDay, 
+                    m.email, m.wechat, m.teacher, m.potential, m.research, m.salutation, m.createTime, r.customer
+    from    MyCustomer as m
+            left join WebUserMyCustomerMap as r on m.id = r.myCustomer
+    where   m.user = $user and m.name like key2
+
+};
+**/
+
+
+/** 搜索待处理的客户信息*/
+QUERY IsCanUseCoupon ( 
+    code bigint, 
+    webuser ID [$user]
+)
+returns ret (
+    result bigint
+) {
+   
+    var result bigint, validitydate datetime, isValid smallint, mycustomer ID MyCustomer, order2 char(50), webuser2 ID [$user], sales ID [$user], nowsales ID [$user];
+
+    set     sales=c.user, --轻代理
+            isValid=c.isValid, --是否有效
+            validitydate=c.validitydate, --有效期
+            mycustomer=c.customer, --MYCID
+            webuser2=wm.webuser --指定客户
+    from    Coupon as c 
+            join WebUserMyCustomerMap as wm on c.customer = wm.mycustomer
+    where c.code = code;
+ 
+    set order2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
+
+    set nowsales = ( select sales from WebuserNowSalesBOOK as c where c.webuser = webuser); --当前轻代理
+   
+    if ( isValid <> 1 and validitydate > now() ) {
+        set result = 2;  --无效的优惠码
+    } else if ( webuser<>webuser2) {
+        set result = 3; --不是指定的客户
+    } else if (not order2 is null)  {
+        set result = 4;  --已经被使用
+    } else if ( not nowsales is null and nowsales <> sales )  {
+        set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
+    } else {
+        set result = 1;  --正常
+    };
+
+    into ret select result;
 };
