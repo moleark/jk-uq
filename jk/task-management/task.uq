@@ -84,7 +84,7 @@ TUID MyCustomer (
     unique(no),
 );
  
---客户
+--客户单位
 TUID MyCustomerUnit (
     id,
     user ID [$user],
@@ -343,12 +343,12 @@ ACTION CreateTaskProduct(
 
 /** 添加任务产品*/
 ACTION CreateTaskProductPack(
-    taskid ID Task,
+    task ID Task,
     product ID ProductX ,
     pack OF product.PackX,
     note text
 ){
-    BOOK TaskProductPackBook at (taskid,product,pack) set note=note;
+    BOOK TaskProductPackBook at (task,product,pack) set note=note;
 };
 
 
@@ -462,16 +462,27 @@ ACTION UseCoupon(
 ) returns ret (
     result bigint
 ) {
-    var result bigint, validitydate datetime, isValid smallint, mycustomer ID MyCustomer, order_2 char(50), webuser_2 ID [$user], sales ID [$user], nowsales ID [$user];
+    var result          bigint, 
+        validitydate    datetime, 
+        isValid         smallint, 
+        mycustomer ID   MyCustomer, 
+        discount        dec(12, 2),  
+        preferential    dec(12, 2),  
+        order_2         char(50), 
+        webuser_2  ID   [$user], 
+        sales ID        [$user], 
+        nowsales   ID   [$user];
 
     set     sales=c.user, --轻代理
             isValid=c.isValid, --是否有效
             validitydate=c.validitydate, --有效期
+            discount = c.discount,
+            preferential=  c.preferential,
             mycustomer=c.customer, --MYCID
             webuser_2=wm.webuser --指定客户
     from    Coupon as c 
             join WebUserMyCustomerMap as wm on c.customer = wm.mycustomer
-    where c.code = code;
+    where   c.code = code;
  
     set order_2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
 
@@ -488,6 +499,9 @@ ACTION UseCoupon(
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
     } else {
         set result = 1;  --正常
+
+        bus couponBus.point set code = code, user = sales, customer = mycustomer, discount = discount, 
+                preferential = preferential,validitydate = validitydate,  isValid = isValid; 
     };
 
     into ret select result;

@@ -105,6 +105,20 @@ returns ret (
     where   tp.task = taskid
 };
 
+/** 搜索任务的产品包装*/
+QUERY SearchTaskProductPack ( taskid ID Task )
+returns ret (
+    task ID Task,
+    product ID ProductX,
+    pack OF product.PackX,
+    note text
+) {    
+    into ret SELECT tp.task, tp.product, tp.pack, tp.note
+    FROM    TaskProductPackBook as tp
+    where   tp.task = taskid
+};
+
+
 /** 搜索任务的项目*/
 QUERY SearchTaskProject ( taskid ID Task )
 returns ret (

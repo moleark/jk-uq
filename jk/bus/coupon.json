@@ -1,0 +1,32 @@
+{
+    "point": [
+        {
+            "name": "code",
+            "type": "number"
+        },
+        {
+            "name": "user",
+            "type": "id"
+        },
+        {
+            "name": "customer",
+            "type": "id"
+        },
+        {
+            "name": "discount",
+            "type": "number"
+        },
+        {
+            "name": "preferential",
+            "type": "number"
+        },
+        {
+            "name": "validitydate",
+            "type": "date"
+        },
+        {
+            "name": "isValid",
+            "type": "number"
+        }
+    ]
+}
