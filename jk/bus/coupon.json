@@ -1,5 +1,5 @@
 {
-    "point": [
+    "coupon": [
         {
             "name": "code",
             "type": "number"
