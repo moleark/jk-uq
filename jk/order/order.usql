@@ -55,7 +55,7 @@ Action submit {
 
         bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
-    if (not customer IS NULL) {
+    if (customer > 0) {
         bus pointBus.order send;
         STATE TO END;
     }else {
