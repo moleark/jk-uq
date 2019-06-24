@@ -32,7 +32,7 @@ TUID InvoiceInfo from JKCustomer(
     id,
     title char(50) not null,
     taxNo char(50),
-    address char(50),
+    address char(400),
     telephone char(20),
     bank char(50),
     accountNo char(50),

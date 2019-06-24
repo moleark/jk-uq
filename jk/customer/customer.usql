@@ -69,7 +69,7 @@ OPEN TUID InvoiceInfo (
     id,
     main title char(50) not null,
     main taxNo char(50),
-    main address char(50),
+    main address char(400),
     main telephone char(20),
     main bank char(50),
     main accountNo char(50),
