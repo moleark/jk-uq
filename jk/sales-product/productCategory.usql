@@ -1,9 +1,9 @@
 OPEN TUID ProductCategory (
     id,
-    no int not null,
-    parent ID ProductCategory,
-    isLeaf tinyint not null default 0,
-    orderWithinParent int,
+    main no int not null,
+    main parent ID ProductCategory,
+    main isLeaf tinyint not null default 0,
+    main orderWithinParent int,
     arr ProductCategoryLanguage (
         owner,
         id,
