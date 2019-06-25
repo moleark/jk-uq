@@ -1,6 +1,1 @@
-BUS couponBus from 百灵威系统工程部/Coupon;
-
-
-ACCEPT productInventory {
-    book ProductInventory at (warehouse, product, pack) set quantity = quantity;
-};
+BUS couponBus from 百灵威系统工程部/coupon;

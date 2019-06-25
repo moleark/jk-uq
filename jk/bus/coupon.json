@@ -9,7 +9,7 @@
             "type": "id"
         },
         {
-            "name": "customer",
+            "name": "webuser",
             "type": "id"
         },
         {

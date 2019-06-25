@@ -124,10 +124,11 @@ TUID Coupon (
     id,
     code bigint,
     user ID [$user],
+    webuser  ID [$user],
+    customer ID MyCustomer,
     validitydate date,    
     discount dec(12, 2),     --折扣
     preferential dec(12, 2), --优惠额度
-    customer ID MyCustomer,
     createTime datetime,
     isValid smallint
 );
@@ -439,26 +440,77 @@ ACTION CreateCoupon(
     validitydate date,
     discount dec(12, 2), 
     preferential dec(12, 2),
-    customer ID [$user],
+    customer ID  MyCustomer
 )returns ret (
     code bigint
 ){
 
-    var code bigint;
+    var code bigint, webuser ID [$user];
     set code = rand() * 100000000;
- 
+    set webuser = ( select co.webuser from WebUserMyCustomerMap as co where co.mycustomer = customer);
+
     var couponId ID;
-    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,webuser=webuser,
     discount=discount, preferential=preferential, createTime=now(), isValid=1;
     into ret select code;
 };
 
-
-/** 添加客户关联关系*/
-ACTION UseCoupon(
+/** 验证优惠码是否可用*/
+ACTION IsCanUseCoupon ( 
     code bigint, 
+    webuser ID [$user]
+)
+returns ret (
+    result bigint
+) {
+    var result      bigint, 
+    validitydate    datetime, 
+    isValid         smallint, 
+    mycustomer ID   MyCustomer, 
+    discount        dec(12,2),  
+    preferential    dec(12,2),  
+    order2          char(50), 
+    webuser2   ID   [$user], 
+    sales ID        [$user], 
+    nowsales   ID   [$user];
+
+    set     sales=c.user, --轻代理
+            isValid=c.isValid, --是否有效
+            validitydate=c.validitydate, --有效期
+            mycustomer=c.customer, --MYCID
+            discount = c.discount,
+            preferential=  c.preferential,
+            webuser2=c.webuser --指定客户
+    from    Coupon as c 
+    where   c.code = code;
+ 
+    set order2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
+
+    set nowsales = ( select sales from WebuserNowSalesBOOK as c where c.webuser = webuser); --当前轻代理
+   
+    if ( isValid <> 1 and validitydate > now() ) {
+        set result = 2;  --无效的优惠码
+    } else if ( webuser<>webuser2) {
+        set result = 3; --不是指定的客户
+    } else if (not order2 is null)  {
+        set result = 4;  --已经被使用
+    } else if ( not nowsales is null and nowsales <> sales )  {
+        set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
+    } else {
+        set result = 1;  --正常
+ 
+        bus couponBus.coupon set code=code, user=sales, webuser=webuser2, discount=discount, 
+            preferential=preferential, validitydate=validitydate, isValid=isValid; 
+        bus couponBus.coupon send;
+    };
+    into ret select result;
+};
+
+/** 使用优惠码 添加客户关联关系*/
+ACTION UseCoupon(
+    code    bigint, 
     webuser ID [$user],
-    order ID
+    order   ID
 ) returns ret (
     result bigint
 ) {
@@ -468,8 +520,8 @@ ACTION UseCoupon(
         mycustomer ID   MyCustomer, 
         discount        dec(12, 2),  
         preferential    dec(12, 2),  
-        order_2         char(50), 
-        webuser_2  ID   [$user], 
+        order2         char(50), 
+        webuser2  ID   [$user], 
         sales ID        [$user], 
         nowsales   ID   [$user];
 
@@ -479,29 +531,25 @@ ACTION UseCoupon(
             discount = c.discount,
             preferential=  c.preferential,
             mycustomer=c.customer, --MYCID
-            webuser_2=wm.webuser --指定客户
+            webuser2=wm.webuser --指定客户
     from    Coupon as c 
             join WebUserMyCustomerMap as wm on c.customer = wm.mycustomer
     where   c.code = code;
  
-    set order_2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
+    set order2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
 
     set nowsales = ( select c.sales from WebuserNowSalesBOOK as c where c.webuser = webuser); --当前轻代理
 
-   
     if ( isValid <> 1 and validitydate > now() ) {
         set result = 2;  --无效的优惠码
-    } else if ( webuser<>webuser_2) {
+    } else if ( webuser<>webuser2) {
         set result = 3; --不是指定的客户
-    } else if (not order_2 is null)  {
+    } else if (not order2 is null)  {
         set result = 4;  --已经被使用
     } else if ( not nowsales is null and nowsales <> sales )  {
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
     } else {
         set result = 1;  --正常
-
-        bus couponBus.point set code = code, user = sales, customer = mycustomer, discount = discount, 
-                preferential = preferential,validitydate = validitydate,  isValid = isValid; 
     };
 
     into ret select result;
@@ -512,4 +560,9 @@ ACTION UseCoupon(
         BOOK WebuserNowSalesBOOK at ( webuser, sales ) set validity = now(); --添加轻代理
     }    
 };
- 
+  
+
+
+
+
+
