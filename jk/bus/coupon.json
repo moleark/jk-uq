@@ -2,7 +2,7 @@
     "coupon": [
         {
             "name": "code",
-            "type": "number"
+            "type": "string"
         },
         {
             "name": "user",

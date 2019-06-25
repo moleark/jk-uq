@@ -122,7 +122,7 @@ TUID CouponType (
 --优惠券
 TUID Coupon (
     id,
-    code bigint,
+    code char(8),
     user ID [$user],
     webuser  ID [$user],
     customer ID MyCustomer,
@@ -442,22 +442,21 @@ ACTION CreateCoupon(
     preferential dec(12, 2),
     customer ID  MyCustomer
 )returns ret (
-    code bigint
+    code char(8)
 ){
 
     var code bigint, webuser ID [$user];
     set code = rand() * 100000000;
-    set webuser = ( select co.webuser from WebUserMyCustomerMap as co where co.mycustomer = customer);
-
+    
     var couponId ID;
-    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,webuser=webuser,
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,webuser=47,
     discount=discount, preferential=preferential, createTime=now(), isValid=1;
     into ret select code;
 };
 
 /** 验证优惠码是否可用*/
 ACTION IsCanUseCoupon ( 
-    code bigint, 
+    code char(20), 
     webuser ID [$user]
 )
 returns ret (
@@ -531,9 +530,8 @@ ACTION UseCoupon(
             discount = c.discount,
             preferential=  c.preferential,
             mycustomer=c.customer, --MYCID
-            webuser2=wm.webuser --指定客户
+            webuser2=c.webuser --指定客户
     from    Coupon as c 
-            join WebUserMyCustomerMap as wm on c.customer = wm.mycustomer
     where   c.code = code;
  
     set order2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
