@@ -33,6 +33,8 @@ SHEET Order ver 0.6 (
     currency ID Currency,
     freightFee dec(12, 2),
     freightFeeRemitted dec(12, 2),
+    coupon char(8),
+    couponRemitted dec(12,2),
 )
 Verify {
     var discount dec(12,4) = 1;
@@ -46,7 +48,7 @@ Action submit {
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
     bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
         shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
-        amount = amount, currency = currency,
+        amount = amount, currency = currency, coupon = coupon, couponRemitted = couponRemitted,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
     foreach orderItems {
         history OrderHistory of( webUser, product, pack )

@@ -76,6 +76,14 @@
             "type": "id"
         },
         {
+            "name": "coupon",
+            "type": "string"
+        },
+        {
+            "name": "couponRemitted",
+            "type": "number"
+        },
+        {
             "name": "createDate",
             "type": "date"
         }

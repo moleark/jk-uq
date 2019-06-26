@@ -1,0 +1,33 @@
+BUS couponBus from 百灵威系统工程部/Coupon
+    ACCEPT coupon {
+        var couponId id;
+        TUID Coupon into couponId unique(code) set user = user, webuser = webuser, discount = discount
+            , preferential = preferential, validitydate = validitydate, isValid = isValid;
+    };
+
+--优惠券
+TUID Coupon (
+    id,
+    code char(8),
+    user ID [$user],
+    webuser ID [$user],
+    discount dec(12, 2),     --折扣
+    preferential dec(12, 2), --优惠额度
+    validitydate date,
+    isValid smallint,
+    unique(code)
+);
+
+
+QUERY getCoupon(code char(8))
+returns ret (
+    code char(8),
+    discount dec(12, 2),     --折扣
+    preferential dec(12, 2), --优惠额度
+    validitydate date,
+    isValid smallint
+){
+    into ret select code, discount, preferential, validitydate, isValid
+    from    coupon
+    where   code = code and isValid = 1 and validitydate > now() and webuser = $user;
+};
