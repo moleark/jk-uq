@@ -471,7 +471,8 @@ returns ret (
     order2          char(50), 
     webuser2   ID   [$user], 
     sales ID        [$user], 
-    nowsales   ID   [$user];
+    nowsales   ID   [$user],
+    coupon char(8) ;
 
     set     sales=c.user, --轻代理
             isValid=c.isValid, --是否有效
@@ -479,15 +480,18 @@ returns ret (
             mycustomer=c.customer, --MYCID
             discount = c.discount,
             preferential=  c.preferential,
-            webuser2=c.webuser --指定客户
+            webuser2=c.webuser, --指定客户
+            coupon = code
     from    Coupon as c 
     where   c.code = code;
  
     set order2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
 
     set nowsales = ( select sales from WebuserNowSalesBOOK as c where c.webuser = webuser); --当前轻代理
-   
-    if ( isValid <> 1 and validitydate > now() ) {
+    
+    if ( coupon is null ) {
+        set result = 0;  --不存在
+    } else if ( isValid <> 1 and validitydate > now() ) {
         set result = 2;  --无效的优惠码
     } else if ( webuser<>webuser2) {
         set result = 3; --不是指定的客户
