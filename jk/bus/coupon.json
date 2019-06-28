@@ -1,6 +1,10 @@
 {
     "coupon": [
         {
+            "name": "id",
+            "type": "number"
+        },
+        {
             "name": "code",
             "type": "string"
         },

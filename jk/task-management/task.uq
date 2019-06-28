@@ -170,8 +170,8 @@ MAP CouponOrderMap (
 
 --我的客户和系统客户关联关系
 MAP WebUserMyCustomerMap (
-    key webuser ID [$user],
     key myCustomer ID MyCustomer,
+    key webuser ID [$user],
 );
 
 --轻代理和客户关系
@@ -508,63 +508,3 @@ returns ret (
     };
     into ret select result;
 };
-
-/** 使用优惠码 添加客户关联关系*/
-ACTION UseCoupon(
-    code    bigint, 
-    webuser ID [$user],
-    order   ID
-) returns ret (
-    result bigint
-) {
-    var result          bigint, 
-        validitydate    datetime, 
-        isValid         smallint, 
-        mycustomer ID   MyCustomer, 
-        discount        dec(12, 2),  
-        preferential    dec(12, 2),  
-        order2         char(50), 
-        webuser2  ID   [$user], 
-        sales ID        [$user], 
-        nowsales   ID   [$user];
-
-    set     sales=c.user, --轻代理
-            isValid=c.isValid, --是否有效
-            validitydate=c.validitydate, --有效期
-            discount = c.discount,
-            preferential=  c.preferential,
-            mycustomer=c.customer, --MYCID
-            webuser2=c.webuser --指定客户
-    from    Coupon as c 
-    where   c.code = code;
- 
-    set order2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
-
-    set nowsales = ( select c.sales from WebuserNowSalesBOOK as c where c.webuser = webuser); --当前轻代理
-
-    if ( isValid <> 1 and validitydate > now() ) {
-        set result = 2;  --无效的优惠码
-    } else if ( webuser<>webuser2) {
-        set result = 3; --不是指定的客户
-    } else if (not order2 is null)  {
-        set result = 4;  --已经被使用
-    } else if ( not nowsales is null and nowsales <> sales )  {
-        set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
-    } else {
-        set result = 1;  --正常
-    };
-
-    into ret select result;
-
-    if( result=1){
-        BOOK CouponOrderMap at ( code, order ); --添加优惠码使用记录
-        BOOK WebUserMyCustomerMap at ( webuser, mycustomer ); --添加系统客户和自己客户的关联关系
-        BOOK WebuserNowSalesBOOK at ( webuser, sales ) set validity = now(); --添加轻代理
-    }    
-};
-  
-
-
-
-
-

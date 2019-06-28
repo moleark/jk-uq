@@ -285,40 +285,22 @@ PAGE (
     where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
     limit $pageSize;
 };
+
  
+/** 搜索平台客户*/
+QUERY SearchWebUser( 
+    key char(100)
+)
+PAGE (
+    id bigint start 0,
+    name char(200)
+){
 
-
-/** 搜索待处理的客户信息
-QUERY SearchRelationCustomer( key char(100))
-returns ret (
-    id bigint,
-    unit ID MyCustomerUnit,
-    no char(30),
-    name char(50),
-    firstName char(50),
-    lastName char(50),
-    telephone char(20),
-    gender char(5),
-    birthDay date,
-    email char(30),
-    wechat char(20),
-    teacher char(20),
-    potential smallint,
-    research smallint,
-    salutation char(10),
-    createTime date,
-    customer ID Customer
-) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
 
-    into ret select  m.id, m.unit, m.no, m.name, m.firstName, m.lastName, m.telephone, m.gender, m.birthDay, 
-                    m.email, m.wechat, m.teacher, m.potential, m.research, m.salutation, m.createTime, r.customer
-    from    MyCustomer as m
-            left join WebUserMyCustomerMap as r on m.id = r.myCustomer
-    where   m.user = $user and m.name like key2
-
+    PAGE select m.id, m.name
+    from    $user as m
+    where   m.id > $pageStart and ( m.name like key2 or key is null )
+    limit $pageSize;
 };
-**/
-
-
