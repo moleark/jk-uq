@@ -24,6 +24,32 @@ TUID TaskType (
     unique(name)
 );
 
+--任务类型
+TUID JkTaskType (
+    id,
+    main name char(20),
+    main TimeLimit bigint,
+    unique(name)
+);
+
+--任务类型
+TUID JkTask (
+    id,
+    main description char(100),
+    main customer ID MyCustomer,
+    main type ID JkTaskType,
+    main EmployeeID char(50),
+    sourceID bigint,
+    sourceType char(10),
+    sourceNo char(50),
+
+    main priorty int not null,
+    main deadline date, -- 要求完成时间
+    main createTime date not null,
+);
+
+
+
 --业务类型
 TUID BizType (
     id,
@@ -502,7 +528,7 @@ returns ret (
     } else {
         set result = 1;  --正常
  
-        bus couponBus.coupon set code=code, user=sales, webuser=webuser2, discount=discount, 
+        bus couponBus.coupon set id =id, code=code, user=sales, webuser=webuser2, discount=discount, 
             preferential=preferential, validitydate=validitydate, isValid=isValid; 
         bus couponBus.coupon send;
     };
