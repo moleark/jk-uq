@@ -77,7 +77,11 @@
         },
         {
             "name": "coupon",
-            "type": "string"
+            "type": "id"
+        },
+        {
+            "name": "couponOffsetAmount",
+            "type": "number"
         },
         {
             "name": "couponRemitted",
