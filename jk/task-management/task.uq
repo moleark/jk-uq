@@ -27,6 +27,7 @@ TUID TaskType (
 --任务类型
 TUID JkTaskType (
     id,
+    no bigint,
     main name char(20),
     main TimeLimit bigint,
     unique(name)
@@ -36,19 +37,20 @@ TUID JkTaskType (
 TUID JkTask (
     id,
     main description char(100),
-    main customer ID MyCustomer,
-    main type ID JkTaskType,
-    main EmployeeID char(50),
+    main customer ID Customer,
+    main type ID TaskType,
+    main biz ID BizType,
+    main employee id employee,
     sourceID bigint,
     sourceType char(10),
     sourceNo char(50),
-
+    no bigint,
     main priorty int not null,
-    main deadline date, -- 要求完成时间
-    main createTime date not null,
+    main deadline date null, -- 要求完成时间
+    main createTime date null,
+    main completeTime datetime null,
+    isValid smallint default 1,
 );
-
-
 
 --业务类型
 TUID BizType (
@@ -84,7 +86,7 @@ TUID MyCustomer (
     id,
     user ID [$user],
     main unit ID MyCustomerUnit,
-    no char(30) not null,
+    no bigint,
     main name char(50) not null,
     main firstName char(50),
     main lastName char(50),
@@ -199,6 +201,13 @@ MAP WebUserMyCustomerMap (
     key myCustomer ID MyCustomer,
     key webuser ID [$user],
 );
+
+--平台用户和内部员工关系
+MAP WebUserEmployeeMap (
+    key webuser ID [$user],
+    key employee ID employee,
+);
+
 
 --轻代理和客户关系
 BOOK WebuserNowSalesBOOK (
@@ -358,6 +367,52 @@ RETURNS ret (
     into ret select taskId as id;
 };
 
+/** 导入任务*/
+ACTION ImportTask(
+    task ID JkTask,
+    customername char(50)
+)
+RETURNS ret (
+    id ID,
+    customer ID Customer,
+    description char(100)
+) {
+    var id bigint, description char(100), customer ID Customer, type ID TaskType, 
+            biz ID BizType, employee ID employee, priorty int, deadline date;
+
+    set     id=a.id, description=a.description, customer=a.customer, type=a.type, 
+            biz=a.biz, employee=a.employee, priorty=a.priorty, deadline=a.deadline
+    from    JkTask as a
+    where   a.id=task;
+
+    var mycustomerid ID;
+    set mycustomerid=id from MyCustomer where no=customer;
+
+    if ( mycustomerid is null ){
+        var name char(50), firstName char(50), lastName char(50), xyz char(5), gender char(5), salutation char(10), birthDay date;
+        set     name=a.name, firstName=a.firstName, lastName=a.lastName, xyz=a.xyz, gender=a.gender, salutation=a.salutation, birthDay=a.birthDay
+        from    Customer as a
+        where   a.id = customer;
+
+        if(name is null){
+            set name = customername;
+        }
+        
+        TUID MyCustomer into mycustomerid unique(customer) set
+            name=name, firstName=firstName, lastName=lastName, gender=gender, user=$user,
+            salutation=salutation, birthDay=birthDay, isValid=1, createTime=now();
+    }
+
+    var taskId ID;
+    TUID task into taskId set
+        description=description, customer=mycustomerid, type=type, biz=biz,
+        priorty=priorty, deadline=deadline, createTime=$date;
+
+    BOOK TaskBook at (taskId) set status=1, principal=$user;
+    into ret select taskId as id, customer,description;
+
+    TUID JkTask into id id (id) set isValid = 0;
+};
 
 /** 添加任务产品*/
 ACTION CreateTaskProduct(
@@ -486,9 +541,19 @@ ACTION IsCanUseCoupon (
     webuser ID [$user]
 )
 returns ret (
-    result bigint
-) {
+    result  bigint,
+    id      bigint, 
+    code   char(20), 
+    user   ID [$user],
+    webuser ID [$user],
+    discount dec(12,2),  
+    preferential dec(12,2), 
+    validitydate datetime, 
+    isValid smallint
+) 
+{
     var result      bigint, 
+    id              bigint, 
     validitydate    datetime, 
     isValid         smallint, 
     mycustomer ID   MyCustomer, 
@@ -500,7 +565,8 @@ returns ret (
     nowsales   ID   [$user],
     coupon char(8) ;
 
-    set     sales=c.user, --轻代理
+    set     id = c.id,
+            sales=c.user, --轻代理
             isValid=c.isValid, --是否有效
             validitydate=c.validitydate, --有效期
             mycustomer=c.customer, --MYCID
@@ -528,9 +594,9 @@ returns ret (
     } else {
         set result = 1;  --正常
  
-        bus couponBus.coupon set id =id, code=code, user=sales, webuser=webuser2, discount=discount, 
+        bus couponBus.coupon set id=id, code=code, user=sales, webuser=webuser2, discount=discount, 
             preferential=preferential, validitydate=validitydate, isValid=isValid; 
         bus couponBus.coupon send;
     };
-    into ret select result;
+    into ret select result, id, code, sales as user, webuser2 as webuser, discount, preferential, validitydate, isValid;
 };

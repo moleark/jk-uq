@@ -25,3 +25,15 @@ returns ret (
    from     customer
    where    no = customerNo;
 };
+
+
+
+QUERY getCustomerOrganization(customerId ID Customer)
+returns ret (
+    organization ID Organization
+    customer ID Customer
+) {
+   into ret select organization, customer
+   from     OrganizationCustomer
+   where    customer = customerId;
+};

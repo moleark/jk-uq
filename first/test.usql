@@ -242,7 +242,7 @@ State a reply
             book 账 at (id1, id1) set f1+=b1, f2-=1, f2-=.f2+f2; -- where 1<>1;
             history 流水 of (id1) set e1=b1+2, e2='2007-1-1';
             -- tuid 商品 at 3+5 set b1=2, name='xyz', d2=100, discription='good at';
-            tuid 商品 into article id(3+5) unique('xyz') set b1=2, d2=100, discription='good at';
+            tuid 商品       into article id(3+5) unique('xyz') set b1=2, d2=100, discription='good at';
             tuid 商品inUnit into article unique('xyz') set b1=2, d2=100, discription='good at';
             tuid 商品inUnit into article id 3 set b1=2, d2=100, discription='good at';
             into stateARet2 select '2019-1-1' as dd;

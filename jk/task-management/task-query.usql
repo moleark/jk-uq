@@ -304,3 +304,38 @@ PAGE (
     where   m.id > $pageStart and ( m.name like key2 or key is null )
     limit $pageSize;
 };
+
+/**
+
+**/
+QUERY SearchJKTask( 
+    key char(100)
+)
+PAGE (
+    id bigint start 0,
+    description char(100),
+    customer ID Customer,
+    type ID TaskType,
+    biz ID BizType,
+    employee  ID employee,
+    sourceID bigint,
+    sourceType char(10),
+    sourceNo char(50),
+    priorty int,
+    deadline date,
+    createTime date 
+){
+
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+
+    PAGE select m.id, m.description, m.customer, m.type, m.biz, m.employee, m.sourceID, m.sourceType, m.sourceNo, m.priorty, m.deadline, m.createTime
+    from    JkTask as m
+            join WebUserEmployeeMap as we on m.employee=we.employee
+    where   we.webuser=$user and m.completeTime is null and m.id > $pageStart and ( m.description like key2 or key is null )
+            and m.isValid is null
+    limit $pageSize;
+};
+
+
+ 
