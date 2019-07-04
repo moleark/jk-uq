@@ -1,0 +1,4 @@
+BUS pointBus from [百灵威系统工程部]/point
+    ACCEPT order {
+       BOOK CouponOrderMap at ( coupon, id ); --添加优惠码使用记录
+    };
