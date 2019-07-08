@@ -121,12 +121,12 @@ ACTION CountProductCategoryInclusion() {
         set n = categoryId;
 
         insert 	into product.tv_productcategoryinclusion(`$unit`, category, salesregion, total)
-		select 	ppc.`$unit`, ppc.category, sr.id, count(distinct ppc.product) as con
+		select 	ppc.`$unit`, ppc.category, p.salesRegion, count(distinct ppc.product) as con
 		from   	product.tv_productproductcategory ppc
                 inner join product.tv_productcache as p on ppc.product = p.product
 		where   ppc.`$unit` = `_$unit` and p.`$unit` = `_$unit`
 				and ppc.category = categoryId
-		group by ppc.`$unit`, ppc.category, sr.id;
+		group by ppc.`$unit`, ppc.category, p.salesRegion;
 
 
         set ng = 5;

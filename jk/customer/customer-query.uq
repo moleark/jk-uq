@@ -30,7 +30,7 @@ returns ret (
 
 QUERY getCustomerOrganization(customerId ID Customer)
 returns ret (
-    organization ID Organization
+    organization ID Organization,
     customer ID Customer
 ) {
    into ret select organization, customer
