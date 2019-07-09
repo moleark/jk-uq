@@ -7,7 +7,7 @@ BUS couponBus from 百灵威系统工程部/Coupon
 
 --优惠券
 TUID Coupon (
-    id,
+    id _,
     main code char(8),
     main user ID [$user],
     main webuser ID [$user],
