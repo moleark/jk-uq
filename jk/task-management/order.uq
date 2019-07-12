@@ -1,4 +1,41 @@
 BUS pointBus from [百灵威系统工程部]/point
     ACCEPT order {
-       BOOK CouponOrderMap at ( coupon, id ); --添加优惠码使用记录
+
+        var order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer, webuserName char(50);
+     
+        set     sales=c.user, --轻代理
+                mycustomer=c.customer --MYCID
+        from    Coupon as c 
+        where   c.id = coupon;
+
+        BOOK CouponOrderMap at ( coupon, id ); --添加优惠码使用记录
+        
+        BOOK WebuserNowSalesBOOK at ( webuser, sales ) set validity = now(); --添加当前轻代理
+         
+        --判断是否指定了客户，如果没有指定则新建客户
+        if( mycustomer is null ){
+            var customerId ID;
+            TUID MyCustomer into customerId unique(no) set
+            name=webuserName, user=sales, createTime=now();
+
+            set mycustomer = customerId;
+        }
+        BOOK WebUserMyCustomerMap at ( webuser, mycustomer ); --添加系统客户和自己客户的关联关系
     };
+
+/**
+
+优惠码使用后:
+1、首先要记录优惠码的使用记录
+    获取订单中的 订单编号 和 优惠码 记录下来;
+
+2、绑定当前轻代理，或者延期当前轻代理。
+    
+3、绑定客户资料和客户档案的关系
+    客户订单的 webuser 和 优惠码 的内部客户编号进行关联
+
+4、记录业绩（ 产品明细 ）
+    记录销售的业绩；销售业绩为 （成交价 - 代理价） * 0.15
+    记录销售上一级的业绩；上一级业绩为 （成交价 - 代理价） * 0.02
+
+*/
