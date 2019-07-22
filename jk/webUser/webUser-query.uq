@@ -61,7 +61,8 @@ ACTION auditPendingUser(
     set telephone = telephone, mobile = mobile, email = email, fax = fax, zipCode = zipCode
     from    WebUserContact
     where    webUser = id;
-    send email on webUserAuditPassET to 'li.guosheng@jk-sci.com,system6@jkchemical.com' with name = firstName;
+    if(email <> '')
+        send email on webUserAuditPassET to email with name = firstName;
 };
 
 /**/

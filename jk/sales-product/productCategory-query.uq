@@ -1,4 +1,16 @@
 
+Query GetRootCategories (salesRegion ID SalesRegion, language ID Language)
+returns ret(
+    productCategory ID ProductCategory
+){
+    into ret select pc.id as productCategory
+    from    ProductCategory as pc
+            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
+                and pcl.language = language
+            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.salesRegion = salesRegion and ppi.total > 0
+    where   pc.parent is null;
+};
+
 Query GetRootCategory (salesRegion ID SalesRegion, language ID Language)
 returns first(
     productCategory ID ProductCategory,

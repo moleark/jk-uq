@@ -50,7 +50,7 @@ Action submit {
     bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
         shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-        freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, createDate = $sheet_date;
+        freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
     foreach orderItems {
         history OrderHistory of( webUser, product, pack )
             set price = price, quantity = quantity, amount = subAmount, currency = currency,
@@ -58,8 +58,8 @@ Action submit {
 
         bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
+
     if (customer > 0) {
-        bus pointBus.order send;
         STATE TO END;
     }else {
         STATE TO MatchingCustomer;
