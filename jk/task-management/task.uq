@@ -289,6 +289,7 @@ History TaskHistory (
 History OrderHistory (
     date,
     key user ID [$user],
+    webuser ID [$user],
     customer ID MyCustomer,
     product ID ProductX not null,
     pack OF product.PackX not null,
