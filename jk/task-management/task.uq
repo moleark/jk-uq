@@ -213,7 +213,7 @@ MAP WebUserEmployeeMap (
 BOOK WebuserNowSalesBOOK (
     key webuser ID [$user],
     key sales ID [$user],
-    validity date
+    validity datetime
 );
 
 

@@ -1,23 +1,33 @@
 BUS pointBus from [百灵威系统工程部]/point
     ACCEPT order {
 
-        var order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer, webuserName char(50);
+        var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer, webuserName char(50);
         
-        if(not coupon is null){
+        if( coupon > 0 ){
             set     sales=c.user, --轻代理
-                    mycustomer=c.customer --MYCID
+                    mycustomer=c.customer, --MYCID
+                    couponID = c.id
             from    Coupon as c 
             where   c.id = coupon;
-         
+        }
+
+        if( couponID > 0 ){ 
             --1、首先要记录优惠码的使用记录
             BOOK CouponOrderMap at ( coupon, id ); --添加优惠码使用记录
             
             --2、绑定当前轻代理，或者延期当前轻代理。
-            BOOK WebuserNowSalesBOOK at ( webuser, sales ) set validity = now(); --添加当前轻代理
+            if(sales>0){
+                BOOK WebuserNowSalesBOOK at ( webuser, sales ) set validity = now(); --添加当前轻代理
+            }
 
             --3、绑定客户资料和客户档案的关系
             --判断是否指定了客户，如果没有指定则新建客户
             if( mycustomer is null ){
+
+                set  webuserName = u.name 
+                from $user as u 
+                where u.id = webuser;
+
                 var customerId ID;
                 TUID MyCustomer into customerId unique(no) set
                 name=webuserName, user=sales, createTime=now();
@@ -38,7 +48,7 @@ BUS pointBus from [百灵威系统工程部]/point
 
             foreach orderItems {
                 var achievement dec(12, 2);
-                set achievement = (amount / catalogueSubAmount * subAmount) - 1 ;
+                set achievement = (amount / catalogueSubAmount * subAmount) - 1;
                 
                 --记录客户当前轻代理的绩效
                 history OrderHistory of( sales )
