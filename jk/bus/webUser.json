@@ -1,0 +1,40 @@
+{
+    "WebUser": [
+        {
+            "name": "id",
+            "type": "number"
+        },
+        {
+            "name": "no",
+            "type": "number"
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "firstName",
+            "type": "string"
+        },
+        {
+            "name": "lastName",
+            "type": "string"
+        },
+        {
+            "name": "gender",
+            "type": "string"
+        },
+        {
+            "name": "salutation",
+            "type": "string"
+        },
+        {
+            "name": "organizationName",
+            "type": "string"
+        },
+        {
+            "name": "departmentName",
+            "type": "string"
+        }
+    ]
+}

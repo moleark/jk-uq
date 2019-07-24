@@ -9,7 +9,10 @@ OPEN TUID WebUser (
     main organizationName char(50),
     main departmentName char(50),
     -- createTime datetime,
-);
+) ON SAVE {
+    bus webUserBus.WebUser set id = id, no = no, name = name, firstName = firstName, lastName = lastName,
+        gender = gender, salutation = salutation, organizationName = organizationName, departmentName = departmentName;
+};
 
 OPEN MAP WebUserContact(
     key webUser ID WebUser,
