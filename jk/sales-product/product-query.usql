@@ -16,7 +16,6 @@ returns ret(
 QUERY SearchProduct (key char(100), salesRegion ID salesRegion)
 PAGE (
     id bigint start 0,
-    productid bigint,
     no char(20),
     brand ID Brand,
     origin char(50),
@@ -27,7 +26,8 @@ PAGE (
     CAS char(20),
     purity char(80),
     molecularFomula char(200),
-    molecularWeight char(30)
+    molecularWeight char(30),
+    seq bigint
 ) {
     var key2 char(100);
     set key2 = concat(key, '*');
@@ -122,9 +122,10 @@ PAGE (
     order by p.sourcerank, p.score desc, p.hasstock desc, p.level desc
     limit 499;
 
-    INSERT  INTO `_$page` (`id`, `productid`, `no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`)
-    SELECT  pp.`id` as `id`, p.`id` AS `productid`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`
-            ,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`
+    INSERT  INTO `_$page` (`id`, `no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`, `seq`)
+    SELECT  p.`id`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`
+            ,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`,
+            pp.`id` as `seq`
     from    `_$page_product` as pp
             inner join tv_productx as p on p.id = pp.product
             LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`

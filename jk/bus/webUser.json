@@ -36,5 +36,53 @@
             "name": "departmentName",
             "type": "string"
         }
+    ],
+    "WebUserContact": [
+        {
+            "name": "webUser",
+            "type": "id"
+        },
+        {
+            "name": "telephone",
+            "type": "string"
+        },
+        {
+            "name": "mobile",
+            "type": "string"
+        },
+        {
+            "name": "email",
+            "type": "string"
+        },
+        {
+            "name": "fax",
+            "type": "string"
+        },
+        {
+            "name": "zipCode",
+            "type": "string"
+        },
+        {
+            "name": "wechatId",
+            "type": "string"
+        },
+        {
+            "name": "addressString",
+            "type": "string"
+        },
+        {
+            "name": "address",
+            "type": "id"
+        }
+    ],
+    "WebUserCustomer": [
+        {
+            "name": "webUser",
+            "type": "id"
+        },
+        {
+            "name": "customer",
+            "type": "id"
+        }
     ]
 }
