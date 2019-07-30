@@ -2,8 +2,8 @@ QUERY SearchPaperDoc (domain ID DomainType, documenttype ID DocumentType )
 returns ret (
     document ID Document
 ) {
-    into ret SELECT id as document
+    into ret select id as document
     FROM    Document
     WHERE   domain=domain and documenttype=documenttype
-    order BY id; 
+    order by id; 
 };
