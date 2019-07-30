@@ -17,7 +17,7 @@ TUID StockLocation(
 );
 
 --文档管理
-TUID Document(
+OPEN TUID Document(
     id,
     main domain ID DomainType,
     main documenttype ID DocumentType,
