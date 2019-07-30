@@ -1,11 +1,8 @@
 QUERY SearchPaperDoc (domain ID DomainType, documenttype ID DocumentType )
 returns ret (
-    document ID Document,
-    name char(100),
-    code char(10),
-    image char(100)
+    document ID Document
 ) {
-    into ret SELECT id,name,code,image
+    into ret SELECT id as document
     FROM    Document
     WHERE   domain=domain and documenttype=documenttype
     order BY id; 
