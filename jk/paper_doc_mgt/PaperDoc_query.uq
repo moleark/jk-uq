@@ -1,0 +1,16 @@
+QUERY SearchPaperDoc ( )
+returns ret (
+    id bigint,
+    name char(100),
+    code char(10),
+    image char(100),
+    description char(50),
+    quantity int,
+    subquantity int
+) {
+    into ret select c.id,c.name,c.code,c.image,c.description,IFNULL(d.quantity,0) quantity, IFNULL(e.subquantity,0) subquantity
+    from ( SELECT a.*,b.id as stockid,b.description FROM Document AS a, StockLocation AS b ) c
+         left join DocumentAccount as d on c.id = d.document AND d.stockLocation = c.stockid
+         left join (SELECT  document, sum(IFNULL(quantity,0)) subquantity FROM DocumentAccount GROUP BY document) AS e ON c.id = e.document 
+    order BY c.id; 
+};
