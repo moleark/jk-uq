@@ -1,16 +1,13 @@
-QUERY SearchPaperDoc ( )
+QUERY SearchPaperDoc (domain ID DomainType, documenttype ID DocumentType )
 returns ret (
     id bigint,
     name char(100),
     code char(10),
     image char(100),
-    description char(50),
-    quantity int,
-    subquantity int
+    description char(50)
 ) {
-    into ret select c.id,c.name,c.code,c.image,c.description,IFNULL(d.quantity,0) as quantity, IFNULL(e.subquantity,0) as subquantity
-    from ( SELECT a.id,a.name,a.code,a.image,b.id as stockid,b.description FROM Document AS a, StockLocation AS b ) as c
-         left join DocumentAccount as d on c.id = d.document AND d.stockLocation = c.stockid
-         left join (SELECT  document, sum(IFNULL(quantity,0)) as subquantity FROM DocumentAccount GROUP BY document) AS e ON c.id = e.document 
-    order BY c.id; 
+    into ret SELECT id,name,code,image
+    FROM    Document
+    WHERE   domain=domain and documenttype=documenttype
+    order BY id; 
 };
