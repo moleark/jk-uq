@@ -9,7 +9,7 @@ returns ret (
     subquantity int
 ) {
     into ret select c.id,c.name,c.code,c.image,c.description,IFNULL(d.quantity,0) as quantity, IFNULL(e.subquantity,0) as subquantity
-    from ( SELECT a.*,b.id as stockid,b.description FROM Document AS a, StockLocation AS b ) as c
+    from ( SELECT a.id,a.name,a.code,a.image,b.id as stockid,b.description FROM Document AS a, StockLocation AS b ) as c
          left join DocumentAccount as d on c.id = d.document AND d.stockLocation = c.stockid
          left join (SELECT  document, sum(IFNULL(quantity,0)) as subquantity FROM DocumentAccount GROUP BY document) AS e ON c.id = e.document 
     order BY c.id; 
