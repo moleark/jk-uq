@@ -9,7 +9,10 @@ OPEN TUID WebUser (
     main organizationName char(50),
     main departmentName char(50),
     -- createTime datetime,
-);
+) ON SAVE {
+    bus webUserBus.WebUser set id = id, no = no, name = name, firstName = firstName, lastName = lastName,
+        gender = gender, salutation = salutation, organizationName = organizationName, departmentName = departmentName;
+};
 
 OPEN MAP WebUserContact(
     key webUser ID WebUser,
@@ -21,9 +24,13 @@ OPEN MAP WebUserContact(
     wechatId char(50),
     addressString char(400),
     address ID Address,
-);
+) ON SAVE {
+    bus webUserBus.WebUserContact set webUser = webUser, telephone = telephone, mobile = mobile,
+        email = email, fax = fax, zipCode = zipCode, wechatId = wechatId, addressString = addressString,
+        address = address;
+};
 
---
+-- WebUser的预设地址
 OPEN MAP webUserContacts (
     key webUser ID WebUser,
     key contact ID Contact,
@@ -42,7 +49,9 @@ OPEN MAP webUserSetting ver 0.1(
 OPEN MAP WebUserCustomer(
     key webUser ID WebUser,
     customer ID Customer,
-);
+) ON SAVE {
+    bus webUserBus.WebUserCustomer set webUser = webUser, customer = customer;
+};
 
 
 BOOK PendingAuditWebUser (

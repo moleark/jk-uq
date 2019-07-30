@@ -1,0 +1,63 @@
+templet webUserAuditPassET (
+    name
+)
+subject /- 恭喜你 -/
+/-
+<!-- InstanceBegin template="/Templates/中文模板2013.dwt" codeOutsideHTMLIsLocked="false" -->
+<!-- InstanceBeginEditable name="doctitle" --><!-- InstanceEndEditable -->
+<p>
+<meta content="text/html; charset=gb2312" http-equiv="Content-Type" />
+<meta content="ie=7" http-equiv="x-ua-compatible" /><style type="text/css">
+*{margin:0;padding:0}
+body{ background:#FFF}
+.head{ width:900px;margin:auto; background:url(http://www.jkchemical.com/ImgMail/Email2013_01.jpg) repeat-x;height:82px; border-top:15px #e6e6e6 solid;}
+.content{ font:13px Arial, Helvetica, sans-serif; line-height:150%;padding:50px 25px; margin:auto}
+.content .sp{ color:#F00}
+.content p{margin:15px 0;}
+.content p a{ color:#000}
+.content p a:hover{ color:#900}
+.content table td{font:13px Arial, Helvetica, sans-serif; background:#efefef;padding:5px 10px}
+.content li{ line-height:150%}
+.foot{ border-top:2px solid #8e8e8e;font:13px Arial, Helvetica, sans-serif;padding:20px; margin:auto}
+.foot table td{ font:13px Arial, Helvetica, sans-serif; color:#5f5f5f; line-height:150%}
+.foot table td a{ color:#5f5f5f; text-decoration:none}
+.foot table td a:hover{ color:#900; text-decoration:none}
+h1{font-size:17px; color:#fff; font-family:Arial, Helvetica, sans-serif}
+ul,ol{margin-left:20px}</style><!-- InstanceBeginEditable name="head" --><!-- InstanceEndEditable --></p>
+<table border="0" cellspacing="0" cellpadding="0" width="900" align="center" style="margin: auto">
+    <tbody>
+        <tr>
+            <td valign="top" style="padding-bottom: 20px; padding-left: 30px; width: 34px; padding-right: 16px; background: #e6e6e6; padding-top: 20px"><img alt="df" width="34" height="673" src="http://www.jkchemical.com/ImgMail/Email2013_05.jpg" /></td>
+            <td valign="top">
+            <div class="content" style="min-height: 400px; margin-bottom: 50px; overflow: auto"><!-- InstanceBeginEditable name="EditRegion2" -->
+            <p><strong>尊敬的客户：</strong></p>
+            <p>您提交的网站会员注册信息已经收到，感谢选择百灵威作为您的合作伙伴！ 化学品是受国家安全法规限制的特殊商品，百灵威的服务对象必须是具有化学品管理和应用能力的专业单位（非个人）。为此，需要您重新提供如下可核查的真实信息，感谢您的理解与合作！</p>
+            <table border="0" cellspacing="1" cellpadding="0" width="50%">
+                <tbody>
+                    <tr>
+                        <td>姓 名：</td>
+                        <td><strong>{{name}}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>收到您的上述信息后，百灵威客服中心将在一个工作日内确认并完成注册，此后您将享有下列便捷的服务功能：</p>
+            <ol>
+                <li>产品查询：超过500，000种精细化学品，可通过产品名称、CAS号、产品编号、分子式、结构式等多种方式进行查询。</li>
+                <li>在线订购：可以根据需求，将选中产品加入购物车，实时在线购买。</li>
+                <li>订单查询：您可以通过订单号随时查询订单状态。</li>
+                <li>资料中心：百灵威更新、发布的产品、专业技术信息，您可以通过资料中心随时了解并使用。</li>
+            </ol>
+            <!-- InstanceEndEditable --></div>
+            <div class="foot">
+            <div style="text-align: center; font: bold 14px Arial, Helvetica, sans-serif; color: #5f5f5f">
+            <p>此邮件为自动发送，请不要直接回复此邮件</p>
+            <p>&nbsp;</p>
+            </div>
+            </div>
+            </td>
+            <td style="padding-bottom: 20px; padding-left: 0px; width: 80px; padding-right: 0px; background: #e6e6e6; padding-top: 20px">&nbsp;</td>
+        </tr>
+    </tbody>
+</table>
+<!-- InstanceEnd -->
+-/;

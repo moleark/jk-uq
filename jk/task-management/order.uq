@@ -1,4 +1,87 @@
 BUS pointBus from [百灵威系统工程部]/point
     ACCEPT order {
-       BOOK CouponOrderMap at ( coupon, id ); --添加优惠码使用记录
+
+        var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer, webuserName char(50);
+        
+        if( coupon > 0 ){
+            set     sales=c.user, --轻代理
+                    mycustomer=c.customer, --MYCID
+                    couponID = c.id
+            from    Coupon as c 
+            where   c.id = coupon;
+        }
+
+        if( couponID > 0 ){ 
+            --1、首先要记录优惠码的使用记录
+            BOOK CouponOrderMap at ( coupon, id ); --添加优惠码使用记录
+            
+            --2、绑定当前轻代理，或者延期当前轻代理。
+            if(sales>0){
+                BOOK WebuserNowSalesBOOK at ( webuser, sales ) set validity = now(); --添加当前轻代理
+            }
+
+            --3、绑定客户资料和客户档案的关系
+            --判断是否指定了客户，如果没有指定则新建客户
+            if( mycustomer is null ){
+
+                set  webuserName = u.name 
+                from $user as u 
+                where u.id = webuser;
+
+                var customerId ID;
+                TUID MyCustomer into customerId unique(no) set
+                name=webuserName, user=sales, createTime=now();
+
+                set mycustomer = customerId;
+            }
+            --绑定
+            BOOK WebUserMyCustomerMap at ( webuser, mycustomer ); --添加系统客户和自己客户的关联关系
+      
+            --4、记录业绩（ 产品明细 ）
+            --获取订单的目录总价，用于计算每个产品分摊的成交价
+            var catalogueSubAmount dec(12, 2);
+            set catalogueSubAmount = 0;
+
+            foreach orderItems {
+                set catalogueSubAmount = catalogueSubAmount + subAmount;
+            }
+
+            foreach orderItems {
+                var achievement dec(12, 2);
+                set achievement = (amount / catalogueSubAmount * subAmount) - 1;
+                
+                --记录客户当前轻代理的绩效
+                history OrderHistory of( sales )
+                set webuser=webuser, product=product, pack=pack, quantity=quantity, price=(achievement*0.15);
+                BOOK AchievementBook at( sales ) set SaleVolume += (achievement * 0.15 );
+                
+                --记录客户当前轻代理上级的绩效
+                var parent ID [$user];
+                set parent=parent from Relation where children = sales;
+                
+                if(parent){
+                    history OrderHistory of( parent )
+                    set webuser=sales, product=product, pack=pack, quantity=quantity, price=(achievement*0.02); 
+                    BOOK AchievementBook at( parent ) set SaleVolume += (achievement * 0.02 );
+                }
+            }
+        }
+
     };
+
+/**
+
+优惠码使用后:
+1、首先要记录优惠码的使用记录
+    获取订单中的 订单编号 和 优惠码 记录下来;
+
+2、绑定当前轻代理，或者延期当前轻代理。
+    
+3、绑定客户资料和客户档案的关系
+    客户订单的 webuser 和 优惠码 的内部客户编号进行关联
+
+4、记录业绩（ 产品明细 ）
+    记录销售的业绩；销售业绩为 （成交价 - 代理价） * 0.15
+    记录销售上一级的业绩；上一级业绩为 （成交价 - 代理价） * 0.02
+
+*/

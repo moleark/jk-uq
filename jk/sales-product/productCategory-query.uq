@@ -1,4 +1,16 @@
 
+Query GetRootCategories (salesRegion ID SalesRegion, language ID Language)
+returns ret(
+    productCategory ID ProductCategory
+){
+    into ret select pc.id as productCategory
+    from    ProductCategory as pc
+            join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
+                and pcl.language = language
+            join ProductCategoryInclusion as ppi on ppi.category = pc.id and ppi.salesRegion = salesRegion and ppi.total > 0
+    where   pc.parent is null;
+};
+
 Query GetRootCategory (salesRegion ID SalesRegion, language ID Language)
 returns first(
     productCategory ID ProductCategory,
@@ -74,7 +86,6 @@ returns secend(
 QUERY SearchProductByCategory (productCategory ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
 PAGE (
     id bigint start 0,
-    productid bigint,
     no char(20),
     brand ID Brand,
     origin char(50),
@@ -85,20 +96,23 @@ PAGE (
     CAS char(20),
     purity char(80),
     molecularFomula char(200),
-    molecularWeight char(30)
+    molecularWeight char(30),
+    seq bigint
 ) {
-    PAGE select p.id, p.id as productid, p.no, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, pc.chemical, pc.CAS, pc.purity, pc.molecularFomula, pc.molecularWeight
-    from ProductX as p
-        left join Brand as b on p.brand = b.id
-        left join ProductChemical as pc on p.id = pc.product
-        join ProductProductCategory as ppc on ppc.product = p.id
-    where p.id > $pageStart and ppc.category = productCategory
-        and exists (
-            select  1 from ProductX.PackX as pk join PriceX as pr on pr.pack = pk.id and pr.salesRegion = salesRegion and pr.product = pk.owner
-            where pk.owner = p.id and pr.discountinued = 0 and pr.expireDate > now()
-        )
+    /-mysql
+    INSERT  INTO `_$page` (`id`, `no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`, `seq`)
+    SELECT  p.`id`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`
+            ,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`,
+            p.`id` as `seq`
+    from    `tv_productcache` as pca
+            inner join `tv_productx` as p on p.`$unit` = pca.`$unit` and p.id = pca.product
+            left join `tv_brand` as b on p.`$unit` = b.`$unit` and p.brand = b.id
+            left join `tv_productchemical` as pc on p.`$unit` = pc.`$unit` and p.id = pc.product
+            join `tv_productproductcategory` as ppc on p.`$unit` = ppc.`$unit` and ppc.product = p.id
+    where   p.id > `_$pagestart` and ppc.category = `_productCategory`
     order by p.id
-    limit $pageSize;
+    limit `_$pagesize`;
+    -/
 };
 
 ACTION CountProductCategoryInclusion() {
@@ -121,12 +135,12 @@ ACTION CountProductCategoryInclusion() {
         set n = categoryId;
 
         insert 	into product.tv_productcategoryinclusion(`$unit`, category, salesregion, total)
-		select 	ppc.`$unit`, ppc.category, sr.id, count(distinct ppc.product) as con
+		select 	ppc.`$unit`, ppc.category, p.salesRegion, count(distinct ppc.product) as con
 		from   	product.tv_productproductcategory ppc
                 inner join product.tv_productcache as p on ppc.product = p.product
 		where   ppc.`$unit` = `_$unit` and p.`$unit` = `_$unit`
 				and ppc.category = categoryId
-		group by ppc.`$unit`, ppc.category, sr.id;
+		group by ppc.`$unit`, ppc.category, p.salesRegion;
 
 
         set ng = 5;

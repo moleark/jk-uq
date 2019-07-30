@@ -213,7 +213,7 @@ MAP WebUserEmployeeMap (
 BOOK WebuserNowSalesBOOK (
     key webuser ID [$user],
     key sales ID [$user],
-    validity date
+    validity datetime
 );
 
 
@@ -289,6 +289,7 @@ History TaskHistory (
 History OrderHistory (
     date,
     key user ID [$user],
+    webuser ID [$user],
     customer ID MyCustomer,
     product ID ProductX not null,
     pack OF product.PackX not null,
@@ -348,6 +349,10 @@ ACTION CompletionCustomerInfoTask(
             TUID MyCustomer id (customer) set research =value;
         }
     }
+
+    history TaskHistory of (taskid)
+    set status=4, principal=$user, resultType=resultType, result=result;
+    delete from TaskBook where task = taskid;
 };
 
 
@@ -523,7 +528,7 @@ RETURNS ret (
 /** 添加客户*/
 ACTION CreateMyCustomer(
     unit ID MyCustomerUnit,
-    no char(30) not null,
+    no bigint,
     name char(50) not null,
     firstName char(50),
     lastName char(50),
@@ -539,7 +544,7 @@ ACTION CreateMyCustomer(
 
 /** 添加客户单位*/
 ACTION CreateMyCustomerUnit(
-    no char(30) not null,
+    no bigint,
     name char(50) not null
 ){
     var customerId ID;
@@ -574,9 +579,11 @@ ACTION CreateCoupon(
 
     var code bigint, webuser ID [$user];
     set code = rand() * 100000000;
+
+    set webuser=webuser from WebUserMyCustomerMap where myCustomer=customer;
     
     var couponId ID;
-    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,webuser=47,
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,webuser=webuser,
     discount=discount, preferential=preferential, createTime=now(), isValid=1;
     into ret select code;
 };
@@ -629,11 +636,11 @@ returns ret (
     
     if ( coupon is null ) {
         set result = 0;  --不存在
-    } else if ( isValid <> 1 and validitydate > now() ) {
+    } else if ( isValid <> 1 or validitydate < now() ) {
         set result = 2;  --无效的优惠码
     } else if ( webuser<>webuser2) {
-        set result = 3; --不是指定的客户
-    } else if (not order2 is null)  {
+        set result = 3;  --不是指定的客户
+    } else if (not order2 is null) {
         set result = 4;  --已经被使用
     } else if ( not nowsales is null and nowsales <> sales )  {
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )

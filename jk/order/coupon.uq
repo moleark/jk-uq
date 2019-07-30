@@ -1,13 +1,13 @@
 BUS couponBus from 百灵威系统工程部/Coupon
     ACCEPT coupon {
         var couponId id;
-        TUID Coupon into couponId id(id) set user = user, webuser = webuser, discount = discount
+        TUID Coupon into couponId id(id) set code = code, user = user, webuser = webuser, discount = discount
             , preferential = preferential, validitydate = validitydate, isValid = isValid;
     };
 
 --优惠券
 TUID Coupon (
-    id,
+    id _,
     main code char(8),
     main user ID [$user],
     main webuser ID [$user],
@@ -15,7 +15,6 @@ TUID Coupon (
     main preferential dec(12, 2), --优惠额度
     main validitydate date,
     main isValid smallint,
-    unique(code)
 );
 
 
