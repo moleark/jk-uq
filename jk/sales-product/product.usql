@@ -59,6 +59,9 @@ OPEN TUID ProductX ver 0.5 (
     isValid tinyint not null default 1,
     search (origin, description, descriptionC),
     unique (brand, origin),
+    index idx_tv_productx_description,
+    index idx_tv_productx_descriptionc,
+    index idx_unit_origin,
 );
 
 MAP PriceX ver 0.2 (
@@ -77,6 +80,7 @@ OPEN Map ProductChemical (
     purity char(80),
     molecularFomula char(200),
     molecularWeight char(30),
+    index idx_unit_cas,
 );
 
 OPEN MAP ProductSalesRegion (
