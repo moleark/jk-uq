@@ -15,7 +15,7 @@ returns ret(
 
 QUERY SearchProduct (key char(100), salesRegion ID salesRegion)
 PAGE (
-    id bigint start 0,
+    id ID ProductX start 0,
     no char(20),
     brand ID Brand,
     origin char(50),

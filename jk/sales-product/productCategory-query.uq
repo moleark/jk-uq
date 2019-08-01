@@ -85,7 +85,7 @@ returns secend(
 
 QUERY SearchProductByCategory (productCategory ID ProductCategory, salesRegion ID SalesRegion, language ID Language)
 PAGE (
-    id bigint start 0,
+    id ID ProductX start 0,
     no char(20),
     brand ID Brand,
     origin char(50),
