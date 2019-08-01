@@ -1,0 +1,9 @@
+QUERY searchPaperDoc(domain ID DomainType, documenttype ID DocumentType )
+returns ret (
+    document ID Document
+) {
+    into ret select id as document
+    from    Document
+    where   domain=domain and documenttype=documenttype
+    order by id; 
+};

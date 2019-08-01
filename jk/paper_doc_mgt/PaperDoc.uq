@@ -17,12 +17,12 @@ TUID StockLocation(
 );
 
 --文档管理
-TUID Document(
+OPEN TUID Document(
     id,
     main domain ID DomainType,
     main documenttype ID DocumentType,
     main name char(100) not null,
-    code char(10) null,
+    main code char(10) null,
     main image char(100) null,
 );
 

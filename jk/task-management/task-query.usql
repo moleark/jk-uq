@@ -215,8 +215,9 @@ PAGE (
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
                 c.teacher, c.potential, c.research, c.salutation, c.createTime
-    from MyCustomer as c
-    where   c.id > $pageStart and c.user = $user and c.name like key2
+    from    MyCustomer as c
+            join MyCustomerUnit as u on c.unit =u.id
+    where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )
     limit $pageSize;
 };
  
@@ -234,7 +235,7 @@ PAGE (
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.no, c.name, c.createTime, c.isValid
     from MyCustomerUnit as c
-    where  c.user=$user and c.id > $pageStart and c.name like key2
+    where c.user=$user and c.id > $pageStart and ( c.name like key2 )
     limit $pageSize;
 };
 
