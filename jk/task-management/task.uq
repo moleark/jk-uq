@@ -278,7 +278,7 @@ BOOK MessageBook (
 --任务流转记录
 History TaskHistory (
     date,
-    key task ID Task,
+    task ID Task,
     status ID TaskStatus,
     principal ID Employee,
     resultType char(5),
@@ -288,7 +288,7 @@ History TaskHistory (
 --销售历史记录
 History OrderHistory (
     date,
-    key user ID [$user],
+    user ID ,
     webuser ID [$user],
     customer ID MyCustomer,
     product ID ProductX not null,
@@ -307,8 +307,8 @@ ACTION CompletionTask(
         value bigint
     )
 ) {
-    history TaskHistory of (taskid)
-    set status=4, principal=$user, resultType=resultType, result=result;
+    history TaskHistory 
+    set task=taskid, status=4, principal=$user, resultType=resultType, result=result;
 
     delete from TaskBook where task = taskid;
 
@@ -350,8 +350,8 @@ ACTION CompletionCustomerInfoTask(
         }
     }
 
-    history TaskHistory of (taskid)
-    set status=4, principal=$user, resultType=resultType, result=result;
+    history TaskHistory 
+    set task=taskid, status=4, principal=$user, resultType=resultType, result=result;
     delete from TaskBook where task = taskid;
 };
 
@@ -363,8 +363,8 @@ ACTION InvalidTask(
     result char(1000)
 ){
 
-    history TaskHistory of( taskid )
-    set status = 3, principal = $user, resultType = resultType, result= result;
+    history TaskHistory 
+    set  task=taskid, status = 3, principal = $user, resultType = resultType, result= result;
 
     delete from TaskBook where task = taskid;
 };
@@ -376,8 +376,8 @@ ACTION ExtensionTask(
     result char(1000)
 ){
     
-    history TaskHistory of( taskid )
-    set status = 2, principal = $user, resultType = 'exten', result= result;
+    history TaskHistory 
+    set task=taskid, status = 2, principal = $user, resultType = 'exten', result= result;
     book TaskBook at ( taskid ) set remindDate = remindDate;
 };
 
