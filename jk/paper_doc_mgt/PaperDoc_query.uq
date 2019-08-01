@@ -1,9 +1,16 @@
 QUERY searchPaperDoc(domain ID DomainType, documenttype ID DocumentType )
-returns ret (
-    document ID Document
+PAGE (
+    id bigint start 0,
+    name char(100),
+    code char(10),
+    image char(100)
 ) {
-    into ret select id as document
-    from    Document
-    where   domain=domain and documenttype=documenttype
-    order by id; 
+    /-mysql
+    INSERT  INTO `_$page` (`id`, `name`,`code`,`image`)
+    SELECT  p.`id`,p.`name` AS `name`,p.`code` AS `code`,p.`image` AS `image`
+    from    Document as p
+    where   p.id > `_$pagestart` and p.domain=domain and p.documenttype=documenttype
+    order by id
+    limit `_$pagesize`;
+    -/
 };
