@@ -30,5 +30,5 @@ returns ret(
             join Customer as ps on ps.id = cd.customer and ps.id = customer
     where   cd.brand = brand
             and cd.startDate < now()
-            and ( cd.endDate is null or cd.endDate > now())
+            and ( cd.endDate is null or cd.endDate > now());
 };

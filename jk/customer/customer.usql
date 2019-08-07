@@ -72,6 +72,6 @@ OPEN TUID InvoiceInfo (
     main taxNo char(50),
     main address char(400),
     main telephone char(50),
-    main bank char(50),
+    main bank char(100),
     main accountNo char(50),
 );

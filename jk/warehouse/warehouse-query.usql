@@ -30,7 +30,7 @@ returns ret(
     where   pi.product = product
             and pi.pack = pack
             and srw.salesRegion = salesRegion
-    order by srw.sequence
+    order by srw.sequence;
 };
 
 /*
