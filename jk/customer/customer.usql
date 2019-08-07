@@ -57,7 +57,7 @@ OPEN MAP CustomerSetting ver 0.1 (
 
 OPEN TUID Contact (
     id,
-    main name char(50) not null,
+    main name char(100) not null,
     main organizationName char(200),
     main mobile char(20) not null,
     main telephone char(50),
