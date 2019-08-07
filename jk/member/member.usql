@@ -26,7 +26,7 @@ BOOK PointYears(
 
 HISTORY PointHistory(
     date,
-    key member ID Member,
+    member ID Member,
     source char(100),
     point int not null,
 );

@@ -10,10 +10,10 @@ returns ret(
         join Brand as b on p.brand = b.id
         join BrandDeliveryTime as bdt on bdt.brand = b.id
     where p.id = product
-        and bdt.salesRegion = salesRegion
+        and bdt.salesRegion = salesRegion;
 };
 
-QUERY SearchProduct (key char(100), salesRegion ID salesRegion)
+QUERY SearchProduct (keyWord char(100), salesRegion ID salesRegion)
 PAGE (
     id ID ProductX start 0,
     no char(20),
@@ -30,7 +30,7 @@ PAGE (
     seq bigint
 ) {
     var key2 char(100);
-    set key2 = concat(key, '*');
+    set key2 = concat(keyWord, '*');
 
     /-mysql
 
@@ -42,13 +42,13 @@ PAGE (
         select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
                 ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
         from    `tv_productx` as p1
-        where   p1.`$unit` = `_$unit` and p1.origin = `_key`
+        where   p1.`$unit` = `_$unit` and p1.origin = `_keyWord`
         union
         select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
                 ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
         from    `tv_productx` as p1
                 LEFT JOIN `tv_productchemical` AS pc1 ON p1.`id`=pc1.`product` and p1.`$unit` = pc1.`$unit`
-        where   pc1.`$unit` = `_$unit` and pc1.cas = `_key`
+        where   pc1.`$unit` = `_$unit` and pc1.cas = `_keyWord`
         union
         select  p4.`$unit`, p4.`id` AS `id`,p4.`no` AS `no`,p4.`brand` AS `brand`,p4.`origin` AS `origin`
                 ,p4.`description` AS `description`, p4.descriptionc, p4.imageurl
@@ -66,7 +66,7 @@ PAGE (
                 select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
                         ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
                 from    `tv_productx` as p1
-                where   match (p1.`descriptionc`) against (`_key`)
+                where   match (p1.`descriptionc`) against (`_keyWord`)
                 limit 499
                 ) p5
     ) AS p
@@ -90,13 +90,13 @@ PAGE (
         select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, 1 as score, 1 as sourcerank
         from    `tv_productcache` as pc
                 inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
-        where   p1.`$unit` = `_$unit` and p1.origin = `_key` and pc.salesRegion = `_salesRegion`
+        where   p1.`$unit` = `_$unit` and p1.origin = `_keyWord` and pc.salesRegion = `_salesRegion`
         union
         select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, 1 as score, 1 as sourcerank
         from    `tv_productcache` as pc
                 inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
                 inner JOIN `tv_productchemical` AS pc1 ON p1.`id`=pc1.`product` and p1.`$unit` = pc1.`$unit`
-        where   pc1.`$unit` = `_$unit` and pc1.cas = `_key` and pc.salesRegion = `_salesRegion`
+        where   pc1.`$unit` = `_$unit` and pc1.cas = `_keyWord` and pc.salesRegion = `_salesRegion`
         union
         select  p4.`$unit`, p4.`id` AS `id`, p4.level, p4.hasstock, score, 4 as sourcerank
         from    (
@@ -110,11 +110,11 @@ PAGE (
         union
         select  p5.`$unit`, p5.`id` AS `id`, p5.level, p5.hasstock, score, 5 as sourcerank
         from    (
-                select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, match (p1.`descriptionc`) against (`_key`) as score
+                select  p1.`$unit`, p1.`id` AS `id`, pc.level, pc.hasstock, match (p1.`descriptionc`) against (`_keyWord`) as score
                 from    `tv_productcache` as pc
                         inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
-                where   match (p1.`descriptionc`) against (`_key`) and pc.salesRegion = `_salesRegion`
-                order by match (p1.`descriptionc`) against (`_key`) desc
+                where   match (p1.`descriptionc`) against (`_keyWord`) and pc.salesRegion = `_salesRegion`
+                order by match (p1.`descriptionc`) against (`_keyWord`) desc
                 limit 499
                 ) p5
         ) AS p
