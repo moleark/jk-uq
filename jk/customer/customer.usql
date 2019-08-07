@@ -44,6 +44,7 @@ OPEN MAP CustomerHandler (
 OPEN MAP CustomerContacts (
     key customer ID Customer,
     key contact ID Contact,
+    isDefault tinyint,
 );
 
 OPEN MAP CustomerSetting ver 0.1 (
