@@ -156,21 +156,21 @@ returns ret (
 };
 
 /** 搜索订单记录*/
-QUERY SearchOrderHistory (
+QUERY SearchAchievementHistory (
      user ID [$user]
 )
 returns ret (
     date datetime,
-    user ID [$user],
-    customer ID MyCustomer,
+    sales ID [$user],
+    webuser ID [$user],
     product ID ProductX not null,
     pack OF product.PackX not null,
     quantity int not null,
     price dec(12, 2) not null
-) {
-    into ret select date, user, customer,product,pack,quantity,price
-    from    OrderHistory
-    where user=user;
+) {    
+    into ret select date, sales, webuser,product,pack,quantity,price 
+    from    AchievementHistory 
+    where sales=user;
 };
 
 
@@ -332,9 +332,10 @@ PAGE (
     set key2 = concat('%', key, '%');
 
 
-    PAGE select m.id, m.description, m.customer, m.type, m.biz, m.employee, m.sourceID, m.sourceType, m.sourceNo, m.priorty, m.deadline, m.createTime
+    PAGE select m.id, m.description, m.customer, jkt.type, jkt.biz, m.employee, m.sourceID, m.sourceType, m.sourceNo, m.priorty, m.deadline, m.createTime
     from    JkTask as m
             join WebUserEmployeeMap as we on m.employee=we.employee
+            JOIN TaskBizJKTaskType as jkt on jkt.jktype = m.jktype
     where   we.webuser=$user and m.completeTime is null and m.id > $pageStart and ( m.description like key2 or key is null )
             and m.isValid is null
     limit $pageSize;

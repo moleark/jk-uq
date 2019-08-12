@@ -38,6 +38,7 @@ TUID JkTask (
     id,
     main description char(100),
     main customer ID Customer,
+    main jktype ID JkTaskType,
     main type ID TaskType,
     main biz ID BizType,
     main employee id employee,
@@ -168,6 +169,14 @@ MAP TaskBiz (
 );
 
 
+--业务类型关系
+MAP TaskBizJKTaskType (
+    key type ID TaskType,
+    key biz ID BizType,
+    key jktype ID JkTaskType
+);
+
+
 --业务类型和完结内容关系
 MAP BizField (
     key task ID Task,
@@ -286,10 +295,10 @@ History TaskHistory (
 );
 
 --销售历史记录
-History OrderHistory (
+History AchievementHistory (
     date,
-    user ID ,
-    webuser ID [$user],
+    sales ID [$user],    --销售
+    webuser ID [$user],  --产生绩效的客户
     customer ID MyCustomer,
     product ID ProductX not null,
     pack OF product.PackX not null,
