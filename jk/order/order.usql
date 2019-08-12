@@ -52,8 +52,8 @@ Action submit {
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
     foreach orderItems {
-        history OrderHistory of( webUser, product, pack )
-            set price = price, quantity = quantity, amount = subAmount, currency = currency,
+        history OrderHistory
+            set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
 
         bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
@@ -74,9 +74,9 @@ STATE MatchingCustomer {
 
 HISTORY OrderHistory (
     date,
-    key webUser ID WebUser,
-    key product ID ProductX,
-    key pack OF product.PackX,
+    webUser ID WebUser,
+    product ID ProductX,
+    pack OF product.PackX,
     price dec(12, 2),
     quantity int,
     amount dec(12, 2),
@@ -95,8 +95,8 @@ HISTORY OrderHistory (
 -- 订单运费记录
 HISTORY OrderFreightHistory (
     date,
-    key webUser ID WebUser,
-    key currency ID Currency,
+    webUser ID WebUser,
+    currency ID Currency,
     freightFee dec(12, 2) not null,
     freightFeeRemitted dec(12, 2) not null,
     user,

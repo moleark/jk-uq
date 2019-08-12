@@ -21,9 +21,9 @@ returns ret (
     from Task as t
          join TaskBook as tb on t.id = tb.task
          join TaskType as tt on t.type = tt.id
-         join BizType  as bt on t.biz = bt.id 
+         join BizType  as bt on t.biz = bt.id
     where tb.principal = $user
-    order by tb.remindDate; 
+    order by tb.remindDate;
 };
 
 /** 搜索本任务的流转过程*/
@@ -35,12 +35,12 @@ returns ret (
     principal ID Employee,
     resultType char(5),
     result char(1000)
-) {    
+) {
     into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
-    FROM    Taskhistory as ht 
+    FROM    Taskhistory as ht
     where    ht.task = taskid
     order by ht.DATE desc
-    limit 200; 
+    limit 200;
 };
 
 
@@ -53,13 +53,13 @@ returns ret (
     principal ID Employee,
     resultType char(5),
     result char(1000)
-) {    
+) {
     into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
-    FROM    Taskhistory as ht 
-            join Task as t on ht.task = t.id 
+    FROM    Taskhistory as ht
+            join Task as t on ht.task = t.id
     where   t.customer = customerid
     order by ht.DATE desc
-    limit 200; 
+    limit 200;
 };
 
 
@@ -72,12 +72,12 @@ returns ret (
     principal ID Employee,
     resultType char(5),
     result char(1000)
-) {    
+) {
     into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
     FROM    Taskhistory as ht
     where   ht.principal = $user and ht.status in( 3, 4 )
     order by ht.DATE desc
-    limit 200; 
+    limit 200;
 };
 
 /** 搜索完结*/
@@ -87,11 +87,11 @@ returns ret (
     field char(100),
     value bigint,
     fieldName char(100)
-) {    
+) {
     into ret SELECT	tf.task, tf.field, tf.value, f.name as fieldName
-    FROM    TaskFieldBook as  tf 
+    FROM    TaskFieldBook as  tf
             join Field as f on tf.field = f.id
-    where   tf.task = taskid
+    where   tf.task = taskid;
 };
 
 /** 搜索任务的产品*/
@@ -100,10 +100,10 @@ returns ret (
     task ID Task,
     product ID ProductX,
     note text
-) {    
+) {
     into ret SELECT tp.task, tp.product, tp.note
     FROM    TaskProductBook as tp
-    where   tp.task = taskid
+    where   tp.task = taskid;
 };
 
 /** 搜索任务的产品包装*/
@@ -113,10 +113,10 @@ returns ret (
     product ID ProductX,
     pack OF product.PackX,
     note text
-) {    
+) {
     into ret SELECT tp.task, tp.product, tp.pack, tp.note
     FROM    TaskProductPackBook as tp
-    where   tp.task = taskid
+    where   tp.task = taskid;
 };
 
 
@@ -126,10 +126,10 @@ returns ret (
     task ID Task,
     project ID Project,
     note text
-) {    
+) {
     into ret SELECT tp.task, tp.project, tp.note
     FROM    TaskProjectBook as tp
-    where   tp.task = taskid
+    where   tp.task = taskid;
 };
 
 
@@ -139,7 +139,7 @@ returns ret (
     user ID [$user],
     post tinyint,
     code bigint
-) {    
+) {
     into ret select user,post, code from Position where user = $user;
 };
 
@@ -151,7 +151,7 @@ QUERY SearchAchievement (
 returns ret (
    user ID [$user],
    SaleVolume dec(12, 2) not null
-) {    
+) {
     into ret select user, SaleVolume from AchievementBook where user = user;
 };
 
@@ -167,9 +167,9 @@ returns ret (
     pack OF product.PackX not null,
     quantity int not null,
     price dec(12, 2) not null
-) {    
-    into ret select date, user, customer,product,pack,quantity,price 
-    from    OrderHistory 
+) {
+    into ret select date, user, customer,product,pack,quantity,price
+    from    OrderHistory
     where user=user;
 };
 
@@ -182,9 +182,9 @@ returns ret (
     parentcode bigint,
     childrencode bigint,
     assigned  char(100)
-) { 
+) {
     into ret select r.parent, r.children, p.code as parentcode, cp.code as childrencode, a.Assigned
-    from    Position as p 
+    from    Position as p
             join Relation as r on p.user = r.parent
             join Position as cp on cp.user = r.children
             left join PeerAssignedBook as a on a.user = p.user and a.peer = r.children
@@ -220,7 +220,7 @@ PAGE (
     where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )
     limit $pageSize;
 };
- 
+
 
 /** 搜索我的客户*/
 QUERY searchMyCustomerUnit(key char(100))
@@ -251,7 +251,7 @@ PAGE (
     PAGE select m.id, m.date, m.note, m.user, m.peer
     from    Message as m
     where   m.id > $pageStart and m.user = $user
-    order by date desc 
+    order by date desc
     limit $pageSize;
 };
 
@@ -273,7 +273,7 @@ PAGE (
     id bigint start 0,
     code bigint,
     user ID [$user],
-    validitydate date,    
+    validitydate date,
     discount dec(12, 2),
     preferential dec(12, 2),
     createTime datetime,
@@ -288,9 +288,9 @@ PAGE (
     limit $pageSize;
 };
 
- 
+
 /** 搜索平台客户*/
-QUERY SearchWebUser( 
+QUERY SearchWebUser(
     key char(100)
 )
 PAGE (
@@ -310,7 +310,7 @@ PAGE (
 /**
 
 **/
-QUERY SearchJKTask( 
+QUERY SearchJKTask(
     key char(100)
 )
 PAGE (
@@ -325,12 +325,12 @@ PAGE (
     sourceNo char(50),
     priorty int,
     deadline date,
-    createTime date 
+    createTime date
 ){
 
     var key2 char(102);
     set key2 = concat('%', key, '%');
-    
+
 
     PAGE select m.id, m.description, m.customer, m.type, m.biz, m.employee, m.sourceID, m.sourceType, m.sourceNo, m.priorty, m.deadline, m.createTime
     from    JkTask as m
@@ -339,6 +339,3 @@ PAGE (
             and m.isValid is null
     limit $pageSize;
 };
-
-
- 

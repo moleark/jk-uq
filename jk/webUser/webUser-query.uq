@@ -39,7 +39,7 @@ ACTION auditPendingUser(
     teacherId bigint
 ) {
     book WebUserCustomer at (id) set customer = customerId;
-    HISTORY WebUserAuditHistory of(id) set result = 1, customer = customerId;
+    HISTORY WebUserAuditHistory set webUser = id, result = 1, customer = customerId;
     -- bus webUserAuditBus.WebUserAuditPass set webUser = id, customer = customerId;
 
     delete from PendingAuditWebUser where webUser = id;
@@ -70,7 +70,7 @@ ACTION auditPendingUserRefuse(
     id bigint,
     comments char(200)
 ) {
-    HISTORY WebUserAuditHistory of(id) set result = 0, comments = comments;
+    HISTORY WebUserAuditHistory set webUser = id, result = 0, comments = comments;
 
     delete from PendingAuditWebUser where webUser = id;
 };

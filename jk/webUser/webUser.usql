@@ -60,7 +60,7 @@ BOOK PendingAuditWebUser (
 
 HISTORY WebUserAuditHistory(
     date,
-    key webUser ID WebUser,
+    webUser ID WebUser,
     result tinyint,
     comments char(100),
     customer ID Customer,
