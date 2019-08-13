@@ -1,34 +1,29 @@
 QUERY GetCountryProvinces(country ID Country)
 returns ret(
-    -- province ID Province
-    id int,
-    englishName char(50),
-    chineseName char(50)
+    province ID Province
 ) {
-    -- into ret select p.id as Province
-    Into ret select p.id, p.englishName, p.chineseName
+    into ret select p.id as Province
     from    Province as p
-    where   p.country = country;
+    where   p.country = country
+    order by p.chineseName;
 };
 
 QUERY GetProvinceCities(province ID Province)
 returns ret(
-    id int,
-    englishName char(50),
-    chineseName char(50)
+    city ID City
 ) {
-    Into ret select c.id, c.englishName, c.chineseName
+    Into ret select c.id as City
     from    City as c
-    where   c.province = province;
+    where   c.province = province
+    order by c.chineseName;
 };
 
 QUERY GetCityCounties(city ID City)
 returns ret(
-    id int,
-    englishName char(50),
-    chineseName char(50)
+    county ID County
 ) {
-    Into ret select c.id, c.englishName, c.chineseName
+    Into ret select c.id as County
     from    County as c
-    where   c.city = city;
+    where   c.city = city
+    order by c.chineseName;
 };
