@@ -1,0 +1,5 @@
+BUS bus1 ver 0.4 from /test;
+
+action TestBus1 ver 0.1 () {
+    Bus bus1.schema1 set a1='a', a2=1, a3=2, a4=1;
+};
