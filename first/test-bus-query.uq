@@ -1,0 +1,105 @@
+BUS bus1 ver 0.2 from /test
+    accept schema1
+    BUS bus1.query1 into tb {
+        set p1='1';
+        set p2=3;
+        set p3=5;
+        into p4 select 'x11' as a1, 21 as a2, 31 as a3, 41 as a4;
+        into p4 select 'x12' as a1, 22 as a2, 32 as a3, 42 as a4;
+    }
+    {
+        var ut int;
+        set ut=unix_timestamp();
+        book BookBus1Accept at(a1, ut) set a3=a3, a4=a4;
+        foreach tb {
+            set ut=ut+1;
+            book BookBus1Accept at(a1, ut) set a3=c1, a4=90;
+        }
+        foreach tb.arrname {
+            set ut=ut+1;
+            book BookBus1Accept at(a1, ut) set a3=a3, a4=91;
+        }
+        foreach tb.arrname2 {
+            set ut=ut+1;
+            book BookBus1Accept at(a1, ut) set a3=b3, a4=92;
+        }
+    };
+
+book BookBus1Accept (
+    key a1 char(100),
+    key a2 int,
+    a3 int,
+    a4 id,
+);
+
+ACTION testQueryBus ver 0.7 (p int)
+BUS bus1.query1 into tb {
+    set p1='1';
+    set p2=3;
+    set p3=5;
+    into p4 select 'x11' as a1, 21 as a2, 31 as a3, 41 as a4;
+    into p4 select 'x12' as a1, 22 as a2, 32 as a3, 42 as a4;
+}
+RETURNS main (
+    p1 text,
+    p2 dec(36,6),
+    p3 id
+)
+RETURNS retArr (
+    a1 text,
+    a2 dec(36,6),
+    a3 dec(36,6),
+    a4 id
+)
+RETURNS retArr2 (
+    b3 text,
+    cb2 dec(36,6),
+    aa3 dec(36,6)
+)
+{
+    var va1 int, a int;
+    var vs1 varchar(100);
+    set va1=p;
+    -- set a=c1 from tb;
+    foreach tb {
+        into main select c1 as p1, 33 as p2, 55 as p3;
+    }
+    foreach tb.arrname {
+        into retArr select a1,a2,a3,a4;
+    }
+    foreach tb.arrname2 {
+        into retArr2 select b3, cb2, aa3;
+    }
+};
+
+SHEET sheetToTestBusQuery ver 0.3 (
+    p1 int,
+    p2 text,
+    arr detail (
+        d1 int,
+        d2 text
+    )
+)
+verify
+BUS bus1.query1 as q into tb {
+    set q.p1='1';
+    set q.p2=3;
+    set q.p3=5;
+    into q.p4 select 'x11' as a1, 21 as a2, 31 as a3, 41 as a4;
+    into q.p4 select 'x12' as a1, 22 as a2, 32 as a3, 42 as a4;
+}
+{
+    fail;
+}
+action act1
+BUS bus1.query1 as q into tb {
+    set q.p1='1';
+    set q.p2=3;
+    set q.p3=5;
+    into q.p4 select 'x11' as a1, 21 as a2, 31 as a3, 41 as a4;
+    into q.p4 select 'x12' as a1, 22 as a2, 32 as a3, 42 as a4;
+}
+{
+    var a int;
+    set a=p1;
+};

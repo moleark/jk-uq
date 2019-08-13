@@ -1,0 +1,18 @@
+BUS bus1 ver 0.2 from /test
+    QUERY query1 {
+        var a int;
+        set a=p2;
+        into BUS select 'sss' as c1,2 as c3,3 as bbba37;
+
+        into bus.arrname select 'a' as a1, 12 as a2, 13 as a3, 14 as a4;
+        into bus.arrname select 'b' as a1, 22 as a2, 23 as a3, 24 as a4;
+        foreach (var a1 text, a2 dec(36,6), a3 dec(36,6), a4 bigint
+            of select a.a1,a.a2, a.a3, a.a4 from p4 as a)
+        {
+            -- into bus.arrname select a1, a2, a3, a4 from p4;
+            into bus.arrname select a1, a2, a3, a4; -- from p4;
+        }
+
+        into bus.arrname2
+            select 'b3b3' as b3, 222 as cb2, 333 as aa3;
+    };
