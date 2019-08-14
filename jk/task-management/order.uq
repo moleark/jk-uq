@@ -1,8 +1,10 @@
 BUS pointBus from [百灵威系统工程部]/point
-    ACCEPT order {
-
+    
+    ACCEPT order 
+    BUS pointBus.getagentprice into tb {
+        set packid='1';
+    } {
         var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer, webuserName char(50);
-        
         if( coupon > 0 ){
             set     sales=c.user, --轻代理
                     mycustomer=c.customer, --MYCID
@@ -46,9 +48,14 @@ BUS pointBus from [百灵威系统工程部]/point
                 set catalogueSubAmount = catalogueSubAmount + subAmount;
             }
 
+            var agentprices dec(12, 2);
+            foreach tb {
+                set agentprices=agentprice;
+            }
+            
             foreach orderItems {
                 var achievement dec(12, 2);
-                set achievement = (amount / catalogueSubAmount * subAmount) - 1;--1代表代理价
+                set achievement = (amount / catalogueSubAmount * subAmount) - agentprices;--1代表代理价
                 
                 --记录客户当前轻代理的绩效
                 history AchievementHistory

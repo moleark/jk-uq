@@ -285,18 +285,6 @@ BOOK MessageBook (
     count bigint,
 );
 
---消息
-BOOK AgencyPrice (
-    key pack OF product.PackX not null,
-    price dec(12, 2) not null
-);
-
---消息
-BOOK AgencyPriceSource (
-    key pack OF product.PackX not null,
-    price dec(12, 2) not null
-);
-
 --任务流转记录
 History TaskHistory (
     date,

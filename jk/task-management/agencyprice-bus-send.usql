@@ -1,7 +1,0 @@
-BUS agencypriceBus ver 0.2  from [百灵威系统工程部]/agencyprices
-    QUERY query1 {
-        var a char(50);
-        set a=packid;
-        into BUS select pack, price
-        from AgencyPriceSource where pack = a;
-    };
