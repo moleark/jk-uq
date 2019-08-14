@@ -209,12 +209,14 @@ PAGE (
     potential smallint,
     research smallint,
     salutation char(10),
-    createTime date
+    createTime date,
+    address ID Address,
+    addressString char(400)
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
-                c.teacher, c.potential, c.research, c.salutation, c.createTime
+                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
     where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )

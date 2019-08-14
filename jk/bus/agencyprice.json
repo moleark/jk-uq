@@ -1,0 +1,21 @@
+{
+    "query1": {
+        "param": [
+            {
+                "name": "packid",
+                "type": "string"
+            }
+        ],
+        "returns": "complex"
+    },
+    "complex": [
+        {
+            "name": "packid",
+            "type": "string"
+        },
+        {
+            "name": "agencyprice",
+            "type": "number"
+        }
+    ]
+}

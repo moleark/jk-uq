@@ -91,6 +91,8 @@ TUID MyCustomer (
     main name char(50) not null,
     main firstName char(50),
     main lastName char(50),
+    main address ID Address,
+    main addressString char(400),
     telephone char(20),
     gender char(5),
     birthDay date,
@@ -283,6 +285,17 @@ BOOK MessageBook (
     count bigint,
 );
 
+--消息
+BOOK AgencyPrice (
+    key pack OF product.PackX not null,
+    price dec(12, 2) not null
+);
+
+--消息
+BOOK AgencyPriceSource (
+    key pack OF product.PackX not null,
+    price dec(12, 2) not null
+);
 
 --任务流转记录
 History TaskHistory (

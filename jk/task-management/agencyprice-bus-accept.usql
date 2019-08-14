@@ -1,0 +1,8 @@
+BUS agencypriceBuss ver 0.2 from [百灵威系统工程部]/agencyprices
+    accept complex
+    BUS agencypriceBuss.query1 into tb {
+        set packid='1';
+    }
+    { 
+        book AgencyPrice at(pack) set price=price;
+    };
