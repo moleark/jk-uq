@@ -1,5 +1,4 @@
-BUS pointBus from [百灵威系统工程部]/point
-    
+BUS pointBus from [百灵威系统工程部]/point    
     ACCEPT order 
     BUS pointBus.getagentprice into tb {
         set packid='1';
