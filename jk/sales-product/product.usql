@@ -5,7 +5,7 @@ OPEN TUID Brand (
     no char(10) not null,
     main name char(50) not null,
     search (name),
-    unique (name),
+    unique (no),
 );
 
 Map BrandSalesRegion (
