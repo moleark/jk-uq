@@ -41,7 +41,6 @@ TUID Country from JKCommon (
     main englishName char(50) not null,
     main chineseName char(50) not null,
     search (englishName, chineseName),
-    unique (englishName),
 );
 
 TUID Province from JKCommon (
@@ -51,7 +50,6 @@ TUID Province from JKCommon (
     main englishName char(50) not null,
     main chineseName char(50) not null,
     search (englishName, chineseName),
-    unique(englishName),
 );
 
 TUID City from JKCommon (
@@ -61,7 +59,6 @@ TUID City from JKCommon (
     main englishName char(50) not null,
     main chineseName char(50) not null,
     search (englishName, chineseName),
-    unique(englishName),
 );
 
 TUID County from JKCommon (

@@ -1,7 +1,0 @@
-BUS pointBus from [百灵威系统工程部]/point
-    QUERY getagentprice {
-        var a char(50);
-        set a = packid;
-        into BUS select 1 packid, 33 as agentprice;
-    };
-

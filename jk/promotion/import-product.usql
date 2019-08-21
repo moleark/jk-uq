@@ -18,5 +18,4 @@ TUID Brand from JKProduct (
     no char(10) not null,
     main name char(50) not null,
     search (name),
-    unique (name),
 );
