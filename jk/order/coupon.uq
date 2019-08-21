@@ -1,23 +1,27 @@
+import JKSalestask = 百灵威系统工程部/salestask;
+
+/*
 BUS couponBus from 百灵威系统工程部/Coupon
     ACCEPT coupon {
         var couponId id;
-        TUID Coupon into couponId id(id) set code = code, user = user, webuser = webuser, discount = discount
+        TUID Coupon into couponId id(id) set code = code, user = user, customer = customer, discount = discount
             , preferential = preferential, validitydate = validitydate, isValid = isValid;
     };
+*/
 
 --优惠券
-TUID Coupon (
-    id _,
+TUID Coupon from JKSalestask (
+    id,
     main code char(8),
     main user ID [$user],
-    main webuser ID [$user],
+    main customer ID Customer,
     main discount dec(12, 2),     --折扣
     main preferential dec(12, 2), --优惠额度
     main validitydate date,
     main isValid smallint,
 );
 
-
+/*
 QUERY getCoupon(code char(8))
 returns ret (
     code char(8),
@@ -28,5 +32,6 @@ returns ret (
 ){
     into ret select code, discount, preferential, validitydate, isValid
     from    coupon
-    where   code = code and isValid = 1 and validitydate > now() and webuser = $user;
+    where   code = code and isValid = 1 and validitydate > now() and customer = $user;
 };
+*/
