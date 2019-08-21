@@ -84,5 +84,29 @@
             "name": "customer",
             "type": "id"
         }
+    ],
+    "WebUserInvoice": [
+        {
+            "name": "webUser",
+            "type": "id"
+        },
+        {
+            "name": "invoiceType",
+            "type": "number"
+        },
+        {
+            "name": "invoiceInfo",
+            "type": "id"
+        }
+    ],
+    "WebUserContacts": [
+        {
+            "name": "webUser",
+            "type": "id"
+        },
+        {
+            "name": "contact",
+            "type": "id"
+        }
     ]
 }
