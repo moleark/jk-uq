@@ -162,13 +162,10 @@ QUERY SearchAchievementHistory (
 returns ret (
     date datetime,
     sales ID [$user],
-    webuser ID [$user],
-    product ID ProductX not null,
-    pack OF product.PackX not null,
-    quantity int not null,
+    mycustomer ID MyCustomer,
     price dec(12, 2) not null
 ) {    
-    into ret select date, sales, webuser,product,pack,quantity,price 
+    into ret select date, sales, mycustomer,price 
     from    AchievementHistory 
     where sales=user;
 };
@@ -221,6 +218,18 @@ PAGE (
             join MyCustomerUnit as u on c.unit =u.id
     where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )
     limit $pageSize;
+};
+
+
+QUERY searchCustomerMyCustomerMap(mycustomer ID MyCustomer)
+returns ret (
+    mycustomer ID MyCustomer,
+    customer ID Customer,
+    webuser ID [$user]
+) {
+    into ret select mycustomer, customer, webuser 
+    from    CustomerMyCustomerMap 
+    where   mycustomer=mycustomer;
 };
 
 

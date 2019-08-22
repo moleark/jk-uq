@@ -93,13 +93,13 @@ TUID MyCustomer (
     main lastName char(50),
     main address ID Address,
     main addressString char(400),
-    telephone char(20),
-    gender char(5),
-    birthDay date,
-    email char(30),
-    wechat char(20),
-    teacher char(20),
-    potential smallint,
+    main telephone char(20),
+    main gender char(5),
+    main birthDay date,
+    main email char(30),
+    main wechat char(20),
+    main teacher char(20),
+    main potential smallint,
     research smallint,
     salutation char(10),
     createTime datetime,
@@ -110,7 +110,7 @@ TUID MyCustomer (
         content char(50) not null,
         order smallint,
     ),
-    isValid smallint not null,
+    isValid smallint default 1,
     search (name, firstName, lastName),
     unique(no),
 );
@@ -129,7 +129,7 @@ TUID MyCustomerUnit (
         content char(50) not null,
         order smallint,
     ),
-    isValid smallint not null,
+    isValid smallint default 1,
     search (name),
     unique(no),
 );
@@ -144,24 +144,17 @@ TUID Message (
     main note text,
 );
 
-
-TUID CouponType (
-    id,
-    main name char(20),
-);
-
 --优惠券
-TUID Coupon (
+OPEN TUID Coupon (
     id,
     code char(8),
     user ID [$user],
-    webuser  ID [$user],
-    customer ID MyCustomer,
+    customer ID Customer,
     validitydate date,    
     discount dec(12, 2),     --折扣
     preferential dec(12, 2), --优惠额度
     createTime datetime,
-    isValid smallint
+    isValid  smallint default 1,
 );
 
 --业务类型关系
@@ -204,13 +197,14 @@ MAP Relation (
 --优惠券订单
 MAP CouponOrderMap (
     key coupon ID Coupon,
-    key order ID ,
+    key order ID,
 );
 
 --我的客户和系统客户关联关系
-MAP WebUserMyCustomerMap (
-    key myCustomer ID MyCustomer,
-    key webuser ID [$user],
+MAP CustomerMyCustomerMap (
+    key mycustomer ID MyCustomer,
+    customer ID Customer,
+    webuser ID [$user],
 );
 
 --平台用户和内部员工关系
@@ -221,8 +215,8 @@ MAP WebUserEmployeeMap (
 
 
 --轻代理和客户关系
-BOOK WebuserNowSalesBOOK (
-    key webuser ID [$user],
+BOOK CustomerNowSalesBOOK (
+    key customer ID Customer,
     key sales ID [$user],
     validity datetime
 );
@@ -273,10 +267,44 @@ BOOK PeerAssignedBook(
     Assigned char(100),
 );
 
+
+--业绩计算规则
+BOOK AchievementRuleBook(
+    key Type int, --1：客户，2：直属销售，3： 二级销售
+    key MinAmount dec(12, 2),
+    key MaxAmount dec(12, 2),
+    value dec(12, 2) ,
+);
+
 --销售业绩
 BOOK AchievementBook(
     key user ID [$user],
     SaleVolume dec(12, 2) not null,
+);
+
+
+
+--业绩历史记录
+History AchievementHistory (
+    date,
+    sales ID [$user],    --销售
+    mycustomer ID MyCustomer,
+    price dec(12, 2) not null,
+    happendate datetime,
+);
+
+
+--订单历史记录
+BOOK CustomerOrderBook (
+    key sales ID [$user],    --销售
+    key orderitem ID,
+    mycustomer ID MyCustomer,
+    product ID ProductX not null,
+    pack OF product.PackX not null,
+    quantity int not null,
+    price dec(12, 2) not null,
+    agentprices dec(12, 2) not null,
+    isUsed smallint default 1,
 );
 
 --消息
@@ -295,17 +323,6 @@ History TaskHistory (
     result char(1000),
 );
 
---销售历史记录
-History AchievementHistory (
-    date,
-    sales ID [$user],    --销售
-    webuser ID [$user],  --产生绩效的客户
-    customer ID MyCustomer,
-    product ID ProductX not null,
-    pack OF product.PackX not null,
-    quantity int not null,
-    price dec(12, 2) not null,
-);
 
 /** 完结任务*/
 ACTION CompletionTask(
@@ -436,15 +453,13 @@ RETURNS ret (
     where   a.id=task;
 
     var mycustomerid ID;
-    set mycustomerid=id from MyCustomer where no=customer;
+    set mycustomerid=mycustomer from CustomerMyCustomerMap where Customer=customer;
 
     if ( mycustomerid is null ){
- 
+        --判断是否有单位，没有单位新建单位
         var mycustomerUnitid ID;
         set mycustomerUnitid=id from MyCustomerUnit where no=organization;
-
         if( mycustomerUnitid is null ){
-        
             TUID MyCustomerUnit into mycustomerUnitid unique(organization) set
                     name=organizationName, createTime=now(), isValid=1, user=$user; 
         }
@@ -461,7 +476,8 @@ RETURNS ret (
         TUID MyCustomer into mycustomerid unique(customer) set
             name=name, firstName=firstName, lastName=lastName, gender=gender, user=$user, unit=mycustomerUnitid,
             salutation=salutation, birthDay=birthDay, isValid=1, createTime=now();
-
+        
+         BOOK CustomerMyCustomerMap at ( mycustomerid ) set customer=customer ; 
     }
 
     var taskId ID;
@@ -556,10 +572,21 @@ ACTION CreateMyCustomer(
 ACTION CreateMyCustomerUnit(
     no bigint,
     name char(50) not null
+)returns ret (
+    code bigint
 ){
-    var customerId ID;
-    TUID MyCustomerUnit into customerId unique(no) set
-        name=name, createTime=now(), isValid=1, user=$user;
+    var rename char(50) , unitId bigint;
+    set rename = a.name from MyCustomerUnit as a where a.user=$user and a.name=name limit 1;
+    
+    if(rename is null ){
+        TUID MyCustomerUnit into unitId unique(no) set
+            name=name, createTime=now(), isValid=1, user=$user;
+        
+    }else{
+         set unitId = 0;
+    };
+    into ret select unitId as code;
+    
 };
 
 
@@ -582,33 +609,35 @@ ACTION CreateCoupon(
     validitydate date,
     discount dec(12, 2), 
     preferential dec(12, 2),
-    customer ID  MyCustomer
+    mycustomer ID MyCustomer
 )returns ret (
     code char(8)
 ){
 
-    var code bigint, webuser ID [$user];
+    var code bigint, customer ID Customer;
     set code = rand() * 100000000;
-
-    set webuser=webuser from WebUserMyCustomerMap where myCustomer=customer;
+    if( not mycustomer is null ){
+        set customer=customer from CustomerMyCustomerMap where mycustomer=mycustomer;
+    }
     
     var couponId ID;
-    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,webuser=webuser,
-    discount=discount, preferential=preferential, createTime=now(), isValid=1;
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
+                discount=discount, preferential=preferential, createTime=now(), isValid=1;
     into ret select code;
+     
 };
 
 /** 验证优惠码是否可用*/
 ACTION IsCanUseCoupon ( 
     code char(20), 
-    webuser ID [$user]
+    customer ID Customer
 )
 returns ret (
     result  bigint,
     id      bigint, 
     code   char(20), 
     user   ID [$user],
-    webuser ID [$user],
+    customer ID Customer,
     discount dec(12,2),  
     preferential dec(12,2), 
     validitydate datetime, 
@@ -619,11 +648,10 @@ returns ret (
     id              bigint, 
     validitydate    datetime, 
     isValid         smallint, 
-    mycustomer ID   MyCustomer, 
+    customer2 ID    Customer, 
     discount        dec(12,2),  
     preferential    dec(12,2),  
     order2          char(50), 
-    webuser2   ID   [$user], 
     sales ID        [$user], 
     nowsales   ID   [$user],
     coupon char(8) ;
@@ -632,23 +660,22 @@ returns ret (
             sales=c.user, --轻代理
             isValid=c.isValid, --是否有效
             validitydate=c.validitydate, --有效期
-            mycustomer=c.customer, --MYCID
+            customer2=c.customer, --MYCID
             discount = c.discount,
             preferential=  c.preferential,
-            webuser2=c.webuser, --指定客户
             coupon = code
     from    Coupon as c 
     where   c.code = code;
  
-    set order2 = ( select co.order from CouponOrderMap as co where co.coupon = code);
+    set order2 = ( select co.order from CouponOrderMap as co where co.coupon = id);
 
-    set nowsales = ( select sales from WebuserNowSalesBOOK as c where c.webuser = webuser); --当前轻代理
+    set nowsales = ( select sales from CustomerNowSalesBOOK as c where c.customer = customer); --当前轻代理
     
     if ( coupon is null ) {
         set result = 0;  --不存在
     } else if ( isValid <> 1 or validitydate < now() ) {
         set result = 2;  --无效的优惠码
-    } else if ( webuser<>webuser2) {
+    } else if ( customer <> customer2) {
         set result = 3;  --不是指定的客户
     } else if (not order2 is null) {
         set result = 4;  --已经被使用
@@ -656,10 +683,38 @@ returns ret (
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
     } else {
         set result = 1;  --正常
- 
-        bus couponBus.coupon set id=id, code=code, user=sales, webuser=webuser2, discount=discount, 
+        /**
+        --取消BUS的发送，如果购物车需要查询订单的使用记录通过VT的方式
+        bus couponBus.coupon set id=id, code=code, user=sales, customer=customer2, discount=discount, 
             preferential=preferential, validitydate=validitydate, isValid=isValid; 
         bus couponBus.coupon send;
+        **/
     };
-    into ret select result, id, code, sales as user, webuser2 as webuser, discount, preferential, validitydate, isValid;
+    into ret select result, id, code, sales as user, customer2 as customer, discount, preferential, validitydate, isValid;
 };
+
+
+ACTION UpateCustomerMyCustomerMap(
+    mycustomer ID MyCustomer,
+    customer ID Customer
+){
+
+     BOOK CustomerMyCustomerMap at ( mycustomer) set customer=customer; 
+};
+
+/**计算绩效**/
+ACTION ComputeAchievement(
+){
+    foreach ( var sales bigint, mycustomer bigint, price dec(12, 2),agentprices dec(12, 2) of
+            select  sales,mycustomer,price,agentprices
+            from    CustomerOrderBook
+            where   sales=$user and isUsed=1
+    ) {
+        history AchievementHistory
+        set  happendate=now(),sales=sales, mycustomer=mycustomer, price=(price - agentprices) * 0.5;
+     }
+};
+
+
+
+ 
