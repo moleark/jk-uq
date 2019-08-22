@@ -1,0 +1,12 @@
+BUS pointBus from [百灵威系统工程部]/point
+    QUERY getAgentPrice {
+
+        foreach (var packid bigint, agentPrice dec(12, 2)
+            of
+            select  ap.pack, ap.agentPrice
+            from    packs as p
+                    join AgentPrice as ap on p.packid = ap.pack)
+        {
+            into bus.agentPriceResult select packid, agentPrice;
+        }
+    };
