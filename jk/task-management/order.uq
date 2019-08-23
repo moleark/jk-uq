@@ -1,7 +1,7 @@
 BUS pointBus ver 0.4 from [百灵威系统工程部]/point
     ACCEPT order
     BUS pointBus.getAgentPrice into tb {
-        set customer = customer;
+        set customerid = customer;
         foreach orderItems {
             into packs select pack as packid;
         }
@@ -26,7 +26,7 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
 
             --3、绑定客户资料和客户档案的关系
             --判断是否指定了客户，如果没有指定则新建客户
-            set mycustomer=mycustomer from CustomerMyCustomerMap where customer=customer;
+            set mycustomer = a.mycustomer from CustomerMyCustomerMap as a where a.customer = customer;
             if( mycustomer is null ){
 
                 var customerId ID;
