@@ -47,21 +47,22 @@ Verify {
 Action submit {
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
-    bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
-        shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
-        amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-        freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
     foreach orderItems {
         history OrderHistory
             set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
-
-        bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
 
     if (customer > 0) {
+        bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
+            shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
+            amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
+            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
+        foreach orderItems {
+            bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+        }
         STATE TO END;
-    }else {
+    } else {
         STATE TO MatchingCustomer;
     }
 }
