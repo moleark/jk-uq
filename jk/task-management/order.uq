@@ -1,12 +1,10 @@
-BUS pointBus from [百灵威系统工程部]/point
+BUS pointBus ver 0.4 from [百灵威系统工程部]/point
     ACCEPT order
     BUS pointBus.getAgentPrice into tb {
         set customer = customer;
-        /*
         foreach orderItems {
             into packs select pack as packid;
         }
-        */
     }{
         var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer;
         if( coupon > 0 ){
