@@ -22,14 +22,13 @@ PAGE (
     code char(10),
     image char(100)
 ) {
-    /-mysql
-    INSERT  INTO `_$page` (`id`, `name`,`code`,`image`)
-    SELECT  p.`id`,p.`name` AS `name`,p.`code` AS `code`,p.`image` AS `image`
-    from    `tv_document` as p
-    where   p.id > `_$pagestart` and p.name=`_name`
-    order by id
-    limit `_$pagesize`;
-    -/
+    var k char(50);
+    set k = concat('%', name, '%');
+    page select p.id, p.name, p.code, p.image
+    from Document as p
+    where (p.name like k) and p.id>$pageStart
+    order by p.id
+    limit $pageSize;
 };
 
 /** 搜索本文档出入库记录*/
@@ -56,7 +55,7 @@ returns ret (
     quantity int
 ) {    
     into ret SELECT	ht.document, ht.stockLocation, ht.Quantity
-    FROM    DocumentHistory as ht 
+    FROM    DocumentAccount as ht 
     where    ht.document = document
     order by ht.stockLocation desc
     limit 200; 
