@@ -1,7 +1,16 @@
 BUS pointBus ver 0.4 from [百灵威系统工程部]/point
-    ACCEPT order
+    ACCEPT order (
+        id, no, webuser, organization, customer as customerX,
+        shippingContact, invoiceContact, invoiceType, invoiceInfo,
+        freightFee, freightFeeRemitted,
+        amount, currency,
+        coupon, couponOffsetAmount, couponRemitted
+    )
+    arr orderItems (
+        product, pack, quantity, price, subAmount
+    )
     BUS pointBus.getAgentPrice into tb {
-        set customerid = customer;
+        set customer = customerX;
         foreach orderItems {
             into packs select pack as packid;
         }
@@ -21,12 +30,13 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
 
             --2、绑定当前轻代理，或者延期当前轻代理。
             if(sales>0){
-                BOOK CustomerNowSalesBOOK at ( customer, sales ) set validity = now(); --添加当前轻代理
+                BOOK CustomerNowSalesBOOK at ( customerX, sales ) set validity = now(); --添加当前轻代理
             }
 
             --3、绑定客户资料和客户档案的关系
             --判断是否指定了客户，如果没有指定则新建客户
-            set mycustomer = a.mycustomer from CustomerMyCustomerMap as a where a.customer = customer;
+            set mycustomer = a.mycustomer from CustomerMyCustomerMap as a
+                where a.customer = customerX;
             if( mycustomer is null ){
 
                 var customerId ID;
@@ -36,7 +46,7 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
                 set mycustomer = customerId;
             }
             --绑定
-            BOOK CustomerMyCustomerMap at ( mycustomer ) set customer=customer, webuser=webuser;
+            BOOK CustomerMyCustomerMap at ( mycustomer ) set customer = customerX, webuser = webuser;
 
             --4、记录销售记录( 产品明细)
             var catalogueSubAmount dec(12, 2);
@@ -50,8 +60,8 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
 
                 var agentprices dec(12, 2);
                 foreach tb.agentPriceResult {
-                    if(pack=packid){
-                        set agentprices=agentprice;
+                    if(pack = packid){
+                        set agentprices = agentprice;
                     }
                 }
                 --如果没有获取代理价则代理价等于销售价格
@@ -60,8 +70,8 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
                 }
                 --记录客户当前轻代理的绩效
                 BOOK CustomerOrderBook at(sales,id)
-                set mycustomer=mycustomer, product=product, pack=pack, quantity=quantity,
-                    price=itemsAmount, agentprices=agentprices, isUsed=1;
+                set mycustomer = mycustomer, product = product, pack = pack, quantity = quantity,
+                    price = itemsAmount, agentprices = agentprices, isUsed = 1;
             }
         }
     };
