@@ -1,6 +1,6 @@
 import JKProduct = 百灵威系统工程部/product;
 
-TUID ProductX ver 0.5 (
+TUID ProductX ver 0.5 from JKProduct(
     id,
     main brand ID Brand not null,
     arr PackX (
