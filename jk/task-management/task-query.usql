@@ -152,7 +152,7 @@ returns ret (
    user ID [$user],
    SaleVolume dec(12, 2) not null
 ) {
-    into ret select user, SaleVolume from AchievementBook where user = user;
+    into ret select user, Volume as SaleVolume from AchievementBook where user = user;
 };
 
 /** 搜索订单记录*/
@@ -275,8 +275,6 @@ returns ret (
     from    MessageBook as m
     where   m.user = $user;
 };
-
-
 
 /** 搜索我的优惠码*/
 QUERY SearchCoupon( key char(100))
