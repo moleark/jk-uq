@@ -277,12 +277,19 @@ BOOK AchievementRuleBook(
 );
 
 --销售业绩
-BOOK AchievementBook(
+BOOK SalesAmountBook(
     key user ID [$user],
-    key Type int, --1：客户，2：直属销售，3： 二级销售, 4:销售额
+    key Type int, --1：自己的销量, 2:直属团队销量；3：二级团队销量
     Volume dec(12, 2) not null,
 );
 
+
+--销售业绩
+BOOK AchievementBook(
+    key user ID [$user],
+    key Type int, --1：客户，2：直属销售，3： 二级销售
+    Volume dec(12, 2) not null,
+);
 
 --业绩历史记录
 History AchievementHistory (
@@ -707,47 +714,106 @@ ACTION UpateCustomerMyCustomerMap(
 /**计算绩效**/
 ACTION ComputeAchievement(
 ){
-
-    var SaleVolume dec(12, 2), one dec(12, 2), two dec(12, 2), three dec(12, 2), Achievement dec(12, 2);
     foreach ( var sales bigint, mycustomer bigint, price dec(12, 2),agentprices dec(12, 2) of
             select  sales,mycustomer,price,agentprices
             from    CustomerOrderBook
             where   sales=$user and isUsed=1
     ) {
-        --获取总销售额
-        set SaleVolume=Volume from AchievementBook where user=$user and Type = 4;
-        --获取一二三级的提取比例
-        set one = value from AchievementRuleBook where MinAmount < SaleVolume and MaxAmount >= SaleVolume and Type=1;
-        set two = value from AchievementRuleBook where MinAmount < SaleVolume and MaxAmount >= SaleVolume and Type=2;
-        set three = value from AchievementRuleBook where MinAmount < SaleVolume and MaxAmount >= SaleVolume and Type=3;
 
-        set Achievement =  ((price - agentprices) * one);
+        --step.1.获取各级团队的总销量
+        var oneSaleVolume dec(12, 2), twoSaleVolume dec(12, 2), threeSaleVolume dec(12, 2);
+        set oneSaleVolume=Volume from SalesAmountBook where user=$user and Type = 1;
+        set twoSaleVolume=Volume from SalesAmountBook where user=$user and Type = 2;
+        set threeSaleVolume=Volume from SalesAmountBook where user=$user and Type = 3;
+         
+        --step.2.获取各级团队的总销量(按照当前额度记上订单金额计算)
+        var oneSaleVolume_1 dec(12, 2), twoSaleVolume_1 dec(12, 2), threeSaleVolume_1 dec(12, 2);
+        set oneSaleVolume_1 = oneSaleVolume+price;
+        set twoSaleVolume_1 = twoSaleVolume+price;
+        set threeSaleVolume_1 = threeSaleVolume+price;
+        
+        --stpe.3.定义各级团队的最大销量, 和各级团队提成比例
+        var oneMaxVolume dec(12, 2), twoMaxVolume dec(12, 2), threeMaxVolume dec(12, 2);
+        var oneRate dec(12, 2), twoRate dec(12, 2), threeRate dec(12, 2); 
+        set oneRate = value, oneMaxVolume=MaxAmount from AchievementRuleBook where MinAmount < oneSaleVolume and MaxAmount >= oneSaleVolume and Type=1;
+        set twoRate = value, twoMaxVolume=MaxAmount from AchievementRuleBook where MinAmount < twoSaleVolume and MaxAmount >= twoSaleVolume and Type=2;
+        set threeRate = value, threeMaxVolume=MaxAmount from AchievementRuleBook where MinAmount < threeSaleVolume and MaxAmount >= threeSaleVolume and Type=3;
 
+        --step.4.定义各级团队提成比例（按照当前额度记上订单金额计算）
+        
+        --计算绩效
+        var  oneAchievement dec(12, 2);
+        if( oneSaleVolume_1 <= oneMaxVolume ){
+            set oneAchievement = ((price - agentprices) * oneRate);
+        }else{
+            var oneRate_1 dec(12, 2) , --超出部分提成比例
+                oneExcess dec(12, 2) , --超出部分
+                oneNotExcess dec(12, 2);--未超出部分
+            set oneExcess =oneSaleVolume_1 - oneMaxVolume;
+            set oneNotExcess = price-(oneSaleVolume_1 - oneMaxVolume);
+
+            set oneRate_1 = value from AchievementRuleBook where MinAmount < oneSaleVolume_1 and MaxAmount >= oneSaleVolume_1 and Type=1;
+            set oneAchievement = ((price - agentprices) * oneRate_1 * ( oneExcess / price) ) + ((price - agentprices) * oneRate * ( oneNotExcess / price) );
+        }
         --更新总销售额
-        book AchievementBook at($user, 4 ) set Volume+=SaleVolume;
+        book SalesAmountBook at($user, 1 ) set Volume+=price;
         --记录A类绩效历史
         history AchievementHistory
-            set happendate=now(), sales=sales, mycustomer=mycustomer, price=Achievement, Types=1;
+            set happendate=now(), sales=sales, mycustomer=mycustomer, price=oneAchievement, Types=1;
         --更新A类绩效
-        book AchievementBook at($user,1) set Volume += Achievement;
+        book AchievementBook at($user,1) set Volume += oneAchievement;
 
         var  twosale ID [$user], threesale ID [$user];
 
         set twosale=parent from  Relation where children=$user;
         if( not twosale is null ){
+
+            var  twoAchievement dec(12, 2);
+            --计算绩效
+            if( twoSaleVolume_1 <= twoMaxVolume ){
+                set twoAchievement =  ( oneAchievement * twoRate );
+            }else{
+                var twoRate_1 dec(12, 2) , --超出部分提成比例
+                    twoExcess dec(12, 2) , --超出部分
+                    twoNotExcess dec(12, 2);--未超出部分
+                set twoExcess =twoSaleVolume_1 - twoMaxVolume;
+                set twoNotExcess = price-(twoSaleVolume_1 - twoMaxVolume);
+
+                set twoRate_1 = value from AchievementRuleBook where MinAmount < twoSaleVolume_1 and MaxAmount >= twoSaleVolume_1 and Type=2;
+                set twoAchievement = (oneAchievement * twoRate_1 * ( twoExcess / price) ) + (oneAchievement * twoRate * ( twoNotExcess / price) );
+            }
+            --更新总销售额
+            book SalesAmountBook at(twosale, 2 ) set Volume+=price;
             --更新B类历史
             history AchievementHistory
-                set happendate=now(), sales=twosale, mycustomer=mycustomer, price=( Achievement * two) , Types=1;
+                set happendate=now(), sales=twosale, mycustomer=mycustomer, price=twoAchievement, Types=1;
             --更新B类绩效
-            book AchievementBook at( twosale,2) set Volume += ( Achievement * two);
+            book AchievementBook at( twosale,2) set Volume += twoAchievement;
    
             set threesale=parent from  Relation where children=twosale;
             if( not threesale is null ){
+                var threeAchievement dec(12, 2);
+                --计算绩效
+                if( threeSaleVolume_1 <= threeMaxVolume ){
+                    set threeAchievement =  ( twoAchievement * threeRate );
+                }else{
+                    var threeRate_1 dec(12, 2) , --超出部分提成比例
+                        threeExcess dec(12, 2) , --超出部分
+                        threeNotExcess dec(12, 2);--未超出部分
+                    set threeExcess =threeSaleVolume_1 - threeMaxVolume;
+                    set threeNotExcess = price-(threeSaleVolume_1 - threeMaxVolume);
+
+                    set threeRate_1 = value from AchievementRuleBook where MinAmount < threeSaleVolume_1 and MaxAmount >= threeSaleVolume_1 and Type=3;
+                    set threeAchievement = (twoAchievement * threeRate_1 * ( threeExcess / price) ) + (twoAchievement * threeRate * ( threeNotExcess / price) );
+
+                }
+                --更新总销售额
+                book SalesAmountBook at(threesale, 3 ) set Volume+=price;
                 --更新C类历史
                 history AchievementHistory
-                    set happendate=now(), sales=threesale, mycustomer=mycustomer, price=( Achievement * three )  , Types=1;
+                    set happendate=now(), sales=threesale, mycustomer=mycustomer, price=threeAchievement  , Types=1;
                --更新C类绩效
-               book AchievementBook at( threesale, 3) set Volume += ( Achievement * three ); 
+               book AchievementBook at( threesale, 3) set Volume +=threeAchievement;
             }
         }  
      }
