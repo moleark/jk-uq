@@ -58,7 +58,6 @@ OPEN TUID ProductX ver 0.5 (
     main imageUrl char(200),
     isValid tinyint not null default 1,
     search (origin, description, descriptionC),
-    unique (brand, origin),
     index idx_tv_productx_description,
     index idx_tv_productx_descriptionc,
     index idx_unit_origin,
