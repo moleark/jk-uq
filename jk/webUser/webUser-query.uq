@@ -1,28 +1,3 @@
-/*
-QUERY getPendingAuditUser()
-returns ret(
-    id bigint,
-    no bigint,
-    name char(50) null,
-    firstName char(50),
-    lastName char(50),
-    gender char(5),
-    salutation char(10),
-    organizationName char(50),
-    departmentName char(50),
-    telephone char(20),
-    mobile char(20) null,
-    email char(50),
-    fax char(20),
-    zipCode char(20)
-) {
-    into ret select u.id, u.no, u.name, u.firstName, u.lastName, u.gender, u.salutation, u.organizationName, u.departmentName
-            , uc.telephone, uc.mobile, uc.email, uc.fax, uc.zipCode
-    from    PendingAuditWebUser as pu
-            join WebUser as u on u.id = pu.webUser
-            join WebUserContact as uc on uc.webUser = u.id;
-};
-*/
 
 QUERY getPendingAuditUser()
 returns ret(
@@ -35,8 +10,7 @@ returns ret(
 /**/
 ACTION auditPendingUser(
     id bigint,
-    customerId bigint,
-    teacherId bigint
+    customerId bigint
 ) {
     book WebUserCustomer at (id) set customer = customerId;
     HISTORY WebUserAuditHistory set webUser = id, result = 1, customer = customerId;
@@ -58,6 +32,7 @@ ACTION auditPendingUser(
     set name = name, firstName = firstName, lastName = lastName, organizationName = organizationName, departmentName = departmentName
     from webUser as w
     where   w.id = id;
+
     set telephone = telephone, mobile = mobile, email = email, fax = fax, zipCode = zipCode
     from    WebUserContact
     where    webUser = id;

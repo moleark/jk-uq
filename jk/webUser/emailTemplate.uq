@@ -3,8 +3,6 @@ templet webUserAuditPassET (
 )
 subject /- 恭喜你 -/
 /-
-<!-- InstanceBegin template="/Templates/中文模板2013.dwt" codeOutsideHTMLIsLocked="false" -->
-<!-- InstanceBeginEditable name="doctitle" --><!-- InstanceEndEditable -->
 <p>
 <meta content="text/html; charset=gb2312" http-equiv="Content-Type" />
 <meta content="ie=7" http-equiv="x-ua-compatible" /><style type="text/css">
@@ -23,13 +21,13 @@ body{ background:#FFF}
 .foot table td a{ color:#5f5f5f; text-decoration:none}
 .foot table td a:hover{ color:#900; text-decoration:none}
 h1{font-size:17px; color:#fff; font-family:Arial, Helvetica, sans-serif}
-ul,ol{margin-left:20px}</style><!-- InstanceBeginEditable name="head" --><!-- InstanceEndEditable --></p>
+ul,ol{margin-left:20px}</style></p>
 <table border="0" cellspacing="0" cellpadding="0" width="900" align="center" style="margin: auto">
     <tbody>
         <tr>
             <td valign="top" style="padding-bottom: 20px; padding-left: 30px; width: 34px; padding-right: 16px; background: #e6e6e6; padding-top: 20px"><img alt="df" width="34" height="673" src="http://www.jkchemical.com/ImgMail/Email2013_05.jpg" /></td>
             <td valign="top">
-            <div class="content" style="min-height: 400px; margin-bottom: 50px; overflow: auto"><!-- InstanceBeginEditable name="EditRegion2" -->
+            <div class="content" style="min-height: 400px; margin-bottom: 50px; overflow: auto">
             <p><strong>尊敬的客户：</strong></p>
             <p>您提交的网站会员注册信息已经收到，感谢选择百灵威作为您的合作伙伴！ 化学品是受国家安全法规限制的特殊商品，百灵威的服务对象必须是具有化学品管理和应用能力的专业单位（非个人）。为此，需要您重新提供如下可核查的真实信息，感谢您的理解与合作！</p>
             <table border="0" cellspacing="1" cellpadding="0" width="50%">
@@ -59,5 +57,4 @@ ul,ol{margin-left:20px}</style><!-- InstanceBeginEditable name="head" --><!-- In
         </tr>
     </tbody>
 </table>
-<!-- InstanceEnd -->
 -/;

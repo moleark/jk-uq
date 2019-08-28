@@ -72,6 +72,11 @@ BOOK PendingAuditWebUser (
     key webUser ID WebUser,
 );
 
+TUID AuditPendingUserRefuseReason (
+    id,
+    main description char(30)
+);
+
 HISTORY WebUserAuditHistory(
     date,
     webUser ID WebUser,
