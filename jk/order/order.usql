@@ -69,7 +69,7 @@ Action submit {
 STATE MatchingCustomer {
     ACTION Pass {
         if (not customer > 0) {
-            set customerid = 100;
+            var customerid int = 100;
             bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customerid,
                 shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                 amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
