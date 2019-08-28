@@ -279,19 +279,21 @@ BOOK AchievementRuleBook(
 --销售业绩
 BOOK AchievementBook(
     key user ID [$user],
-    SaleVolume dec(12, 2) not null,
+    key Type int, --1：客户，2：直属销售，3： 二级销售, 4:销售额
+    Volume dec(12, 2) not null,
 );
-
 
 
 --业绩历史记录
 History AchievementHistory (
     date,
     sales ID [$user],    --销售
+    Types int,
     mycustomer ID MyCustomer,
     price dec(12, 2) not null,
     happendate datetime,
 );
+
 
 
 --订单历史记录
@@ -705,16 +707,49 @@ ACTION UpateCustomerMyCustomerMap(
 /**计算绩效**/
 ACTION ComputeAchievement(
 ){
+
+    var SaleVolume dec(12, 2), one dec(12, 2), two dec(12, 2), three dec(12, 2), Achievement dec(12, 2);
     foreach ( var sales bigint, mycustomer bigint, price dec(12, 2),agentprices dec(12, 2) of
             select  sales,mycustomer,price,agentprices
             from    CustomerOrderBook
             where   sales=$user and isUsed=1
     ) {
+        --获取总销售额
+        set SaleVolume=Volume from AchievementBook where user=$user and Type = 4;
+        --获取一二三级的提取比例
+        set one = value from AchievementRuleBook where MinAmount < SaleVolume and MaxAmount >= SaleVolume and Type=1;
+        set two = value from AchievementRuleBook where MinAmount < SaleVolume and MaxAmount >= SaleVolume and Type=2;
+        set three = value from AchievementRuleBook where MinAmount < SaleVolume and MaxAmount >= SaleVolume and Type=3;
+
+        set Achievement =  ((price - agentprices) * one);
+
+        --更新总销售额
+        book AchievementBook at($user, 4 ) set Volume+=SaleVolume;
+        --记录A类绩效历史
         history AchievementHistory
-        set  happendate=now(),sales=sales, mycustomer=mycustomer, price=(price - agentprices) * 0.5;
+            set happendate=now(), sales=sales, mycustomer=mycustomer, price=Achievement, Types=1;
+        --更新A类绩效
+        book AchievementBook at($user,1) set Volume += Achievement;
+
+        var  twosale ID [$user], threesale ID [$user];
+
+        set twosale=parent from  Relation where children=$user;
+        if( not twosale is null ){
+            --更新B类历史
+            history AchievementHistory
+                set happendate=now(), sales=twosale, mycustomer=mycustomer, price=( Achievement * two) , Types=1;
+            --更新B类绩效
+            book AchievementBook at( twosale,2) set Volume += ( Achievement * two);
+   
+            set threesale=parent from  Relation where children=twosale;
+            if( not threesale is null ){
+                --更新C类历史
+                history AchievementHistory
+                    set happendate=now(), sales=threesale, mycustomer=mycustomer, price=( Achievement * three )  , Types=1;
+               --更新C类绩效
+               book AchievementBook at( threesale, 3) set Volume += ( Achievement * three ); 
+            }
+        }  
      }
+     delete from CustomerOrderBook;
 };
-
-
-
- 
