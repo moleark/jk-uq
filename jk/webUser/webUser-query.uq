@@ -22,7 +22,7 @@ ACTION auditPendingUser(
     firstName char(50),
     lastName char(50),
     organizationName char(50),
-    departmentName char(50),
+    departmentName char(100),
     telephone char(20),
     mobile char(20),
     email char(50),

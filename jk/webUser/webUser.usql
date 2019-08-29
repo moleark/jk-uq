@@ -7,7 +7,7 @@ OPEN TUID WebUser (
     main gender char(5),
     main salutation char(10),
     main organizationName char(50),
-    main departmentName char(50),
+    main departmentName char(100),
     -- createTime datetime,
 ) ON SAVE {
     if ($user > 0){
