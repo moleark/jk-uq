@@ -6,7 +6,7 @@ OPEN TUID WebUser (
     main lastName char(50),
     main gender char(5),
     main salutation char(10),
-    main organizationName char(50),
+    main organizationName char(100),
     main departmentName char(100),
     -- createTime datetime,
 ) ON SAVE {
