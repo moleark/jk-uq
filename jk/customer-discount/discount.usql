@@ -2,21 +2,16 @@ OPEN MAP CustomerDiscount (
     key customer ID Customer,
     key brand ID Brand,
     discount dec(12,4) not null,
-    startDate datetime,
-    endDate datetime,
+    startDate date,
+    endDate date,
 );
 
 OPEN MAP OrganizationDiscount (
     key organization ID Organization,
     key brand ID Brand,
     discount dec(12,4) not null,
-    startDate datetime,
-    endDate datetime,
-);
-
-OPEN MAP CustomerMap (
-    key customerSub ID Customer,
-    key customerSup ID Customer,
+    startDate date,
+    endDate date,
 );
 
 /*返回单个值的Query——获取客户的品牌折扣*/

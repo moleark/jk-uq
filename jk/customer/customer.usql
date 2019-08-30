@@ -59,7 +59,7 @@ OPEN TUID Contact (
     id,
     main name char(100) not null,
     main organizationName char(200),
-    main mobile char(20) not null,
+    main mobile char(50) not null,
     main telephone char(50),
     main email char(50),
     main addressString char(400),
@@ -75,3 +75,12 @@ OPEN TUID InvoiceInfo (
     main bank char(100),
     main accountNo char(50),
 );
+
+OPEN MAP CustomerContractor (
+    key customer ID Customer,
+    key contractor ID Customer,
+) ON SAVE {
+    if ($user > 0) {
+        bus webUserBus.CustomerContractor set customer = customer, contractor = contractor;
+    }
+};

@@ -23,8 +23,8 @@ ACTION auditPendingUser(
     lastName char(50),
     organizationName char(100),
     departmentName char(100),
-    telephone char(20),
-    mobile char(20),
+    telephone char(50),
+    mobile char(50),
     email char(50),
     fax char(20),
     zipCode char(20);

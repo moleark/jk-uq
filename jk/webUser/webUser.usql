@@ -18,8 +18,8 @@ OPEN TUID WebUser (
 
 OPEN MAP WebUserContact(
     key webUser ID WebUser,
-    telephone char(20),
-    mobile char(20) null,
+    telephone char(50),
+    mobile char(50) null,
     email char(50),
     fax char(20),
     zipCode char(20),
