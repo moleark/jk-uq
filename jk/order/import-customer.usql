@@ -30,10 +30,10 @@ TUID Contact from JKCustomer (
 
 TUID InvoiceInfo from JKCustomer(
     id,
-    title char(50) not null,
+    title char(200) not null,
     taxNo char(50),
     address char(400),
     telephone char(50),
-    bank char(50),
+    bank char(100),
     accountNo char(50),
 );
