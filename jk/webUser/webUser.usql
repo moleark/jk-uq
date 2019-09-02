@@ -57,6 +57,18 @@ OPEN MAP webUserSetting ver 0.1(
     }
 };
 
+-- WebUser的默认值设置表
+OPEN MAP webUserSettingAlter (
+    key webUser ID WebUser,
+    key type ID WebUserSettingType,
+    contentId bigint
+);
+
+OPEN TUID WebUserSettingType (
+    id,
+    main description char(20),
+);
+
 -- WebUser 和 Customer的关联关系
 OPEN MAP WebUserCustomer(
     key webUser ID WebUser,
