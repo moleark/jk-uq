@@ -80,6 +80,9 @@ OPEN MAP WebUserCustomer(
 };
 
 
+
+
+
 BOOK PendingAuditWebUser (
     key webUser ID WebUser,
 );
@@ -92,8 +95,14 @@ TUID AuditPendingUserRefuseReason (
 HISTORY WebUserAuditHistory(
     date,
     webUser ID WebUser,
-    result tinyint,
-    comments char(100),
     customer ID Customer,
+    user,
+);
+
+HISTORY WebUserAuditRefuseHistory(
+    date,
+    webUser ID WebUser,
+    reason ID AuditPendingUserRefuseReason,
+    comments char(100),
     user,
 );

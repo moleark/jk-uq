@@ -13,8 +13,7 @@ ACTION auditPendingUser(
     customerId bigint
 ) {
     book WebUserCustomer at (id) set customer = customerId;
-    HISTORY WebUserAuditHistory set webUser = id, result = 1, customer = customerId;
-    -- bus webUserAuditBus.WebUserAuditPass set webUser = id, customer = customerId;
+    HISTORY WebUserAuditHistory set webUser = id, customer = customerId;
 
     delete from PendingAuditWebUser where webUser = id;
 
@@ -43,9 +42,42 @@ ACTION auditPendingUser(
 /**/
 ACTION auditPendingUserRefuse(
     id bigint,
+    reason ID AuditPendingUserRefuseReason,
     comments char(200)
 ) {
-    HISTORY WebUserAuditHistory set webUser = id, result = 0, comments = comments;
+    HISTORY WebUserAuditRefuseHistory set webUser = id, reason = reason, comments = comments;
 
     delete from PendingAuditWebUser where webUser = id;
+
+    var name char(50),
+    firstName char(50),
+    lastName char(50),
+    organizationName char(100),
+    departmentName char(100),
+    telephone char(50),
+    mobile char(50),
+    email char(50),
+    fax char(20),
+    zipCode char(20);
+
+    set name = name, firstName = firstName, lastName = lastName, organizationName = organizationName, departmentName = departmentName
+    from webUser as w
+    where   w.id = id;
+
+    set telephone = telephone, mobile = mobile, email = email, fax = fax, zipCode = zipCode
+    from    WebUserContact
+    where    webUser = id;
+    if(email <> '') {
+        if(reason = 1){
+            send email on webUserAuditPassET to email with name = firstName;
+        }else if(reason = 2) {
+            send email on webUserAuditPassET to email with name = firstName;
+        } else if(reason = 3) {
+            send email on webUserAuditPassET to email with name = firstName;
+        } else if(reason = 4) {
+            send email on webUserAuditPassET to email with name = firstName;
+        } else {
+            send email on webUserAuditPassET to email with name = firstName;
+        }
+    }
 };
