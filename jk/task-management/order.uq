@@ -56,7 +56,7 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
             }
             foreach orderItems {
                 var itemsAmount dec(12, 2);
-                set itemsAmount = (amount / catalogueSubAmount * subAmount)
+                set itemsAmount = (amount / catalogueSubAmount * subAmount) /quantity;
 
                 var agentprices dec(12, 2);
                 set agentprices = null;
