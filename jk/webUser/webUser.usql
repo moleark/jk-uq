@@ -6,8 +6,8 @@ OPEN TUID WebUser (
     main lastName char(50),
     main gender char(5),
     main salutation char(10),
-    main organizationName char(50),
-    main departmentName char(50),
+    main organizationName char(100),
+    main departmentName char(100),
     -- createTime datetime,
 ) ON SAVE {
     if ($user > 0){
@@ -18,8 +18,8 @@ OPEN TUID WebUser (
 
 OPEN MAP WebUserContact(
     key webUser ID WebUser,
-    telephone char(20),
-    mobile char(20) null,
+    telephone char(50),
+    mobile char(50) null,
     email char(50),
     fax char(20),
     zipCode char(20),
@@ -57,6 +57,18 @@ OPEN MAP webUserSetting ver 0.1(
     }
 };
 
+-- WebUser的默认值设置表
+OPEN MAP webUserSettingAlter (
+    key webUser ID WebUser,
+    key type ID WebUserSettingType,
+    contentId bigint
+);
+
+OPEN TUID WebUserSettingType (
+    id,
+    main description char(20),
+);
+
 -- WebUser 和 Customer的关联关系
 OPEN MAP WebUserCustomer(
     key webUser ID WebUser,
@@ -68,15 +80,29 @@ OPEN MAP WebUserCustomer(
 };
 
 
+
+
+
 BOOK PendingAuditWebUser (
     key webUser ID WebUser,
+);
+
+TUID AuditPendingUserRefuseReason (
+    id,
+    main description char(30)
 );
 
 HISTORY WebUserAuditHistory(
     date,
     webUser ID WebUser,
-    result tinyint,
-    comments char(100),
     customer ID Customer,
+    user,
+);
+
+HISTORY WebUserAuditRefuseHistory(
+    date,
+    webUser ID WebUser,
+    reason ID AuditPendingUserRefuseReason,
+    comments char(100),
     user,
 );

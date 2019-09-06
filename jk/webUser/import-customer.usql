@@ -24,9 +24,9 @@ TUID Customer from JKCustomer (
 TUID Contact from JKCustomer (
     id,
     main name char(50) not null,
-    main organizationName char(50),
-    main mobile char(20) not null,
-    main telephone char(20),
+    main organizationName char(200),
+    main mobile char(50) not null,
+    main telephone char(50),
     main email char(50),
     addressString char(400),
     main address ID Address,
@@ -38,6 +38,6 @@ TUID InvoiceInfo from JKCustomer(
     taxNo char(50),
     address char(400),
     telephone char(50),
-    bank char(50),
+    bank char(100),
     accountNo char(50),
 );
