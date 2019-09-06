@@ -149,14 +149,21 @@ QUERY SearchAchievement (
      user ID [$user]
 )
 returns ret (
-   user ID [$user],
-   Type int,
-   SaleVolume dec(12, 2) not null
+    user ID [$user],
+    oneSaleVolume dec(12, 2),
+    twoSaleVolume dec(12, 2),
+    threeSaleVolume dec(12, 2),
+    oneAchievement dec(12, 2),
+    twoAchievement dec(12, 2),
+    threeAchievement dec(12, 2)
 ) {
-    into ret select user, Type, Volume as SaleVolume from AchievementBook where user = user;
+    into ret select a.user, a.oneSaleVolume, a.twoSaleVolume, a.threeSaleVolume, a.oneAchievement, a.twoAchievement, a.threeAchievement 
+    from    SalesAchievementBook as a
+    where   a.user = user;
 };
 
-/** 搜索订单记录*/
+
+/** 搜索业绩记录*/
 QUERY SearchAchievementHistory (
      types int
 )
@@ -164,12 +171,13 @@ returns ret (
     date datetime,
     sales ID [$user],
     mycustomer ID MyCustomer,
-    price dec(12, 2) not null,
+    Amount dec(12, 2) not null,
     Types int 
 ) {    
-    into ret select date, sales, mycustomer,price,Types
-    from    AchievementHistory 
-    where   sales=$user and Types=types;
+    into ret select a.date, a.sales, a.mycustomer, a.Amount, a.Types
+    from    AchievementHistory as a
+    where   a.sales=$user and a.Types=types and a.Amount<>0
+    order by a.date desc ;
 };
 
 
