@@ -46,6 +46,7 @@ OPEN TUID Address (
     main zipCode char(20),
     main description char(200),
     search (description),
+    unique(country, province, city, county)
 );
 
 OPEN TUID SalesRegion (
