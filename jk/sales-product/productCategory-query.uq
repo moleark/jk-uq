@@ -119,11 +119,11 @@ ACTION CountProductCategoryInclusion() {
     /-mysql
     begin
     declare categoryId, parentId, subId, n, ng int default 0;
-	truncate table product.tv_productcategoryinclusion;
+	truncate table tv_productcategoryinclusion;
 
 	read_loop: LOOP
 		select	id, parent into categoryId, parentId
-		from	product.tv_productcategory
+		from	tv_productcategory
 		where	isleaf = 1 and id > n
         order by id
 		limit 1;
@@ -134,10 +134,10 @@ ACTION CountProductCategoryInclusion() {
 
         set n = categoryId;
 
-        insert 	into product.tv_productcategoryinclusion(`$unit`, category, salesregion, total)
+        insert 	into tv_productcategoryinclusion(`$unit`, category, salesregion, total)
 		select 	ppc.`$unit`, ppc.category, p.salesRegion, count(distinct ppc.product) as con
-		from   	product.tv_productproductcategory ppc
-                inner join product.tv_productcache as p on ppc.product = p.product
+		from   	tv_productproductcategory ppc
+                inner join tv_productcache as p on ppc.product = p.product
 		where   ppc.`$unit` = `_$unit` and p.`$unit` = `_$unit`
 				and ppc.category = categoryId
 		group by ppc.`$unit`, ppc.category, p.salesRegion;
@@ -146,23 +146,23 @@ ACTION CountProductCategoryInclusion() {
         set ng = 5;
         set subId = categoryId;
         while parentId is not null and ng > 0 do
-			if exists( select 1 from product.tv_productcategoryinclusion where category = parentId ) then
-            	update	product.tv_productcategoryinclusion ppi,
-						product.tv_productcategoryinclusion ppi2
+			if exists( select 1 from tv_productcategoryinclusion where category = parentId ) then
+            	update	tv_productcategoryinclusion ppi,
+						tv_productcategoryinclusion ppi2
                 set		ppi.total = ppi.total + ppi2.total
 				where	ppi.category = parentId and ppi2.category = categoryId
 						and ppi.`$unit` = ppi2.`$unit` and ppi.salesregion = ppi2.salesregion
                         and ppi.`$unit` = `_$unit`;
 			else
-				insert 	into product.tv_productcategoryinclusion(`$unit`, category, salesregion, total)
+				insert 	into tv_productcategoryinclusion(`$unit`, category, salesregion, total)
 				select	`$unit`, parentId, salesregion, total
-				from	product.tv_productcategoryinclusion ppi
+				from	tv_productcategoryinclusion ppi
 				where	ppi.`$unit` = `_$unit` and ppi.category = subId;
             end if;
 
             set subId = parentId;
             select	parent into parentId
-            from	product.tv_productcategory
+            from	tv_productcategory
             where	`$unit` = `_$unit` and id = subId;
             set ng = ng - 1;
         end while;
