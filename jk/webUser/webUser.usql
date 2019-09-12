@@ -35,7 +35,7 @@ OPEN MAP WebUserContact(
 };
 
 -- WebUser的预设地址
-OPEN MAP webUserContacts (
+OPEN MAP WebUserContacts (
     key webUser ID WebUser,
     key contact ID Contact,
 ) ON SAVE {
@@ -45,7 +45,7 @@ OPEN MAP webUserContacts (
 };
 
 -- WebUser的默认值设置表
-OPEN MAP webUserSetting ver 0.1(
+OPEN MAP WebUserSetting ver 0.1(
     key webUser ID WebUser,
     shippingContact ID Contact,
     invoiceContact ID Contact,
@@ -58,7 +58,7 @@ OPEN MAP webUserSetting ver 0.1(
 };
 
 -- WebUser的默认值设置表
-OPEN MAP webUserSettingAlter (
+OPEN MAP WebUserSettingAlter (
     key webUser ID WebUser,
     key type ID WebUserSettingType,
     contentId bigint
