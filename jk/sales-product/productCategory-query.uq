@@ -109,7 +109,7 @@ PAGE (
             left join `tv_brand` as b on p.`$unit` = b.`$unit` and p.brand = b.id
             left join `tv_productchemical` as pc on p.`$unit` = pc.`$unit` and p.id = pc.product
             join `tv_productproductcategory` as ppc on p.`$unit` = ppc.`$unit` and ppc.product = p.id
-    where   p.id > `_$pagestart` and ppc.category = `_productCategory`
+    where   p.id > `_$pagestart` and ppc.category = `_productCategory` and pca.salesRegion = `_salesRegion`
     order by p.id
     limit `_$pagesize`;
     -/
