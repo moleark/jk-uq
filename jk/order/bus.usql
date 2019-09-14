@@ -1,1 +1,2 @@
 BUS pointBus from 百灵威系统工程部/Point;
+BUS webUserBus from 百灵威系统工程部/WebUser;

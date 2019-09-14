@@ -38,6 +38,9 @@ SHEET Order ver 0.6 (
     couponRemitted dec(12,2),
 )
 Verify {
+    -- 1.订单总价等于订单明细价格、优惠折扣等价格之和；
+    -- 2.订单明细的价格与目录价或折扣价相同（要获取到目录价、有customer时要获取到折扣）
+    -- 3.优惠码折扣、抵扣正确
     var discount dec(12,4) = 1;
     if (not customer IS NULL) {
         foreach orderItems {
@@ -63,21 +66,29 @@ Action submit {
         }
         STATE TO END;
     } else {
-        STATE TO MatchingCustomer;
+        STATE TO Matching;
     }
 }
-STATE MatchingCustomer {
-    ACTION Pass {
+STATE Matching {
+    ACTION Pass
+    BUS webUserBus.getCustomerByWebUser as q into tb {
+        set q.webUser = webUser;
+    } {
         if (not customer > 0) {
-            var customerid int = 100;
-            bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customerid,
-                shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
-                amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-                freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
-            foreach orderItems {
-                bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+            var customerid int;
+            foreach tb {
+                set customerid = customer;
             }
-            STATE TO END;
+            if (not customerid is null) {
+                bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customerid,
+                    shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
+                    amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
+                    freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
+                foreach orderItems {
+                    bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+                }
+                STATE TO END;
+            }
         }
     }
 };
