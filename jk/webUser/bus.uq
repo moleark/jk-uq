@@ -1,1 +1,10 @@
 BUS webUserBus from [百灵威系统工程部]/WebUser;
+
+/*
+BUS webUserBusQuery from [百灵威系统工程部]/WebUser
+    QUERY getCustomerByWebUser {
+        var customer id;
+        set customer = customer from WebUserCustomer as w where w.WebUser = webUser;
+        into BUS select customer;
+    };
+*/
