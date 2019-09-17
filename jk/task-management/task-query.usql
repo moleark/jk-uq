@@ -155,9 +155,21 @@ returns ret (
     threeSaleVolume dec(12, 2),
     oneAchievement dec(12, 2),
     twoAchievement dec(12, 2),
-    threeAchievement dec(12, 2)
+    threeAchievement dec(12, 2),
+    teamCount bigint,
+    customerCount bigint,
+    activeCustomerCount bigint
 ) {
-    into ret select a.user, a.oneSaleVolume, a.twoSaleVolume, a.threeSaleVolume, a.oneAchievement, a.twoAchievement, a.threeAchievement 
+    var teamCount bigint, customerCount bigint, activeCustomerCount bigint;
+    set teamCount = ifnull(count(1),0) from Relation where parent=$user;
+    set customerCount = ifnull(count(1),0) from MyCustomer where user=$user;
+    set activeCustomerCount= ifnull(count(1),0) from CustomerNowSalesBOOK where sales=$user;
+
+    set teamCount = ifnull(teamCount,0);
+    set customerCount = ifnull(customerCount,0);
+    set activeCustomerCount = ifnull(activeCustomerCount,0);
+
+    into ret select a.user, a.oneSaleVolume, a.twoSaleVolume, a.threeSaleVolume, a.oneAchievement, a.twoAchievement, a.threeAchievement,teamCount, customerCount, activeCustomerCount
     from    SalesAchievementBook as a
     where   a.user = user;
 };
@@ -218,18 +230,50 @@ PAGE (
     salutation char(10),
     createTime date,
     address ID Address,
-    addressString char(400)
+    addressString char(400),
+    IsOccupy smallint
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
-                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString
+                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString, 
+                case when  cb.sales = $user or cb.sales is null then 0 else 1 end as IsOccupy
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
+            left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
+            left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
     where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )
     limit $pageSize;
 };
 
+/**判断客户是否被占用**/
+QUERY MyCustomerIsOccupy(
+    mycustomer ID MyCustomer
+)
+returns ret (
+    code smallint
+) {
+    var telephone char(20), customerId ID, counts int;
+    set telephone = telephone from MyCustomer where id = mycustomer limit 1;
+
+    var content ID Contact;
+    
+    set customerId=b.id 
+    from    Customer.Contact as a 
+            join Customer as b on a.owner=b.id
+    where   a.content=telephone;
+
+    set     counts = count(1) 
+    from    CustomerNowSalesBOOK 
+    where   customer=customerId and ( sales is null or sales <> $user );
+    set counts = ifnull(counts,0);
+
+    if(counts > 0){
+       into ret select 1 as code;
+    }else{
+       into ret select 0 as code;
+    }
+};
 
 QUERY searchCustomerMyCustomerMap(mycustomer ID MyCustomer)
 returns ret (
@@ -238,7 +282,7 @@ returns ret (
     webuser ID [$user]
 ) {
     into ret select mycustomer, customer, webuser 
-    from    CustomerMyCustomerMap 
+    from    CustomerMyCustomerMap
     where   mycustomer=mycustomer;
 };
 
@@ -349,7 +393,6 @@ PAGE (
 
     var key2 char(102);
     set key2 = concat('%', key, '%');
-
 
     PAGE select m.id, m.description, m.customer, jkt.type, jkt.biz, m.employee, m.sourceID, m.sourceType, m.sourceNo, m.priorty, m.deadline, m.createTime
     from    JkTask as m

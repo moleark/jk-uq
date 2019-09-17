@@ -214,10 +214,10 @@ MAP WebUserEmployeeMap (
 );
 
 
---轻代理和客户关系
+--当前轻代理
 BOOK CustomerNowSalesBOOK (
     key customer ID Customer,
-    key sales ID [$user],
+    sales ID [$user],
     validity datetime
 );
 
@@ -279,6 +279,9 @@ BOOK AchievementRuleBook(
 --销售业绩
 BOOK SalesAchievementBook(
     key user ID [$user],
+   
+    Level int not null default 1, --级别 ： 1：铜牌； 2:金牌；3:钻石；（级别 ：0：普通； 1：铜牌； 2:金牌；3:钻石；）
+
     oneSaleVolume dec(12, 2) not null default 0 , --客户销量
     twoSaleVolume dec(12, 2) not null default 0 , --直属团队销量
     threeSaleVolume dec(12, 2) not null default 0 , --二级团队销量
@@ -566,12 +569,31 @@ ACTION CreateMyCustomer(
     lastName char(50),
     gender char(5),
     salutation char(10),
-    birthDay date
+    birthDay date,
+    telephone char(50)
+)returns ret (
+    code bigint
 ){
-    var customerId ID;
-    TUID MyCustomer into customerId unique(no) set
+    var myCustomerId ID,customerId ID, counts int;
+    TUID MyCustomer into myCustomerId unique(no) set
         name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit, user = $user,
-        salutation=salutation, birthDay=birthDay,isValid=1,createTime=now();
+        salutation=salutation, birthDay=birthDay, telephone=telephone,isValid=1,createTime=now();
+
+    set customerId=b.id 
+    from    Customer.Contact as a 
+            join Customer as b on a.owner=b.id
+    where   a.content=telephone;
+
+    set     counts = count(1) 
+    from    CustomerNowSalesBOOK 
+    where   customer=customerId and ( sales is null or sales <> $user );
+    set counts = ifnull(counts,0);
+
+    if(counts > 0){
+       into ret select 1 as code;
+    }else{
+       into ret select 0 as code;
+    }
 };
 
 /** 添加客户单位*/
@@ -675,7 +697,7 @@ returns ret (
  
     set order2 = ( select co.order from CouponOrderMap as co where co.coupon = id);
 
-    set nowsales = ( select sales from CustomerNowSalesBOOK as c where c.customer = customer); --当前轻代理
+    set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.customer = customer limit 1 ); --当前轻代理
     
     if ( coupon is null ) {
         set result = 0;  --不存在
@@ -762,11 +784,9 @@ returns ret (
         
             into ret select   oneSaleVolume_1, oneMaxVolume , price, agentprices, quantity, oneRate_1, oneExcess, oneNotExcess, oneRate , oneAchievement as result;
         }
+
         --step.1.3.记账
         --更新总销售额，A类绩效
-        if(oneAchievement<0){
-            set oneAchievement = oneAchievement * -1;
-        }
         book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement;
         --记录A类绩效历史
         history AchievementHistory set sales=sales, mycustomer=mycustomer, Amount=oneAchievement, Types=1;
@@ -774,8 +794,9 @@ returns ret (
         --step.2.计算二级绩效
         var twosale ID [$user], threesale ID [$user];
         set twosale=parent from  Relation where children=$user;
-        if( not twosale is null ){
 
+        if( not twosale is null ){
+ 
             --step.2.1.获取基础变量
             var twoSaleVolume dec(12, 2) ,twoMaxVolume dec(12, 2), twoRate dec(12, 2), twoSaleVolume_1 dec(12, 2);
             --获取总销量
@@ -804,16 +825,34 @@ returns ret (
                 into ret select  twoSaleVolume_1 as oneSaleVolume_1, twoMaxVolume as oneMaxVolume, price, agentprices, quantity, twoRate_1 as oneRate_1,  twoExcess as oneExcess,  twoNotExcess as oneNotExcess, twoRate as oneRate , twoAchievement as result;
             }
 
-            --step.2.3.记账
-            --更新总销售额
-            if(twoAchievement<0){
-                set twoAchievement = twoAchievement * -1;
+            --更新上级的类型
+            var twoLevelA int = 0, twoLevelB int = 0, twoLevel int = 1;
+            set     twoLevelA = sum( case when b.oneSaleVolume > 0 then 1 else 0 end ), twoLevelB = sum( case when b.Level > 1 then 1 ELSE 0 END  )
+            from    Relation as a
+                    join SalesAchievementBook as b on a.children = b.user
+            where   a.parent=twosale;
+
+            set     twoLevel =  
+                    case 
+                        when  twoLevelB >= 3 then 3 
+                    ELSE 	case 
+                                when  twoLevelA >= 3 then 2
+                            ELSE 1
+                            END 
+                    END 
+            from    SalesAchievementBook
+            where   user=twosale;
+            book SalesAchievementBook at(twosale) set level = twoLevel;
+
+            if( twoLevel >= 2 ){
+                --step.2.3.记账
+                --更新总销售额
+                book SalesAchievementBook at(twosale) set twoSaleVolume+=sumprice, twoAchievement+=twoAchievement;
+                --更新B类历史
+                history AchievementHistory
+                    set sales=twosale, mycustomer=mycustomer, Amount=twoAchievement, Types=2;
             }
-            book SalesAchievementBook at(twosale) set twoSaleVolume+=sumprice, twoAchievement+=twoAchievement;
-            --更新B类历史
-            history AchievementHistory
-                set sales=twosale, mycustomer=mycustomer, Amount=twoAchievement, Types=2;
-          
+
             --step.3.计算三级绩效
             set threesale=parent from  Relation where children=twosale;
             if( not threesale is null ){
@@ -837,24 +876,44 @@ returns ret (
                         threeExcess dec(12, 2) , --超出部分
                         threeNotExcess dec(12, 2);--未超出部分
                     set threeExcess =threeSaleVolume_1 - threeMaxVolume;
-                    set threeNotExcess = sumprice-(threeSaleVolume_1 - threeMaxVolume);
+                    set threeNotExcess = sumprice - ( threeSaleVolume_1 - threeMaxVolume );
 
                     set threeRate_1 = value from AchievementRuleBook where MinAmount < threeSaleVolume_1 and MaxAmount >= threeSaleVolume_1 and Type=3;
-                    set threeAchievement = ( (twoAchievement * threeRate_1 * ( threeExcess / sumprice) ) + (twoAchievement * threeRate * ( threeNotExcess / sumprice) )) * quantity ;
+                    set threeAchievement = ( (twoAchievement * threeRate_1 * ( threeExcess / sumprice ) ) + ( twoAchievement * threeRate * ( threeNotExcess / sumprice) ) ) * quantity ;
                     
                     into ret select  threeSaleVolume_1 as oneSaleVolume_1, threeMaxVolume as oneMaxVolume , price, agentprices,quantity, threeRate_1 as oneRate_1,  threeExcess as oneExcess,  threeNotExcess as oneNotExcess, threeRate as oneRate , threeAchievement as result;
                 }
-                --step.3.3.记账
-                --更新总销售额
-                if(threeAchievement<0){
-                    set threeAchievement = threeAchievement * -1;
+
+
+                var threeLevelA int = 0, threeLevelB int = 0, threeLevel int = 1;
+                set     threeLevelA = sum( case when b.oneSaleVolume > 0 then 1 else 0 end ), threeLevelB = sum( case when b.Level > 1 then 1 ELSE 0 END  )
+                from    Relation as a
+                        join SalesAchievementBook as b on a.children = b.user
+                where   a.parent=threesale;
+
+                set     threeLevel =  
+                        case 
+                            when  threeLevelB >= 3 then 3 
+                        ELSE 	case 
+                                    when  threeLevelA >= 3 then 2
+                                ELSE 1
+                                END 
+                        END 
+                from    SalesAchievementBook
+                where   user=twosale;
+                book SalesAchievementBook at(threesale) set level = threeLevel;
+                
+                if( twoLevel >= 2 and threeLevel >= 3 ){
+                    --step.3.3.记账
+                    --更新总销售额
+                    book SalesAchievementBook at(threesale) set threeSaleVolume+=sumprice, threeAchievement+=threeAchievement;
+                    --更新C类历史
+                    history AchievementHistory
+                        set sales=threesale, mycustomer=mycustomer, Amount=threeAchievement  , Types=3;
                 }
-                book SalesAchievementBook at(threesale) set threeSaleVolume+=sumprice, threeAchievement+=threeAchievement;
-                --更新C类历史
-                history AchievementHistory
-                    set sales=threesale, mycustomer=mycustomer, Amount=threeAchievement  , Types=3;
             }
         }  
      }
+
      delete from CustomerOrderBook where sales=$user;
 };
