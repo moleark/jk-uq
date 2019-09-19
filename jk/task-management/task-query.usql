@@ -169,9 +169,17 @@ returns ret (
     set customerCount = ifnull(customerCount,0);
     set activeCustomerCount = ifnull(activeCustomerCount,0);
 
-    into ret select a.user, a.oneSaleVolume, a.twoSaleVolume, a.threeSaleVolume, a.oneAchievement, a.twoAchievement, a.threeAchievement,teamCount, customerCount, activeCustomerCount
-    from    SalesAchievementBook as a
+
+    var oneSaleVolume dec(12, 2) = 0, twoSaleVolume dec(12, 2) =0, threeSaleVolume dec(12, 2)=0, 
+        oneAchievement dec(12, 2)=0, twoAchievement dec(12, 2)=0, threeAchievement dec(12, 2)=0;
+
+    set     oneSaleVolume = a.oneSaleVolume, twoSaleVolume = a.twoSaleVolume, threeSaleVolume = a.threeSaleVolume,
+            oneAchievement = a.oneAchievement, twoAchievement = a.twoAchievement, threeAchievement = a.threeAchievement
+    from    SalesAchievementBook as a 
     where   a.user = user;
+
+    into ret select user,  oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  oneAchievement,  twoAchievement,  threeAchievement, teamCount, customerCount, activeCustomerCount;
+   
 };
 
 
@@ -184,15 +192,16 @@ returns ret (
     sales ID [$user],
     mycustomer ID MyCustomer,
     Amount dec(12, 2) not null,
-    Types int 
+    Types int,
+    order ID,
+    status smallint
 ) {    
-    into ret select a.date, a.sales, a.mycustomer, a.Amount, a.Types
+    into ret select a.date, a.sales, a.mycustomer, a.Amount, a.Types, a.order, a.status
     from    AchievementHistory as a
-    where   a.sales=$user and a.Types=types and a.Amount<>0
+    where   a.sales= $user and a.Types = types and a.Amount <> 0
     order by a.date desc ;
 };
-
-
+ 
 /** 搜索我的团队*/
 QUERY SearchTeam ()
 returns ret (
@@ -348,6 +357,7 @@ PAGE (
     PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid
     from    Coupon as m
     where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
+    order by m.createTime desc
     limit $pageSize;
 };
 

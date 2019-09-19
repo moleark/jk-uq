@@ -202,6 +202,7 @@ MAP CouponOrderMap (
 
 --我的客户和系统客户关联关系
 MAP CustomerMyCustomerMap (
+    key sales ID [$user],
     key mycustomer ID MyCustomer,
     customer ID Customer,
     webuser ID [$user],
@@ -296,9 +297,13 @@ BOOK SalesAchievementBook(
 History AchievementHistory (
     date,
     sales ID [$user],    --销售
+    order ID,
+    price dec(12, 2) not null,
+    agentprices dec(12, 2) not null,
     Types int,
     mycustomer ID MyCustomer,
     Amount dec(12, 2) not null,
+    status smallint default 1,
 );
 
 
@@ -315,6 +320,8 @@ BOOK CustomerOrderBook (
     agentprices dec(12, 2) not null,
     isUsed smallint default 1,
 );
+
+
 
 --消息
 BOOK MessageBook (
@@ -486,7 +493,7 @@ RETURNS ret (
             name=name, firstName=firstName, lastName=lastName, gender=gender, user=$user, unit=mycustomerUnitid,
             salutation=salutation, birthDay=birthDay, isValid=1, createTime=now();
         
-         BOOK CustomerMyCustomerMap at ( mycustomerid ) set customer=customer ; 
+         BOOK CustomerMyCustomerMap at ( $user, mycustomerid ) set customer=customer ; 
     }
 
     var taskId ID;
@@ -642,8 +649,9 @@ ACTION CreateCoupon(
     code char(8)
 ){
 
-    var code bigint, customer ID Customer;
-    set code = rand() * 100000000;
+    var code bigint, head bigint,  customer ID Customer;
+    set code = ( RAND() * 99999999) + 10000000;
+    
     if( not mycustomer is null ){
         set customer=customer from CustomerMyCustomerMap where mycustomer=mycustomer;
     }
@@ -727,7 +735,7 @@ ACTION UpateCustomerMyCustomerMap(
     customer ID Customer
 ){
 
-     BOOK CustomerMyCustomerMap at ( mycustomer) set customer=customer; 
+     BOOK CustomerMyCustomerMap at ($user, mycustomer) set customer=customer; 
 };
 
 
@@ -746,8 +754,8 @@ returns ret (
     oneRate dec(12, 2),
     result dec(12, 2)
 ) {
-    foreach ( var sales bigint, mycustomer bigint, quantity bigint, price dec(12, 2),agentprices dec(12, 2) of
-            select  sales,mycustomer,quantity,price,agentprices
+    foreach ( var sales bigint, mycustomer bigint, quantity bigint, order bigint, price dec(12, 2),agentprices dec(12, 2) of
+            select  sales,mycustomer,quantity,order,price,agentprices
             from    CustomerOrderBook
             where   sales=$user and isUsed=1
     ) {
@@ -789,7 +797,7 @@ returns ret (
         --更新总销售额，A类绩效
         book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement;
         --记录A类绩效历史
-        history AchievementHistory set sales=sales, mycustomer=mycustomer, Amount=oneAchievement, Types=1;
+        history AchievementHistory set sales=sales, mycustomer=mycustomer, Amount=oneAchievement, Types=1, order=order, price=price,agentprices=agentprices ;
        
         --step.2.计算二级绩效
         var twosale ID [$user], threesale ID [$user];
@@ -834,9 +842,9 @@ returns ret (
 
             set     twoLevel =  
                     case 
-                        when  twoLevelB >= 3 then 3 
+                        when  twoLevelB >= 1 then 3 
                     ELSE 	case 
-                                when  twoLevelA >= 3 then 2
+                                when  twoLevelA >= 1 then 2
                             ELSE 1
                             END 
                     END 
@@ -849,8 +857,7 @@ returns ret (
                 --更新总销售额
                 book SalesAchievementBook at(twosale) set twoSaleVolume+=sumprice, twoAchievement+=twoAchievement;
                 --更新B类历史
-                history AchievementHistory
-                    set sales=twosale, mycustomer=mycustomer, Amount=twoAchievement, Types=2;
+                history AchievementHistory set sales=twosale, mycustomer=mycustomer, Amount=twoAchievement, Types=2, order=order, price=price,agentprices=agentprices ;
             }
 
             --step.3.计算三级绩效
@@ -884,7 +891,6 @@ returns ret (
                     into ret select  threeSaleVolume_1 as oneSaleVolume_1, threeMaxVolume as oneMaxVolume , price, agentprices,quantity, threeRate_1 as oneRate_1,  threeExcess as oneExcess,  threeNotExcess as oneNotExcess, threeRate as oneRate , threeAchievement as result;
                 }
 
-
                 var threeLevelA int = 0, threeLevelB int = 0, threeLevel int = 1;
                 set     threeLevelA = sum( case when b.oneSaleVolume > 0 then 1 else 0 end ), threeLevelB = sum( case when b.Level > 1 then 1 ELSE 0 END  )
                 from    Relation as a
@@ -893,9 +899,9 @@ returns ret (
 
                 set     threeLevel =  
                         case 
-                            when  threeLevelB >= 3 then 3 
+                            when  threeLevelB >= 1 then 3 
                         ELSE 	case 
-                                    when  threeLevelA >= 3 then 2
+                                    when  threeLevelA >= 1 then 2
                                 ELSE 1
                                 END 
                         END 
@@ -909,7 +915,7 @@ returns ret (
                     book SalesAchievementBook at(threesale) set threeSaleVolume+=sumprice, threeAchievement+=threeAchievement;
                     --更新C类历史
                     history AchievementHistory
-                        set sales=threesale, mycustomer=mycustomer, Amount=threeAchievement  , Types=3;
+                        set sales=threesale, mycustomer=mycustomer, Amount=threeAchievement,Types=3, order=order, price=price,agentprices=agentprices;
                 }
             }
         }  
