@@ -36,6 +36,7 @@ SHEET Order ver 0.6 (
     coupon ID Coupon,
     couponOffsetAmount dec(12, 2),
     couponRemitted dec(12,2),
+    salesRegion ID SalesRegion,
 )
 Verify {
     -- 1.订单总价等于订单明细价格、优惠折扣等价格之和；
@@ -53,14 +54,15 @@ Action submit {
     foreach orderItems {
         history OrderHistory
             set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
-                freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
+                freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee,
+                salesRegion = salesRegion;
     }
 
     if (customer > 0) {
         bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
             shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
             amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
+            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
         foreach orderItems {
             bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
         }
@@ -83,7 +85,7 @@ STATE Matching {
                 bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customerid,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-                    freightFee = freightFee, freightFeeRemitted = freightFeeRemitted;
+                    freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
                 foreach orderItems {
                     bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
@@ -106,6 +108,7 @@ HISTORY OrderHistory (
     packingFee dec(12, 2),
     proxyFreightFee dec(12, 2),
     currency ID Currency,
+    salesRegion ID SalesRegion,
     user,
     sheet,
     type,

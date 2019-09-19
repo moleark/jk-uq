@@ -26,6 +26,6 @@ returns ret(
     into ret select st.id, st.no, st.discription as description, st.date
     from   [$sheet] as st
     where   st.user = webUser
-            and st.sheet = 30 -- typeof order
-            and st.state = 15;
+            and st.sheet = 43 -- typeof order
+            and st.state = 17;
 };
