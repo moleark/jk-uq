@@ -3,7 +3,7 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
         id, no, webuser, organization, customer as customerX,
         shippingContact, invoiceContact, invoiceType, invoiceInfo,
         freightFee, freightFeeRemitted,
-        amount, currency,
+        amount, currency, salesRegion as salesRegionX,
         coupon, couponOffsetAmount, couponRemitted
     )
     arr orderItems (
@@ -12,10 +12,9 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
     BUS pointBus.getAgentPrice into tb {
         set customer = customerX;
         foreach orderItems {
-            into packs select pack as packid;
+            into packs select pack as packid, salesRegionX AS salesRegion;
         }
     }{
-
         --step.1.获取优惠码
         var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer;
         if( coupon > 0 ){
