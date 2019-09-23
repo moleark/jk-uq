@@ -114,7 +114,7 @@ TUID MyCustomer (
     search (name, firstName, lastName),
     unique(no),
 );
- 
+
 --客户单位
 TUID MyCustomerUnit (
     id,
@@ -131,7 +131,7 @@ TUID MyCustomerUnit (
     ),
     isValid smallint default 1,
     search (name),
-    unique(no),
+    unique(user, name),
 );
 
 
@@ -150,7 +150,7 @@ OPEN TUID Coupon (
     code char(8),
     user ID [$user],
     customer ID Customer,
-    validitydate date,    
+    validitydate date,
     discount dec(12, 2),     --折扣
     preferential dec(12, 2), --优惠额度
     createTime datetime,
@@ -192,7 +192,7 @@ MAP Relation (
     key parent ID [$user],
     key children ID [$user],
 );
- 
+
 
 --优惠券订单
 MAP CouponOrderMap (
@@ -280,7 +280,7 @@ BOOK AchievementRuleBook(
 --销售业绩
 BOOK SalesAchievementBook(
     key user ID [$user],
-   
+
     Level int not null default 1, --级别 ： 1：铜牌； 2:金牌；3:钻石；（级别 ：0：普通； 1：铜牌； 2:金牌；3:钻石；）
 
     oneSaleVolume dec(12, 2) not null default 0 , --客户销量
@@ -350,7 +350,7 @@ ACTION CompletionTask(
         value bigint
     )
 ) {
-    history TaskHistory 
+    history TaskHistory
     set task=taskid, status=4, principal=$user, resultType=resultType, result=result;
 
     delete from TaskBook where task = taskid;
@@ -393,7 +393,7 @@ ACTION CompletionCustomerInfoTask(
         }
     }
 
-    history TaskHistory 
+    history TaskHistory
     set task=taskid, status=4, principal=$user, resultType=resultType, result=result;
     delete from TaskBook where task = taskid;
 };
@@ -406,7 +406,7 @@ ACTION InvalidTask(
     result char(1000)
 ){
 
-    history TaskHistory 
+    history TaskHistory
     set  task=taskid, status = 3, principal = $user, resultType = resultType, result= result;
 
     delete from TaskBook where task = taskid;
@@ -418,8 +418,8 @@ ACTION ExtensionTask(
     remindDate date,
     result char(1000)
 ){
-    
-    history TaskHistory 
+
+    history TaskHistory
     set task=taskid, status = 2, principal = $user, resultType = 'exten', result= result;
     book TaskBook at ( taskid ) set remindDate = remindDate;
 };
@@ -460,10 +460,10 @@ RETURNS ret (
     customer ID Customer,
     description char(100)
 ) {
-    var id bigint, description char(100), customer ID Customer, type ID TaskType, 
+    var id bigint, description char(100), customer ID Customer, type ID TaskType,
             biz ID BizType, employee ID employee, priorty int, deadline date;
 
-    set     id=a.id, description=a.description, customer=a.customer, type=a.type, 
+    set     id=a.id, description=a.description, customer=a.customer, type=a.type,
             biz=a.biz, employee=a.employee, priorty=a.priorty, deadline=a.deadline
     from    JkTask as a
     where   a.id=task;
@@ -476,10 +476,10 @@ RETURNS ret (
         var mycustomerUnitid ID;
         set mycustomerUnitid=id from MyCustomerUnit where no=organization;
         if( mycustomerUnitid is null ){
-            TUID MyCustomerUnit into mycustomerUnitid unique(organization) set
-                    name=organizationName, createTime=now(), isValid=1, user=$user; 
+            TUID MyCustomerUnit into mycustomerUnitid unique($user, organization) set
+                no = organization, createTime=now(), isValid=1;
         }
- 
+
         var name char(50), firstName char(50), lastName char(50), xyz char(5), gender char(5), salutation char(10), birthDay date;
         set     name=a.name, firstName=a.firstName, lastName=a.lastName, xyz=a.xyz, gender=a.gender, salutation=a.salutation, birthDay=a.birthDay
         from    Customer as a
@@ -488,12 +488,12 @@ RETURNS ret (
         if(name is null){
             set name = customername;
         }
-        
+
         TUID MyCustomer into mycustomerid unique(customer) set
             name=name, firstName=firstName, lastName=lastName, gender=gender, user=$user, unit=mycustomerUnitid,
             salutation=salutation, birthDay=birthDay, isValid=1, createTime=now();
-        
-         BOOK CustomerMyCustomerMap at ( $user, mycustomerid ) set customer=customer ; 
+
+         BOOK CustomerMyCustomerMap at ( $user, mycustomerid ) set customer=customer ;
     }
 
     var taskId ID;
@@ -549,7 +549,7 @@ RETURNS ret (
     var parent ID [$user];
     set parent =( select user from Position where code=invitacode );
     if parent is null {
-        into ret select -1 as succeed, 0 as code; 
+        into ret select -1 as succeed, 0 as code;
     }
     else{
         var code bigint;
@@ -586,13 +586,13 @@ ACTION CreateMyCustomer(
         name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit, user = $user,
         salutation=salutation, birthDay=birthDay, telephone=telephone,isValid=1,createTime=now();
 
-    set customerId=b.id 
-    from    Customer.Contact as a 
+    set customerId=b.id
+    from    Customer.Contact as a
             join Customer as b on a.owner=b.id
     where   a.content=telephone;
 
-    set     counts = count(1) 
-    from    CustomerNowSalesBOOK 
+    set     counts = count(1)
+    from    CustomerNowSalesBOOK
     where   customer=customerId and ( sales is null or sales <> $user );
     set counts = ifnull(counts,0);
 
@@ -608,20 +608,16 @@ ACTION CreateMyCustomerUnit(
     no bigint,
     name char(50) not null
 )returns ret (
-    code bigint
+    id ID MyCustomerUnit
 ){
-    var rename char(50) , unitId bigint;
-    set rename = a.name from MyCustomerUnit as a where a.user=$user and a.name=name limit 1;
-    
-    if(rename is null ){
-        TUID MyCustomerUnit into unitId unique(no) set
-            name=name, createTime=now(), isValid=1, user=$user;
-        
-    }else{
-         set unitId = 0;
-    };
-    into ret select unitId as code;
-    
+    var unitId bigint;
+    set unitId = a.id from MyCustomerUnit as a where a.user=$user and a.name = name limit 1;
+
+    if(unitId is null) {
+        TUID MyCustomerUnit into unitId unique($user, name) set
+            no = name, createTime=now(), isValid=1;
+    }
+    into ret select unitId as id;
 };
 
 
@@ -642,7 +638,7 @@ ACTION UpdateNowMessage(){
 /** 添加优惠码*/
 ACTION CreateCoupon(
     validitydate date,
-    discount dec(12, 2), 
+    discount dec(12, 2),
     preferential dec(12, 2),
     mycustomer ID MyCustomer
 )returns ret (
@@ -651,44 +647,44 @@ ACTION CreateCoupon(
 
     var code bigint, head bigint,  customer ID Customer;
     set code = ( RAND() * 99999999) + 10000000;
-    
+
     if( not mycustomer is null ){
         set customer=customer from CustomerMyCustomerMap where mycustomer=mycustomer;
     }
-    
+
     var couponId ID;
     TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
                 discount=discount, preferential=preferential, createTime=now(), isValid=1;
     into ret select code;
-     
+
 };
 
 /** 验证优惠码是否可用*/
-ACTION IsCanUseCoupon ( 
-    code char(20), 
+ACTION IsCanUseCoupon (
+    code char(20),
     customer ID Customer
 )
 returns ret (
     result  bigint,
-    id      bigint, 
-    code   char(20), 
+    id      bigint,
+    code   char(20),
     user   ID [$user],
     customer ID Customer,
-    discount dec(12,2),  
-    preferential dec(12,2), 
-    validitydate datetime, 
+    discount dec(12,2),
+    preferential dec(12,2),
+    validitydate datetime,
     isValid smallint
-) 
+)
 {
-    var result      bigint, 
-    id              bigint, 
-    validitydate    datetime, 
-    isValid         smallint, 
-    customer2 ID    Customer, 
-    discount        dec(12,2),  
-    preferential    dec(12,2),  
-    order2          char(50), 
-    sales ID        [$user], 
+    var result      bigint,
+    id              bigint,
+    validitydate    datetime,
+    isValid         smallint,
+    customer2 ID    Customer,
+    discount        dec(12,2),
+    preferential    dec(12,2),
+    order2          char(50),
+    sales ID        [$user],
     nowsales   ID   [$user],
     coupon char(8) ;
 
@@ -700,13 +696,13 @@ returns ret (
             discount = c.discount,
             preferential=  c.preferential,
             coupon = code
-    from    Coupon as c 
+    from    Coupon as c
     where   c.code = code;
- 
+
     set order2 = ( select co.order from CouponOrderMap as co where co.coupon = id);
 
     set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.customer = customer limit 1 ); --当前轻代理
-    
+
     if ( coupon is null ) {
         set result = 0;  --不存在
     } else if ( isValid <> 1 or validitydate < now() ) {
@@ -721,8 +717,8 @@ returns ret (
         set result = 1;  --正常
         /**
         --取消BUS的发送，如果购物车需要查询订单的使用记录通过VT的方式
-        bus couponBus.coupon set id=id, code=code, user=sales, customer=customer2, discount=discount, 
-            preferential=preferential, validitydate=validitydate, isValid=isValid; 
+        bus couponBus.coupon set id=id, code=code, user=sales, customer=customer2, discount=discount,
+            preferential=preferential, validitydate=validitydate, isValid=isValid;
         bus couponBus.coupon send;
         **/
     };
@@ -735,7 +731,7 @@ ACTION UpateCustomerMyCustomerMap(
     customer ID Customer
 ){
 
-     BOOK CustomerMyCustomerMap at ($user, mycustomer) set customer=customer; 
+     BOOK CustomerMyCustomerMap at ($user, mycustomer) set customer=customer;
 };
 
 
@@ -774,7 +770,7 @@ returns ret (
         set oneSaleVolume_1 =  oneSaleVolume + sumprice;
         --获取提成比例和 改比例的最大销量
         set oneRate = value, oneMaxVolume=MaxAmount from AchievementRuleBook where MinAmount <= oneSaleVolume and oneSaleVolume < MaxAmount and Type=1;
-     
+
         --step.1.2.计算绩效
         var  oneAchievement dec(12, 2);
         if( oneSaleVolume_1 <= oneMaxVolume ){
@@ -789,7 +785,7 @@ returns ret (
 
             set oneRate_1 = value from AchievementRuleBook where MinAmount < oneSaleVolume_1 and MaxAmount >= oneSaleVolume_1 and Type=1;
             set oneAchievement = (((price - agentprices) * oneRate_1 * ( oneExcess / sumprice) ) + ((price - agentprices) * oneRate * ( oneNotExcess / sumprice) ) ) * quantity ;
-        
+
             into ret select   oneSaleVolume_1, oneMaxVolume , price, agentprices, quantity, oneRate_1, oneExcess, oneNotExcess, oneRate , oneAchievement as result;
         }
 
@@ -798,13 +794,13 @@ returns ret (
         book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement;
         --记录A类绩效历史
         history AchievementHistory set sales=sales, mycustomer=mycustomer, Amount=oneAchievement, Types=1, order=order, price=price,agentprices=agentprices ;
-       
+
         --step.2.计算二级绩效
         var twosale ID [$user], threesale ID [$user];
         set twosale=parent from  Relation where children=$user;
 
         if( not twosale is null ){
- 
+
             --step.2.1.获取基础变量
             var twoSaleVolume dec(12, 2) ,twoMaxVolume dec(12, 2), twoRate dec(12, 2), twoSaleVolume_1 dec(12, 2);
             --获取总销量
@@ -814,7 +810,7 @@ returns ret (
             set twoSaleVolume_1 =  twoSaleVolume+sumprice;
             --获取提成比例和 改比例的最大销量
             set twoRate = value, twoMaxVolume=MaxAmount from AchievementRuleBook where MinAmount <= twoSaleVolume and twoSaleVolume < MaxAmount and Type=2;
-            
+
             --step.2.2.计算绩效
             var  twoAchievement dec(12, 2);
             if( twoSaleVolume_1 <= twoMaxVolume ){
@@ -840,14 +836,14 @@ returns ret (
                     join SalesAchievementBook as b on a.children = b.user
             where   a.parent=twosale;
 
-            set     twoLevel =  
-                    case 
-                        when  twoLevelB >= 1 then 3 
-                    ELSE 	case 
+            set     twoLevel =
+                    case
+                        when  twoLevelB >= 1 then 3
+                    ELSE 	case
                                 when  twoLevelA >= 1 then 2
                             ELSE 1
-                            END 
-                    END 
+                            END
+                    END
             from    SalesAchievementBook
             where   user=twosale;
             book SalesAchievementBook at(twosale) set level = twoLevel;
@@ -864,7 +860,7 @@ returns ret (
             set threesale=parent from  Relation where children=twosale;
             if( not threesale is null ){
                 --step.3.1.获取基础变量
-                var threeSaleVolume dec(12, 2), threeMaxVolume dec(12, 2), threeRate dec(12, 2), threeSaleVolume_1 dec(12, 2); 
+                var threeSaleVolume dec(12, 2), threeMaxVolume dec(12, 2), threeRate dec(12, 2), threeSaleVolume_1 dec(12, 2);
                 --获取总销量
                 set threeSaleVolume=threeSaleVolume from SalesAchievementBook where user=threesale;
                 set threeSaleVolume = ifnull(threeSaleVolume,0);
@@ -887,7 +883,7 @@ returns ret (
 
                     set threeRate_1 = value from AchievementRuleBook where MinAmount < threeSaleVolume_1 and MaxAmount >= threeSaleVolume_1 and Type=3;
                     set threeAchievement = ( (twoAchievement * threeRate_1 * ( threeExcess / sumprice ) ) + ( twoAchievement * threeRate * ( threeNotExcess / sumprice) ) ) * quantity ;
-                    
+
                     into ret select  threeSaleVolume_1 as oneSaleVolume_1, threeMaxVolume as oneMaxVolume , price, agentprices,quantity, threeRate_1 as oneRate_1,  threeExcess as oneExcess,  threeNotExcess as oneNotExcess, threeRate as oneRate , threeAchievement as result;
                 }
 
@@ -897,18 +893,18 @@ returns ret (
                         join SalesAchievementBook as b on a.children = b.user
                 where   a.parent=threesale;
 
-                set     threeLevel =  
-                        case 
-                            when  threeLevelB >= 1 then 3 
-                        ELSE 	case 
+                set     threeLevel =
+                        case
+                            when  threeLevelB >= 1 then 3
+                        ELSE 	case
                                     when  threeLevelA >= 1 then 2
                                 ELSE 1
-                                END 
-                        END 
+                                END
+                        END
                 from    SalesAchievementBook
                 where   user=twosale;
                 book SalesAchievementBook at(threesale) set level = threeLevel;
-                
+
                 if( twoLevel >= 2 and threeLevel >= 3 ){
                     --step.3.3.记账
                     --更新总销售额
@@ -918,7 +914,7 @@ returns ret (
                         set sales=threesale, mycustomer=mycustomer, Amount=threeAchievement,Types=3, order=order, price=price,agentprices=agentprices;
                 }
             }
-        }  
+        }
      }
 
      delete from CustomerOrderBook where sales=$user;

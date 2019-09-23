@@ -170,16 +170,16 @@ returns ret (
     set activeCustomerCount = ifnull(activeCustomerCount,0);
 
 
-    var oneSaleVolume dec(12, 2) = 0, twoSaleVolume dec(12, 2) =0, threeSaleVolume dec(12, 2)=0, 
+    var oneSaleVolume dec(12, 2) = 0, twoSaleVolume dec(12, 2) =0, threeSaleVolume dec(12, 2)=0,
         oneAchievement dec(12, 2)=0, twoAchievement dec(12, 2)=0, threeAchievement dec(12, 2)=0;
 
     set     oneSaleVolume = a.oneSaleVolume, twoSaleVolume = a.twoSaleVolume, threeSaleVolume = a.threeSaleVolume,
             oneAchievement = a.oneAchievement, twoAchievement = a.twoAchievement, threeAchievement = a.threeAchievement
-    from    SalesAchievementBook as a 
+    from    SalesAchievementBook as a
     where   a.user = user;
 
     into ret select user,  oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  oneAchievement,  twoAchievement,  threeAchievement, teamCount, customerCount, activeCustomerCount;
-   
+
 };
 
 
@@ -195,13 +195,13 @@ returns ret (
     Types int,
     order ID,
     status smallint
-) {    
+) {
     into ret select a.date, a.sales, a.mycustomer, a.Amount, a.Types, a.order, a.status
     from    AchievementHistory as a
     where   a.sales= $user and a.Types = types and a.Amount <> 0
     order by a.date desc ;
 };
- 
+
 /** 搜索我的团队*/
 QUERY SearchTeam ()
 returns ret (
@@ -245,7 +245,7 @@ PAGE (
     var key2 char(102);
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
-                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString, 
+                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
                 case when  cb.sales = $user or cb.sales is null then 0 else 1 end as IsOccupy
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
@@ -266,14 +266,14 @@ returns ret (
     set telephone = telephone from MyCustomer where id = mycustomer limit 1;
 
     var content ID Contact;
-    
-    set customerId=b.id 
-    from    Customer.Contact as a 
+
+    set customerId=b.id
+    from    Customer.Contact as a
             join Customer as b on a.owner=b.id
     where   a.content=telephone;
 
-    set     counts = count(1) 
-    from    CustomerNowSalesBOOK 
+    set     counts = count(1)
+    from    CustomerNowSalesBOOK
     where   customer=customerId and ( sales is null or sales <> $user );
     set counts = ifnull(counts,0);
 
@@ -290,7 +290,7 @@ returns ret (
     customer ID Customer,
     webuser ID [$user]
 ) {
-    into ret select mycustomer, customer, webuser 
+    into ret select mycustomer, customer, webuser
     from    CustomerMyCustomerMap
     where   mycustomer=mycustomer;
 };
@@ -299,7 +299,7 @@ returns ret (
 /** 搜索我的客户*/
 QUERY searchMyCustomerUnit(key char(100))
 PAGE (
-    id bigint start 0,
+    id ID MyCustomerUnit start 0,
     no char(30),
     name char(50),
     createTime date,
