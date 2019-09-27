@@ -27,5 +27,5 @@ returns ret(
     from   [$sheet] as st
     where   st.user = webUser
             and st.sheet = 43 -- typeof order
-            and st.state = 17;
+            and st.state = 20;
 };
