@@ -676,53 +676,56 @@ returns ret (
     isValid smallint
 )
 {
-    var result      bigint,
-    id              bigint,
-    validitydate    datetime,
-    isValid         smallint,
-    customer2 ID    Customer,
-    discount        dec(12,2),
-    preferential    dec(12,2),
-    order2          char(50),
-    sales ID        [$user],
-    nowsales   ID   [$user],
-    coupon char(8) ;
+    var result      bigint,     --返回结果
+    id              bigint,     --优惠码id
+    validitydate    datetime,   --有效期
+    isValid         smallint,   --是否有效
+    customerX ID    Customer,   --指定客户CID
+    discount        dec(12,2),  --折扣
+    preferential    dec(12,2),  --金额
+    orderX          char(50),   --被使用的订单
+    sales ID        [$user],    --优惠码的轻代理
+    nowsales   ID   [$user],    --客户的当前轻代理
+    coupon char(8) ;            --优惠码
 
     set     id = c.id,
-            sales=c.user, --轻代理
-            isValid=c.isValid, --是否有效
-            validitydate=c.validitydate, --有效期
-            customer2=c.customer, --MYCID
-            discount = c.discount,
+            sales=c.user,                   --轻代理
+            isValid=c.isValid,              --是否有效
+            validitydate=c.validitydate,    --有效期
+            customerX=c.customer,           --CID
+            discount = c.discount, 
             preferential=  c.preferential,
             coupon = code
     from    Coupon as c
     where   c.code = code;
 
-    set order2 = ( select co.order from CouponOrderMap as co where co.coupon = id);
-
+    --判断是否被订单使用
+    set orderX = ( select co.order from CouponOrderMap as co where co.coupon = id);
+    --获取客户的当前轻代理
     set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.customer = customer limit 1 ); --当前轻代理
-
+    
     if ( coupon is null ) {
         set result = 0;  --不存在
     } else if ( isValid <> 1 or validitydate < now() ) {
         set result = 2;  --无效的优惠码
-    } else if ( customer <> customer2) {
+    } else if ( customer <> customerX) {
         set result = 3;  --不是指定的客户
-    } else if (not order2 is null) {
+    } else if (not orderX is null) {
         set result = 4;  --已经被使用
     } else if ( not nowsales is null and nowsales <> sales )  {
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
+    } else if ( sales = $user )  {
+        set result = 6;  --轻代理不能用自己的优惠码下单
     } else {
         set result = 1;  --正常
         /**
         --取消BUS的发送，如果购物车需要查询订单的使用记录通过VT的方式
-        bus couponBus.coupon set id=id, code=code, user=sales, customer=customer2, discount=discount,
+        bus couponBus.coupon set id=id, code=code, user=sales, customer=customerX, discount=discount,
             preferential=preferential, validitydate=validitydate, isValid=isValid;
         bus couponBus.coupon send;
         **/
     };
-    into ret select result, id, code, sales as user, customer2 as customer, discount, preferential, validitydate, isValid;
+    into ret select result, id, code, sales as user, customerX as customer, discount, preferential, validitydate, isValid;
 };
 
 
@@ -919,3 +922,21 @@ returns ret (
 
      delete from CustomerOrderBook where sales=$user;
 };
+
+/**
+
+1、轻代理等级分为普通代理， 金牌代理， 钻石代理
+    普通代理：注册后即为普通代理
+    金牌代理：拥有三个有销量的普通代理
+    钻石代理：拥有三个有销量的金牌代理
+
+2、考核区间
+    考核对象        考核条件	    0-50万提成比例	50-100万提成比例	大于100万提成比例
+    销售            达到普通代理        50%	            55%	                60%
+    销售上线	    达到金牌代理        15%	            20%	                25%
+    销售二级上线	达到金牌代理        15%	            20%	                25%
+
+3、计算公式
+    提成 = （成交价 -  代理价） * 提成比例
+
+**/
