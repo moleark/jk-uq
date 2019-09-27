@@ -76,7 +76,7 @@ STATE Matching {
     BUS webUserBus.getCustomerByWebUser as q into tb {
         set q.webUser = webUser;
     } {
-        if (not customer > 0) {
+        if (customer is null) {
             var customerid int;
             foreach tb {
                 set customerid = customer;
