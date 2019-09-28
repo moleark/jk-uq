@@ -212,14 +212,17 @@ returns ret (
     children ID [$user],
     parentcode bigint,
     childrencode bigint,
-    assigned  char(100)
+    assigned  char(100),
+    volume dec(12, 2)
 ) {
-    into ret select r.parent, r.children, p.code as parentcode, cp.code as childrencode, a.Assigned
+    into ret select r.parent, r.children, p.code as parentcode, cp.code as childrencode, a.Assigned, sab.oneSaleVolume as volume
     from    Position as p
             join Relation as r on p.user = r.parent
             join Position as cp on cp.user = r.children
+            left join SalesAchievementBook as sab on sab.user = r.children
             left join PeerAssignedBook as a on a.user = p.user and a.peer = r.children
-    where   p.user = $user;
+    where   p.user = $user
+    order by sab.oneSaleVolume desc;
 };
 
 /** 搜索我的客户*/
@@ -243,13 +246,14 @@ PAGE (
     createTime date,
     address ID Address,
     addressString char(400),
-    IsOccupy smallint
+    validity date,
+    isOccupy smallint
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
                 c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
-                case when  cb.sales = $user or cb.sales is null then 0 else 1 end as IsOccupy
+                cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
             left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
@@ -279,12 +283,15 @@ PAGE (
     salutation char(10),
     createTime date,
     address ID Address,
-    addressString char(400)
+    addressString char(400),
+    validity date,
+    isOccupy smallint
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
-                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString
+                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
+                cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
             join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
