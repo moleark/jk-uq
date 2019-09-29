@@ -301,6 +301,22 @@ PAGE (
     limit $pageSize;
 };
 
+
+/** 搜索我的新客户*/
+QUERY searchNewMyCustomer()
+returns ret (
+    sales ID [$user],
+    customer ID Customer,
+    webuser ID [$user],
+    createTime datetime
+) {
+
+    into ret select sales, customer, webuser, createTime
+    from    NewMyCustomerBook 
+    where   sales = $user;
+};
+
+
 /**判断客户是否被占用**/
 QUERY MyCustomerIsOccupy(
     mycustomer ID MyCustomer

@@ -1,0 +1,14 @@
+PENDING CustomerOrderPending ver 0.6 (
+    id,
+    sales ID [$user],    --销售
+    mycustomer ID MyCustomer,
+    customer ID Customer,
+    order ID,
+    orderNo ID,
+    price dec(12, 2) not null,
+    agentprices dec(12, 2) not null,
+    isUsed smallint default 1,
+    date,
+);
+
+
