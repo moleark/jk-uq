@@ -11,9 +11,9 @@ OPEN TUID WebUser (
     -- createTime datetime,
 ) ON SAVE {
     if ($user > 0) {
-        if exists(select 1 from WebUserCustomer where webUser = $user)
-        or exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
-        or exists(select 1 from PendingAuditWebUser where webUser = $user){
+        if exists(select 1 from WebUserCustomer where webUser = id)
+        or exists(select 1 from WebUserAuditRefuseHistory where WebUser = id)
+        or exists(select 1 from PendingAuditWebUser where webUser = id){
             BOOK PendingAuditWebUser at(id);
         }
         bus webUserBus.WebUser set id = id, no = no, name = name, firstName = firstName, lastName = lastName,
