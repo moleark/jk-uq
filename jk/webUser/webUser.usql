@@ -10,7 +10,12 @@ OPEN TUID WebUser (
     main departmentName char(100),
     -- createTime datetime,
 ) ON SAVE {
-    if ($user > 0){
+    if ($user > 0) {
+        if exists(select 1 from WebUserCustomer where webUser = $user)
+        or exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
+        or exists(select 1 from PendingAuditWebUser where webUser = $user){
+            BOOK PendingAuditWebUser at(id);
+        }
         bus webUserBus.WebUser set id = id, no = no, name = name, firstName = firstName, lastName = lastName,
             gender = gender, salutation = salutation, organizationName = organizationName, departmentName = departmentName;
     }
