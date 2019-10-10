@@ -17,12 +17,14 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
     }{
         --step.1.获取优惠码
         var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer;
+
+        set mycustomer = a.mycustomer, sales=a.sales from CustomerMyCustomerMap as a where a.customer = customerX limit 1;
         if( coupon > 0 ){
             set     sales=c.user, --轻代理
                     couponID = c.id
             from    Coupon as c
             where   c.id = coupon;
-        } 
+        }
 
         --step.2.绑定关系或者更新关系
         --如果有优惠码，更新当前轻代理的有效期；
@@ -37,7 +39,6 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
         }
         
         --step.3.记录销售记录( 产品明细)
-        set mycustomer = a.mycustomer, sales=a.sales from CustomerMyCustomerMap as a where a.customer = customerX limit 1;
         if(sales>0){
             --计算合同的总代理价
             var sumAgentprice dec(12, 2);
@@ -60,12 +61,12 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
             --记录客户订单
             var pid ID;
             if( not mycustomer is null ){
-                PENDING CustomerOrderPending +( sales:sales, mycustomer:mycustomer, customer:customerX, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice, isUsed=1 ) to pid;
+                PENDING CustomerOrderPending +( sales:sales, mycustomer:mycustomer, customer:customerX, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice) to pid;
 
                 BOOK CustomerOrderBook at( sales, mycustomer, customerX, no, 1, 1 )
                 set  quantity = 1, price = amount, agentprices = sumAgentprice, isUsed = 1;
             }else{
-                PENDING CustomerOrderPending +( sales:sales, mycustomer:0, customer:customerX, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice, isUsed=1 ) to pid;
+                PENDING CustomerOrderPending +( sales:sales, mycustomer:0, customer:customerX, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice) to pid;
 
                 BOOK CustomerOrderBook at( sales, 0,customerX, no, 1, 1 )
                 set  quantity = 1, price = amount, agentprices = sumAgentprice, isUsed = 1;

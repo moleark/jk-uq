@@ -13,14 +13,13 @@ returns ret (
     oneRate dec(12, 2),
     result dec(12, 2)
 ) {
-    foreach ( var sales bigint, mycustomer bigint, customer bigint, quantity bigint, order bigint, price dec(12, 2),agentprices dec(12, 2) of
-            select  sales,mycustomer,customer,quantity,order,price,agentprices
-            from    CustomerOrderBook
-            where   sales=$user and isUsed=1
+    foreach ( var sales ID, mycustomer ID, customer ID, order ID, quantity int, price dec(12, 2),agentprices dec(12, 2) of
+            select  sales, mycustomer, customer, order, 1 , price, agentprices
+            from    CustomerOrderPending
+            where   sales = $user
     ) {
 
         var sumprice  dec(12, 2);
-
         set sumprice = price * quantity;
 
         --step.1.计算一级绩效
@@ -181,7 +180,8 @@ returns ret (
             }
         }
      }
-     delete from CustomerOrderBook where sales=$user;
+     --delete from CustomerOrderBook where sales=$user;
+     delete from CustomerOrderPending where sales=$user;
 };
 
 /**
