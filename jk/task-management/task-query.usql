@@ -321,17 +321,17 @@ returns ret (
 
 /**判断客户是否被绑定**/
 QUERY MyCustomerIsOccupy(
-    mycustomer ID MyCustomer
+    customer ID Customer
 )
 returns ret (
     code smallint
 ) {
+    var mobile char(20), customerId ID, counts int;
+    /**
     --验证都以手机号为准，如果以后有更精确的信息再调整
     --step.1.获取此客户的手机号
-    var mobile char(20), customerId ID, counts int;
     set mobile = mobile from MyCustomer where id = mycustomer limit 1;
 
-    
     --step.2.获取使用此手机号的CID
     --获取Customer 使用用此手机号的CID
     table customerlist ( customer ID Customer );
@@ -345,29 +345,13 @@ returns ret (
     from    CustomerMyCustomerMap as a
             join MyCustomer as b on a.mycustomer = b.id
     where   b.mobile=mobile;
-    
+   
     --step.3.判断这些CID是否已有当前轻代理（除去自己）
     set     counts = count(1)
     from    CustomerNowSalesBOOK
     where   customer in( select customer from customerlist ) 
             and ( sales is null or sales <> $user );
-    /*
-    set     counts = count(1)
-    from    CustomerNowSalesBOOK
-    where   (customer in( 
-                select b.id
-                from    Customer.Contact as a
-                        join Customer as b on a.owner=b.id
-                where   a.content = mobile and a.type = 'mobile'
-            ) 
-            or customer in( 
-                select a.customer
-                from    CustomerMyCustomerMap as a
-                        join MyCustomer as b on a.mycustomer = b.id
-                where   b.mobile=mobile
-            ))
-            and ( sales is null or sales <> $user );
-    */
+     **/
     set counts = ifnull(counts,0);
    
     --step.4.返回验证结果

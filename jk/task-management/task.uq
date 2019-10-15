@@ -625,7 +625,7 @@ ACTION CreateMyCustomerUnit(
 
     if( unitId is null ) {
         TUID MyCustomerUnit into unitId unique($user, name) set
-            no = 1, createTime=now(), isValid=1;
+            no = null, createTime=now(), isValid=1;
     }
     into ret select unitId as id;
 };

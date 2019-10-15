@@ -16,6 +16,14 @@ PAGE (
     limit $pageSize;
 };
 
+QUERY getCustomerByKey(key char(30))
+returns ret (
+    customer ID Customer
+) {
+   into ret select a.owner as customer
+   from     Customer.Contact as a
+   where    a.content=key;
+};
 
 QUERY getCustomerByNo(customerNo char(30))
 returns ret (
@@ -26,8 +34,6 @@ returns ret (
    where    no = customerNo;
 };
 
-
-
 QUERY getCustomerOrganization(customerId ID Customer)
 returns ret (
     organization ID Organization,
@@ -37,3 +43,5 @@ returns ret (
    from     OrganizationCustomer
    where    customer = customerId;
 };
+
+
