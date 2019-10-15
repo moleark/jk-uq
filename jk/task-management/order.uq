@@ -62,14 +62,8 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
             var pid ID;
             if( not mycustomer is null ){
                 PENDING CustomerOrderPending +( sales:sales, mycustomer:mycustomer, customer:customerX, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice) to pid;
-
-                BOOK CustomerOrderBook at( sales, mycustomer, customerX, no, 1, 1 )
-                set  quantity = 1, price = amount, agentprices = sumAgentprice, isUsed = 1;
             }else{
                 PENDING CustomerOrderPending +( sales:sales, mycustomer:0, customer:customerX, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice) to pid;
-
-                BOOK CustomerOrderBook at( sales, 0,customerX, no, 1, 1 )
-                set  quantity = 1, price = amount, agentprices = sumAgentprice, isUsed = 1;
                 BOOK NewMyCustomerBook at( sales, customerX ) set webuser = webuser, createTime = NOW(); --创建新客户
             }
         }

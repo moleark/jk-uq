@@ -1,6 +1,6 @@
 import JKCustomer = 百灵威系统工程部/customer;
 
-TUID Customer from JKCustomer(
+TUID Customer sync JKCustomer(
     id,
     main name char(50) not null,
     main firstName char(50),

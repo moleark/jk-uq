@@ -103,6 +103,7 @@ TUID MyCustomer (
     main address ID Address,
     main addressString char(400),
     main telephone char(20),
+    main mobile char(20),
     main gender char(5),
     main birthDay date,
     main email char(30),
@@ -223,6 +224,13 @@ MAP WebUserEmployeeMap (
     key employee ID employee,
 );
 
+--收保护客户，一次性使用
+MAP ProtectedCustomersMap (
+    key customer ID Customer,
+    key sales ID [$user],
+    validity datetime
+);
+
 
 --当前轻代理
 BOOK CustomerNowSalesBOOK (
@@ -315,25 +323,7 @@ History AchievementHistory (
     Amount dec(12, 2) not null,
     status smallint default 1,
 );
-
-
-
---订单历史记录
-BOOK CustomerOrderBook (
-    key sales ID [$user],    --销售
-    key mycustomer ID MyCustomer,
-    key customer ID Customer,
-    key order ID,
-    key product ID ProductX not null,
-    key pack OF product.PackX not null,
-    quantity int not null,
-    price dec(12, 2) not null,
-    agentprices dec(12, 2) not null,
-    isUsed smallint default 1,
-);
-
-
-
+ 
 --消息
 BOOK MessageBook (
     key user ID [$user],
@@ -587,24 +577,27 @@ ACTION CreateMyCustomer(
     lastName char(50),
     gender char(5),
     salutation char(10),
-    birthDay date,
-    telephone char(50)
+    telephone char(50),
+    mobile char(50),
+    newcustomerid bigint
 )returns ret (
     code bigint
 ){
-    var myCustomerId ID,customerId ID, counts int;
+    var myCustomerId ID, counts int;
     TUID MyCustomer into myCustomerId unique(no) set
         name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit, user = $user,
-        salutation=salutation, birthDay=birthDay, telephone=telephone,isValid=1,createTime=now();
+        salutation=salutation, birthDay=now(), telephone=telephone,mobile=mobile,isValid=1,createTime=now();
 
-    set customerId=b.id
-    from    Customer.Contact as a
-            join Customer as b on a.owner=b.id
-    where   a.content=telephone;
-
+    --判断是否被占用
     set     counts = count(1)
     from    CustomerNowSalesBOOK
-    where   customer=customerId and ( sales is null or sales <> $user );
+    where   customer in (
+                select   b.id
+                from    Customer.Contact as a
+                        join Customer as b on a.owner=b.id
+                where   a.content=mobile 
+            ) 
+            and ( sales is null or sales <> $user );
     set counts = ifnull(counts,0);
 
     if(counts > 0){
@@ -612,11 +605,17 @@ ACTION CreateMyCustomer(
     }else{
        into ret select 0 as code;
     }
+
+    if( newcustomerid > 0){
+        var webuser ID [$user];
+        set webuser = a.webuser from NewMyCustomerBook as a where a.customer = newcustomerid;
+        BOOK CustomerMyCustomerMap at ($user, myCustomerId) set customer=newcustomerid,webuser=webuser;
+        delete from NewMyCustomerBook where customer = newcustomerid;
+    }
 };
 
 /** 添加客户单位*/
 ACTION CreateMyCustomerUnit(
-    no bigint,
     name char(50) not null
 )returns ret (
     id ID MyCustomerUnit
@@ -624,9 +623,9 @@ ACTION CreateMyCustomerUnit(
     var unitId bigint;
     set unitId = a.id from MyCustomerUnit as a where a.user=$user and a.name = name limit 1;
 
-    if(unitId is null) {
+    if( unitId is null ) {
         TUID MyCustomerUnit into unitId unique($user, name) set
-            no = name, createTime=now(), isValid=1;
+            no = 1, createTime=now(), isValid=1;
     }
     into ret select unitId as id;
 };

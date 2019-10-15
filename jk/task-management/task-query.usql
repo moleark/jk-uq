@@ -235,6 +235,7 @@ PAGE (
     firstName char(50),
     lastName char(50),
     telephone char(20),
+    mobile char(20),
     gender char(5),
     birthDay date,
     email char(30),
@@ -251,7 +252,7 @@ PAGE (
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
-    PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
+    PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.mobile, c.gender, c.birthDay, c.email, c.wechat,
                 c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
                 cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy
     from    MyCustomer as c
@@ -273,6 +274,7 @@ PAGE (
     firstName char(50),
     lastName char(50),
     telephone char(20),
+    mobile char(20),
     gender char(5),
     birthDay date,
     email char(30),
@@ -289,12 +291,12 @@ PAGE (
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
-    PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.gender, c.birthDay, c.email, c.wechat,
+    PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.mobile, c.gender, c.birthDay, c.email, c.wechat,
                 c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
                 cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
-            join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
+            left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
             left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
     where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )
             and (( type = 1 ) or (type = 2 and cb.sales = $user ) )
@@ -317,28 +319,58 @@ returns ret (
 };
 
 
-/**判断客户是否被占用**/
+/**判断客户是否被绑定**/
 QUERY MyCustomerIsOccupy(
     mycustomer ID MyCustomer
 )
 returns ret (
     code smallint
 ) {
-    var telephone char(20), customerId ID, counts int;
-    set telephone = telephone from MyCustomer where id = mycustomer limit 1;
+    --验证都以手机号为准，如果以后有更精确的信息再调整
+    --step.1.获取此客户的手机号
+    var mobile char(20), customerId ID, counts int;
+    set mobile = mobile from MyCustomer where id = mycustomer limit 1;
 
-    var content ID Contact;
-
-    set customerId=b.id
+    
+    --step.2.获取使用此手机号的CID
+    --获取Customer 使用用此手机号的CID
+    table customerlist ( customer ID Customer );
+    into   customerlist select b.id as customer
     from    Customer.Contact as a
             join Customer as b on a.owner=b.id
-    where   a.content=telephone;
+    where   a.content = mobile and a.type = 'mobile';
 
+    --获取MyCustomer 使用此手机号的CID（这个是否还需要验证，因为有漏洞我随便把一个我当前客户的手机号改成其他人的 其他人验证的时候就是已绑定）
+    into   customerlist select a.customer
+    from    CustomerMyCustomerMap as a
+            join MyCustomer as b on a.mycustomer = b.id
+    where   b.mobile=mobile;
+    
+    --step.3.判断这些CID是否已有当前轻代理（除去自己）
     set     counts = count(1)
     from    CustomerNowSalesBOOK
-    where   customer=customerId and ( sales is null or sales <> $user );
+    where   customer in( select customer from customerlist ) 
+            and ( sales is null or sales <> $user );
+    /*
+    set     counts = count(1)
+    from    CustomerNowSalesBOOK
+    where   (customer in( 
+                select b.id
+                from    Customer.Contact as a
+                        join Customer as b on a.owner=b.id
+                where   a.content = mobile and a.type = 'mobile'
+            ) 
+            or customer in( 
+                select a.customer
+                from    CustomerMyCustomerMap as a
+                        join MyCustomer as b on a.mycustomer = b.id
+                where   b.mobile=mobile
+            ))
+            and ( sales is null or sales <> $user );
+    */
     set counts = ifnull(counts,0);
-
+   
+    --step.4.返回验证结果
     if(counts > 0){
        into ret select 1 as code;
     }else{

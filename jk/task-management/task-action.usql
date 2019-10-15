@@ -180,7 +180,6 @@ returns ret (
             }
         }
      }
-     --delete from CustomerOrderBook where sales=$user;
      delete from CustomerOrderPending where sales=$user;
 };
 
