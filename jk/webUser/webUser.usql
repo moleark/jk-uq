@@ -33,10 +33,10 @@ OPEN MAP WebUserContact(
     address ID Address,
 ) ON SAVE {
     if ($user > 0){
-        if not exists(select 1 from WebUserCustomer where webUser = id)
-        and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = id)
-        and not exists(select 1 from PendingAuditWebUser where webUser = id){
-            BOOK PendingAuditWebUser at(id);
+        if not exists(select 1 from WebUserCustomer where webUser = $user)
+        and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
+        and not exists(select 1 from PendingAuditWebUser where webUser = $user){
+            BOOK PendingAuditWebUser at($user);
         }
         bus webUserBus.WebUserContact set webUser = webUser, telephone = telephone, mobile = mobile,
             email = email, fax = fax, zipCode = zipCode, wechatId = wechatId, addressString = addressString,
@@ -50,10 +50,10 @@ OPEN MAP WebUserContacts (
     key contact ID Contact,
 ) ON SAVE {
     if($user > 0) {
-        if not exists(select 1 from WebUserCustomer where webUser = id)
-        and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = id)
-        and not exists(select 1 from PendingAuditWebUser where webUser = id){
-            BOOK PendingAuditWebUser at(id);
+        if not exists(select 1 from WebUserCustomer where webUser = $user)
+        and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
+        and not exists(select 1 from PendingAuditWebUser where webUser = $user){
+            BOOK PendingAuditWebUser at($user);
         }
         bus webUserBus.WebUserContacts set webUser = webUser, contact = contact;
     }

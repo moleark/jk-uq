@@ -4,8 +4,8 @@ returns ret(
 ) {
     into ret select p.id as Province
     from    Province as p
-    where   p.country = country
-    order by p.chineseName;
+    where   p.country = country and p.isValid = 1
+    order by p.order;
 };
 
 QUERY GetProvinceCities(province ID Province)
@@ -14,8 +14,8 @@ returns ret(
 ) {
     Into ret select c.id as City
     from    City as c
-    where   c.province = province
-    order by c.chineseName;
+    where   c.province = province and c.isValid = 1
+    order by c.order;
 };
 
 QUERY GetCityCounties(city ID City)
@@ -24,6 +24,6 @@ returns ret(
 ) {
     Into ret select c.id as County
     from    County as c
-    where   c.city = city
-    order by c.chineseName;
+    where   c.city = city and c.isValid = 1
+    order by c.order;
 };

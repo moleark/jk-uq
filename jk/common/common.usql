@@ -6,6 +6,8 @@ OPEN TUID Country (
     main code char(10) not null,
     main englishName char(50) not null,
     main chineseName char(50) not null,
+    isValid smallint not null default 1,
+    order int not null default 0,
     search (englishName, chineseName),
     unique (englishName),
 );
@@ -16,6 +18,8 @@ OPEN TUID Province (
     main country ID Country not null,
     main englishName char(50) not null,
     main chineseName char(50) not null,
+    isValid smallint not null default 1,
+    order int not null default 0,
     search (englishName, chineseName),
 );
 
@@ -25,6 +29,8 @@ OPEN TUID City (
     main province ID Province not null,
     main englishName char(50) not null,
     main chineseName char(50) not null,
+    isValid smallint not null default 1,
+    order int not null default 0,
     search (englishName, chineseName),
 );
 
@@ -34,6 +40,8 @@ OPEN TUID County (
     main city ID City not null,
     main englishName char(50) not null,
     main chineseName char(50) not null,
+    isValid smallint not null default 1,
+    order int not null default 0,
     search (englishName, chineseName),
 );
 
