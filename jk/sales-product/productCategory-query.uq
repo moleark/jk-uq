@@ -100,18 +100,28 @@ PAGE (
     seq bigint
 ) {
     /-mysql
-    INSERT  INTO `_$page` (`id`, `no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`, `seq`)
-    SELECT  p.`id`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`
-            ,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`,
-            p.`id` as `seq`
-    from    `tv_productcache` as pca
-            inner join `tv_productx` as p on p.`$unit` = pca.`$unit` and p.id = pca.product
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_searchProductByCategory`;
+    CREATE TEMPORARY TABLE `_$page_searchProductByCategory` ( `inid` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `id` BIGINT NOT NULL) ENGINE=MyISAM;
+
+    insert into `_$page_searchProductByCategory`(`id`)
+    select  ppc.product
+    from    `tv_productproductcategory` as ppc
+            inner join `tv_productcache` as pca on pca.$unit = ppc.$unit and pca.product = ppc.product
+    where   ppc.$unit = `_$unit` and ppc.category = `_productCategory` and pca.salesRegion = `_salesRegion`;
+
+    INSERT  INTO `_$page` (`id`, `no`, `brand`, `origin`, `description`, `descriptionc`, `imageurl`, `chemical`, `cas`
+            , `purity`, `molecularfomula`, `molecularweight`, `seq`)
+    SELECT  p.`id`, p.`no` AS `no`, p.`brand` AS `brand`, p.`origin` AS `origin`, p.`description` AS `description`
+            , p.`descriptionc` AS `descriptionc`, p.`imageurl` AS `imageurl`, pc.`chemical` AS `chemical`, pc.`cas` AS `cas`
+            , pc.`purity` AS `purity`, pc.`molecularfomula` AS `molecularfomula`, pc.`molecularweight` AS `molecularweight`
+            , pp.`inid` as `seq`
+    from    `_$page_searchProductByCategory` as pp
+            inner join `tv_productx` as p on p.id = pp.id
             left join `tv_brand` as b on p.`$unit` = b.`$unit` and p.brand = b.id
             left join `tv_productchemical` as pc on p.`$unit` = pc.`$unit` and p.id = pc.product
-            join `tv_productproductcategory` as ppc on p.`$unit` = ppc.`$unit` and ppc.product = p.id
-    where   p.id > `_$pagestart` and ppc.category = `_productCategory` and pca.salesRegion = `_salesRegion`
-    order by p.id
-    limit `_$pagesize`;
+    where   1 = 1 and pp.inid > `_$pagestart`
+    limit   `_$pagesize`;
     -/
 };
 
