@@ -108,7 +108,8 @@ PAGE (
     select  ppc.product
     from    `tv_productproductcategory` as ppc
             inner join `tv_productcache` as pca on pca.$unit = ppc.$unit and pca.product = ppc.product
-    where   ppc.$unit = `_$unit` and ppc.category = `_productCategory` and pca.salesRegion = `_salesRegion`;
+    where   ppc.$unit = `_$unit` and ppc.category = `_productCategory` and pca.salesRegion = `_salesRegion`
+    order by pca.hasstock desc, pca.level desc;
 
     INSERT  INTO `_$page` (`id`, `no`, `brand`, `origin`, `description`, `descriptionc`, `imageurl`, `chemical`, `cas`
             , `purity`, `molecularfomula`, `molecularweight`, `seq`)
