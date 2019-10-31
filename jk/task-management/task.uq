@@ -122,7 +122,6 @@ TUID MyCustomer (
     ),
     isValid smallint default 1,
     search (name, firstName, lastName),
-    unique(no),
 );
 
 --客户单位
@@ -292,6 +291,7 @@ BOOK AchievementRuleBook(
     key MinAmount dec(12, 2),
     key MaxAmount dec(12, 2),
     value dec(12, 2) ,
+    TeamCount smallint,
 );
 
 --销售业绩
@@ -490,7 +490,7 @@ RETURNS ret (
             set name = customername;
         }
 
-        TUID MyCustomer into mycustomerid unique(customer) set
+        TUID MyCustomer into mycustomerid set
             name=name, firstName=firstName, lastName=lastName, gender=gender, user=$user, unit=mycustomerUnitid,
             salutation=salutation, birthDay=birthDay, isValid=1, createTime=now();
 
@@ -584,7 +584,7 @@ ACTION CreateMyCustomer(
     code bigint
 ){
     var myCustomerId ID, counts int;
-    TUID MyCustomer into myCustomerId unique(no) set
+    TUID MyCustomer into myCustomerId set
         name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit, user = $user,
         salutation=salutation, birthDay=now(), telephone=telephone,mobile=mobile,isValid=1,createTime=now();
 

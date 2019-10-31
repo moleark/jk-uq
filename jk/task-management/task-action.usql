@@ -24,14 +24,14 @@ returns ret (
 
         --step.1.计算一级绩效
         --step.1.1.获取基础变量
-        var oneSaleVolume dec(12, 2), oneMaxVolume dec(12, 2), oneRate dec(12, 2), oneSaleVolume_1 dec(12, 2);
+        var oneSaleVolume dec(12, 2), oneMaxVolume dec(12, 2), oneRate dec(12, 2), oneSaleVolume_1 dec(12, 2), oneTeamCount smallint;
         --获取总销量
         set oneSaleVolume=oneSaleVolume from SalesAchievementBook where user=$user;
         set oneSaleVolume = ifnull(oneSaleVolume,0);
         --获取总销量（加上订单金额）
         set oneSaleVolume_1 =  oneSaleVolume + sumprice;
         --获取提成比例和 改比例的最大销量
-        set oneRate = value, oneMaxVolume=MaxAmount from AchievementRuleBook where MinAmount <= oneSaleVolume and oneSaleVolume < MaxAmount and Type=1;
+        set oneRate = value, oneMaxVolume=MaxAmount, oneTeamCount = TeamCount from AchievementRuleBook where MinAmount <= oneSaleVolume and oneSaleVolume < MaxAmount and Type=1;
 
         --step.1.2.计算绩效
         var  oneAchievement dec(12, 2);
@@ -64,14 +64,14 @@ returns ret (
         if( not twosale is null ){
 
             --step.2.1.获取基础变量
-            var twoSaleVolume dec(12, 2) ,twoMaxVolume dec(12, 2), twoRate dec(12, 2), twoSaleVolume_1 dec(12, 2);
+            var twoSaleVolume dec(12, 2) ,twoMaxVolume dec(12, 2), twoRate dec(12, 2), twoSaleVolume_1 dec(12, 2), twoTeamCount smallint;
             --获取总销量
             set twoSaleVolume=a.twoSaleVolume from SalesAchievementBook as a where a.user=twosale;
             set twoSaleVolume = ifnull(twoSaleVolume,0);
             --获取总销量（加上订单金额）
             set twoSaleVolume_1 =  twoSaleVolume+sumprice;
             --获取提成比例和 改比例的最大销量
-            set twoRate = value, twoMaxVolume=MaxAmount from AchievementRuleBook where MinAmount <= twoSaleVolume and twoSaleVolume < MaxAmount and Type=2;
+            set twoRate = value, twoMaxVolume=MaxAmount, twoTeamCount = TeamCount from AchievementRuleBook where MinAmount <= twoSaleVolume and twoSaleVolume < MaxAmount and Type=2;
 
             --step.2.2.计算绩效
             var  twoAchievement dec(12, 2);
@@ -101,9 +101,9 @@ returns ret (
 
             set     twoLevel =
                     case
-                        when  twoLevelB >= 1 then 3
+                        when  twoLevelB >= twoTeamCount then 3
                     ELSE 	case
-                                when  twoLevelA >= 1 then 2
+                                when  twoLevelA >= twoTeamCount then 2
                             ELSE 1
                             END
                     END
@@ -123,14 +123,14 @@ returns ret (
             set threesale=parent from  Relation where children=twosale;
             if( not threesale is null ){
                 --step.3.1.获取基础变量
-                var threeSaleVolume dec(12, 2), threeMaxVolume dec(12, 2), threeRate dec(12, 2), threeSaleVolume_1 dec(12, 2);
+                var threeSaleVolume dec(12, 2), threeMaxVolume dec(12, 2), threeRate dec(12, 2), threeSaleVolume_1 dec(12, 2), threeTeamCount smallint;
                 --获取总销量
                 set threeSaleVolume=threeSaleVolume from SalesAchievementBook where user=threesale;
                 set threeSaleVolume = ifnull(threeSaleVolume,0);
                 --获取总销量（加上订单金额）
                 set threeSaleVolume_1 = threeSaleVolume+sumprice;
                 --获取提成比例和 改比例的最大销量
-                set threeRate = value, threeMaxVolume=MaxAmount from AchievementRuleBook where MinAmount <= threeSaleVolume and threeSaleVolume < MaxAmount and Type=3;
+                set threeRate = value, threeMaxVolume=MaxAmount, threeTeamCount = TeamCount from AchievementRuleBook where MinAmount <= threeSaleVolume and threeSaleVolume < MaxAmount and Type=3;
 
                 --step.3.2.计算绩效
                 var threeAchievement dec(12, 2);
@@ -159,9 +159,9 @@ returns ret (
 
                 set     threeLevel =
                         case
-                            when  threeLevelB >= 1 then 3
+                            when  threeLevelB >= threeTeamCount then 3
                         ELSE 	case
-                                    when  threeLevelA >= 1 then 2
+                                    when  threeLevelA >= threeTeamCount then 2
                                 ELSE 1
                                 END
                         END
