@@ -102,26 +102,33 @@ PAGE (
     /-mysql
 
     DROP TEMPORARY TABLE IF EXISTS `_$page_searchProductByCategory`;
-    CREATE TEMPORARY TABLE `_$page_searchProductByCategory` ( `inid` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `id` BIGINT NOT NULL) ENGINE=MyISAM;
+    CREATE TEMPORARY TABLE `_$page_searchProductByCategory` ( `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `product` BIGINT NOT NULL) ENGINE=MyISAM;
 
-    insert into `_$page_searchProductByCategory`(`id`)
+    insert into `_$page_searchProductByCategory`(`product`)
+    select  product
+    from    tv_productproductcategorycache
+    where   $unit = `_$unit` and salesRegion = `_salesRegion` and category = `_productCategory`
+    order by `order`
+    /*
     select  ppc.product
     from    `tv_productproductcategory` as ppc
             inner join `tv_productcache` as pca on pca.$unit = ppc.$unit and pca.product = ppc.product
     where   ppc.$unit = `_$unit` and ppc.category = `_productCategory` and pca.salesRegion = `_salesRegion`
-    order by pca.hasstock desc, pca.level desc;
+    order by pca.hasstock desc, pca.level desc, ppc.product
+    */
+    limit 1200;
 
     INSERT  INTO `_$page` (`id`, `no`, `brand`, `origin`, `description`, `descriptionc`, `imageurl`, `chemical`, `cas`
             , `purity`, `molecularfomula`, `molecularweight`, `seq`)
     SELECT  p.`id`, p.`no` AS `no`, p.`brand` AS `brand`, p.`origin` AS `origin`, p.`description` AS `description`
             , p.`descriptionc` AS `descriptionc`, p.`imageurl` AS `imageurl`, pc.`chemical` AS `chemical`, pc.`cas` AS `cas`
             , pc.`purity` AS `purity`, pc.`molecularfomula` AS `molecularfomula`, pc.`molecularweight` AS `molecularweight`
-            , pp.`inid` as `seq`
+            , pp.`id` as `seq`
     from    `_$page_searchProductByCategory` as pp
-            inner join `tv_productx` as p on p.id = pp.id
+            inner join `tv_productx` as p on p.id = pp.product
             left join `tv_brand` as b on p.`$unit` = b.`$unit` and p.brand = b.id
             left join `tv_productchemical` as pc on p.`$unit` = pc.`$unit` and p.id = pc.product
-    where   1 = 1 and pp.inid > `_$pagestart`
+    where   1 = 1 and pp.id > `_$pagestart`
     limit   `_$pagesize`;
     -/
 };
@@ -186,6 +193,17 @@ ACTION CountProductCategoryInclusion() {
         set categoryId = null;
 
 	end loop;
+
+
+    truncate table tv_productproductcategorycache;
+    insert  into tv_productproductcategorycache(`$unit`, category, salesRegion, `order`, product)
+    select  ppc.`$unit`, ppc.category, pca.salesRegion, @rownum := @rownum + 1, ppc.product
+    from    `tv_productcategory` as pc
+            inner join `tv_productproductcategory` as ppc on ppc.`$unit` = pc.`$unit` and ppc.category = pc.id
+            inner join `tv_productcache` as pca on pca.$unit = ppc.$unit and pca.product = ppc.product
+            , (select @rownum := 0) r
+    where   ppc.$unit = `_$unit` and ppc.isleaf = 1
+    order by pca.hasstock desc, pca.level desc, ppa.product
     end;
     -/
 };

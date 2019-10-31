@@ -23,3 +23,10 @@ Map ProductCategoryInclusion (
     key salesRegion ID SalesRegion,
     total int not null,
 );
+
+Map ProductProductCategoryCache (
+    key salesRegion ID SalesRegion,
+    key category ID ProductCategory,
+    key order int,
+    product ID ProductX,
+);
