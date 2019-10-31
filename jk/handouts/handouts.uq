@@ -1,0 +1,99 @@
+--领域分类
+TUID DomainType(
+    id,
+    main description char(50) not null,
+);
+
+--文档类型
+TUID DocumentType(
+    id,
+    main description char(20) not null,
+);
+
+--库存地点
+TUID StockLocation(
+    id,
+    main description char(50) not null,
+);
+
+--文档管理
+OPEN TUID Document(
+    id,
+    main domain ID DomainType,
+    main documenttype ID DocumentType,
+    main name char(100) not null,
+    main code char(10) null,
+    main image char(100) null,
+);
+
+--文档出入库记录
+HISTORY DocumentHistory(
+    date,
+    stockLocation ID StockLocation,
+    document ID Document,
+    OIType int,  --出入库类型（0出库 1入库）
+    Quantity int,
+    user,
+);
+
+--文档余量
+BOOK DocumentAccount(
+    key stockLocation ID StockLocation,
+    key document ID Document,
+    Quantity int,
+);
+
+/** 入库*/
+ACTION DocumentInStock(
+    stockLocationid ID StockLocation,
+    documentid ID Document,
+    oitype int,
+    quantity int
+) {
+
+    VAR nowquantity int;
+    VAR num int;
+    set num=count(1)
+    from   DocumentAccount 
+    where  stockLocation=stockLocationid and document=documentid
+
+    if(num>0){
+        set nowquantity=ifnull(a.Quantity,0)+ifnull(quantity,0)
+        from   DocumentAccount as a
+        where  a.stockLocation=stockLocationid and a.document=documentid
+    }else{
+        set nowquantity=quantity
+    }
+    if nowquantity>0 and quantity>0{
+        history DocumentHistory 
+        set stockLocation=stockLocationid, document=documentid, oitype=1, Quantity=quantity;
+
+        book DocumentAccount at (stockLocationid, documentid) set Quantity=nowquantity;       
+    }
+
+};
+
+/** 出库*/
+ACTION DocumentOutStock(
+    stockLocationid ID StockLocation,
+    documentid ID Document,
+    oitype int,
+    quantity int
+) {
+    VAR nowquantity int;
+    VAR num int;
+    set num=count(1)
+    from   DocumentAccount 
+    where  stockLocation=stockLocationid and document=documentid
+
+    if(num>0){
+        set nowquantity=ifnull(a.Quantity,0)-ifnull(quantity,0)
+        from   DocumentAccount as a
+        where  a.stockLocation=stockLocationid and a.document=documentid
+    }
+    if nowquantity>=0 and quantity>0{
+        history DocumentHistory 
+        set stockLocation=stockLocationid, document=documentid, oitype=0, Quantity=quantity;
+        book DocumentAccount at (stockLocationid, documentid) set Quantity=nowquantity;       
+    }
+};

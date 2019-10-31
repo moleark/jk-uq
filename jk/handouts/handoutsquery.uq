@@ -1,0 +1,62 @@
+QUERY SearchPaperDoc(domain ID DomainType, documenttype ID DocumentType )
+PAGE (
+    id bigint start 0,
+    name char(100),
+    code char(10),
+    image char(100)
+) {
+    /-mysql
+    INSERT  INTO `_$page` (`id`, `name`,`code`,`image`)
+    SELECT  p.`id`,p.`name` AS `name`,p.`code` AS `code`,p.`image` AS `image`
+    from    `tv_document` as p
+    where   p.id > `_$pagestart` and p.domain=`_domain` and p.documenttype=`_documenttype`
+    order by id
+    limit `_$pagesize`;
+    -/
+};
+
+QUERY SearchPaperDocByKey(name char(100))
+PAGE (
+    id bigint start 0,
+    name char(100),
+    code char(10),
+    image char(100)
+) {
+    var k char(50);
+    set k = concat('%', name, '%');
+    page select p.id, p.name, p.code, p.image
+    from Document as p
+    where (p.name like k) and p.id>$pageStart
+    order by p.id
+    limit $pageSize;
+};
+
+/** 搜索本文档出入库记录*/
+QUERY SearchDocumentHistory (document ID Document)
+returns ret (
+    date datetime,
+    document ID Document,
+    stockLocation ID StockLocation,
+    oitype int,
+    quantity int
+) {    
+    into ret SELECT	ht.date, ht.document, ht.stockLocation, ht.OIType, ht.Quantity
+    FROM    DocumentHistory as ht 
+    where    ht.document = document
+    order by ht.DATE desc
+    limit 200; 
+};
+
+/** 搜索本文档现货库存*/
+QUERY GetDocumentBook (document ID Document)
+returns ret (
+    document ID Document,
+    stockLocation ID StockLocation,
+    quantity int
+) {    
+    into ret SELECT	ht.document, ht.stockLocation, ht.Quantity
+    FROM    DocumentAccount as ht 
+    where    ht.document = document
+    order by ht.stockLocation desc
+    limit 200; 
+};
