@@ -64,20 +64,34 @@ returns ret (
 
 
 /** 搜索客户历史沟通记录*/
-QUERY SearchHistoryTaskByEmployee ( )
+QUERY SearchHistoryTaskByEmployee( )
 returns ret (
-    date datetime,
-    task ID Task,
-    status ID TaskStatus,
-    principal ID Employee,
-    resultType char(5),
-    result char(1000)
+    id bigint,
+    description char(100),
+    customer ID MyCustomer,
+    type ID TaskType,
+    typeName char(50),
+    biz ID BizType,
+    bizName char(50),
+    sourceID bigint,
+    sourceType char(10),
+    sourceNo char(50),
+    priorty int,
+    deadline date,
+    createTime date
 ) {
-    into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
-    FROM    Taskhistory as ht
-    where   ht.principal = $user and ht.status in( 3, 4 )
-    order by ht.DATE desc
-    limit 200;
+
+    into ret select t.id, t.description, t.customer, t.type, tt.name as typeName, t.biz, bt.name as bizName
+        , t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, t.createTime
+    from Task as t
+            join TaskType as tt on t.type = tt.id
+            join BizType  as bt on t.biz = bt.id
+    where   t.id in (
+                SELECT	ht.task
+                FROM    Taskhistory as ht
+                where   ht.principal = $user and ht.status in( 3, 4 )
+            )
+    order by t.deadline;
 };
 
 /** 搜索完结*/
@@ -321,7 +335,7 @@ returns ret (
 
 /**判断客户是否被绑定**/
 QUERY MyCustomerIsOccupy(
-    customer ID Customer
+        customer ID Customer
 )
 returns ret (
     code smallint
@@ -345,19 +359,24 @@ returns ret (
     from    CustomerMyCustomerMap as a
             join MyCustomer as b on a.mycustomer = b.id
     where   b.mobile=mobile;
-   
+    
     --step.3.判断这些CID是否已有当前轻代理（除去自己）
     set     counts = count(1)
     from    CustomerNowSalesBOOK
     where   customer in( select customer from customerlist ) 
             and ( sales is null or sales <> $user );
-     **/
-    set counts = ifnull(counts,0);
-   
+    
+    foreach customerList {
+        if exists(select a.customer from CustomerNowSalesBOOK as a where a.customer=customer) {
+            set counts= counts+ 1;
+        }
+    }
+    **/
+ 
     --step.4.返回验证结果
-    if(counts > 0){
+    if(select a.customer from CustomerNowSalesBOOK as a where a.customer=customer) {
        into ret select 1 as code;
-    }else{
+    } else {
        into ret select 0 as code;
     }
 };

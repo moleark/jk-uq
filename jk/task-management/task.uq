@@ -122,7 +122,6 @@ TUID MyCustomer (
     ),
     isValid smallint default 1,
     search (name, firstName, lastName),
-    unique(no),
 );
 
 --客户单位
@@ -292,6 +291,7 @@ BOOK AchievementRuleBook(
     key MinAmount dec(12, 2),
     key MaxAmount dec(12, 2),
     value dec(12, 2) ,
+    TeamCount smallint,
 );
 
 --销售业绩
