@@ -31,7 +31,7 @@ BUS pointBus ver 0.4 from [百灵威系统工程部]/point
         --如果没优惠码，获取mycustomer 和customer 的关联关系
         if( couponID > 0 ){
             --step.2.1.首先要记录优惠码的使用记录
-            BOOK CouponOrderMap at ( coupon, orderId ); --添加优惠码使用记录
+            BOOK CouponOrderMap at ( coupon, orderId, customerX ); --添加优惠码使用记录
             --step.2.2.绑定当前轻代理，或者延期当前轻代理。
             if(sales>0){
                 BOOK CustomerNowSalesBOOK at ( customerX ) set sales = sales, validity = dateadd(month, 3, NOW()); --添加当前轻代理

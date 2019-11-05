@@ -148,13 +148,17 @@ returns ret (
 
 
 /** 搜索邀请码*/
-QUERY SearchPosition ()
+QUERY SearchPosition (position bigint)
 returns ret (
     user ID [$user],
     post tinyint,
     code bigint
 ) {
-    into ret select user,post, code from Position where user = $user;
+    if (position){
+        into ret select user,post, code from Position where code = position;
+    }else{
+        into ret select user,post, code from Position where user = $user;
+    }
 };
 
 
@@ -273,7 +277,7 @@ PAGE (
             join MyCustomerUnit as u on c.unit =u.id
             left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
             left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
-    where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )
+    where   c.id > $pageStart and c.user = $user and c.isValid=1 and (c.name like key2 or u.name like key2 )
     limit $pageSize;
 };
 
@@ -312,7 +316,7 @@ PAGE (
             join MyCustomerUnit as u on c.unit =u.id
             left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
             left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
-    where   c.id > $pageStart and c.user = $user and (c.name like key2 or u.name like key2 )
+    where   c.id > $pageStart and c.user = $user  and c.isValid=1 and (c.name like key2 or u.name like key2 )
             and (( type = 1 ) or (type = 2 and cb.sales = $user ) )
     limit $pageSize;
 };
@@ -435,29 +439,6 @@ returns ret (
     from    MessageBook as m
     where   m.user = $user;
 };
-
-/** 搜索我的优惠码*/
-QUERY SearchCoupon( key char(100))
-PAGE (
-    id bigint start 0,
-    code bigint,
-    user ID [$user],
-    validitydate date,
-    discount dec(12, 2),
-    preferential dec(12, 2),
-    createTime datetime,
-    isValid smallint
-) {
-    var key2 char(102);
-    set key2 = concat('%', key, '%');
-
-    PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid
-    from    Coupon as m
-    where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
-    order by m.createTime desc
-    limit $pageSize;
-};
-
 
 /** 搜索平台客户*/
 QUERY SearchWebUser(

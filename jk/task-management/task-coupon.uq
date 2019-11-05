@@ -1,0 +1,139 @@
+--优惠券
+OPEN TUID Coupon (
+    id,
+    code char(12),
+    user ID [$user],
+    customer ID Customer,
+    validitydate date,
+    discount dec(12, 2),     --折扣
+    preferential dec(12, 2), --优惠额度
+    createTime datetime,
+    isValid  smallint default 1,
+);
+
+
+--优惠券订单
+MAP CouponOrderMap (
+    key coupon ID Coupon,
+    key order ID,
+    key customer ID,
+);
+
+
+/** 添加优惠码*/
+ACTION CreateCoupon(
+    validitydate date,
+    discount dec(12, 2),
+    preferential dec(12, 2),
+    mycustomer ID MyCustomer
+)returns ret (
+    code char(8)
+){
+
+    var code varchar(12), head bigint,  customer ID Customer;
+    set code = ( RAND() * 100000000) + 100000000;
+    set code = substr(code, 1, 8);
+
+    if( not mycustomer is null ){
+        set customer=customer from CustomerMyCustomerMap where mycustomer=mycustomer;
+    }
+
+    var couponId ID;
+    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
+                discount=discount, preferential=preferential, createTime=now(), isValid=1;
+    into ret select code;
+
+};
+
+/** 验证优惠码是否可用*/
+ACTION IsCanUseCoupon (
+    code char(20),
+    customer ID Customer
+)
+returns ret (
+    result  bigint,
+    id      bigint,
+    code   char(20),
+    user   ID [$user],
+    customer ID Customer,
+    discount dec(12,2),
+    preferential dec(12,2),
+    validitydate datetime,
+    isValid smallint
+)
+{
+    var result      bigint,     --返回结果
+    id              bigint,     --优惠码id
+    validitydate    datetime,   --有效期
+    isValid         smallint,   --是否有效
+    customerX ID    Customer,   --指定客户CID
+    discount        dec(12,2),  --折扣
+    preferential    dec(12,2),  --金额
+    orderX          char(50),   --被使用的订单
+    sales ID        [$user],    --优惠码的轻代理
+    nowsales   ID   [$user],    --客户的当前轻代理
+    coupon char(8) ;            --优惠码
+
+    set     id = c.id,
+            sales=c.user,                   --轻代理
+            isValid=c.isValid,              --是否有效
+            validitydate=c.validitydate,    --有效期
+            customerX=c.customer,           --CID
+            discount = c.discount, 
+            preferential=  c.preferential,
+            coupon = code
+    from    Coupon as c
+    where   c.code = code;
+
+    --判断是否被订单使用, 一个优惠码只能被同一个客户使用一次
+    set orderX = ( select co.order from CouponOrderMap as co where co.coupon = id and co.customer = customer  );
+    --获取客户的当前轻代理
+    set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.customer = customer limit 1 ); --当前轻代理
+    
+    if ( coupon is null ) {
+        set result = 0;  --不存在
+    } else if ( isValid <> 1 or validitydate < now() ) {
+        set result = 2;  --无效的优惠码
+    } else if ( customer <> customerX) {
+        set result = 3;  --不是指定的客户
+    } else if (not orderX is null) {
+        set result = 4;  --已经被使用
+    } else if ( not nowsales is null and nowsales <> sales )  {
+        set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
+    } else if ( sales = $user )  {
+        set result = 6;  --轻代理不能用自己的优惠码下单
+    } else {
+        set result = 1;  --正常
+        /**
+        --取消BUS的发送，如果购物车需要查询订单的使用记录通过VT的方式
+        bus couponBus.coupon set id=id, code=code, user=sales, customer=customerX, discount=discount,
+            preferential=preferential, validitydate=validitydate, isValid=isValid;
+        bus couponBus.coupon send;
+        **/
+    };
+    into ret select result, id, code, sales as user, customerX as customer, discount, preferential, validitydate, isValid;
+};
+
+
+/** 搜索我的优惠码*/
+QUERY SearchCoupon( key char(100))
+PAGE (
+    id bigint start 0,
+    code bigint,
+    user ID [$user],
+    validitydate date,
+    discount dec(12, 2),
+    preferential dec(12, 2),
+    createTime datetime,
+    isValid smallint
+) {
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+
+    PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid
+    from    Coupon as m
+    where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
+    order by m.createTime desc
+    limit $pageSize;
+};
+

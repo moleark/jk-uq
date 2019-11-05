@@ -1,0 +1,158 @@
+--客户
+TUID MyCustomer (
+    id,
+    user ID [$user],
+    main unit ID MyCustomerUnit,
+    no bigint,
+    main name char(50) not null,
+    main firstName char(50),
+    main lastName char(50),
+    main address ID Address,
+    main addressString char(400),
+    main telephone char(20),
+    main mobile char(20),
+    main gender char(5),
+    main birthDay date,
+    main email char(30),
+    main wechat char(20),
+    main teacher char(20),
+    main potential smallint,
+    research smallint,
+    salutation char(10),
+    createTime datetime,
+    ARR Contact (
+        owner,
+        id,
+        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq etc.
+        content char(50) not null,
+        order smallint,
+    ),
+    isValid smallint default 1,
+    search (name, firstName, lastName),
+);
+
+--客户单位
+TUID MyCustomerUnit (
+    id,
+    user ID [$user],
+    no bigint,
+    main name char(50) not null,
+    createTime datetime,
+    ARR Contact (
+        owner,
+        id,
+        type char(8) not null, -- tel,mobile,email,fax,post,address,wechat,qq etc.
+        content char(50) not null,
+        order smallint,
+    ),
+    isValid smallint default 1,
+    search (name),
+    unique(user, name),
+);
+
+--新客户
+BOOK NewMyCustomerBook (
+    key sales ID [$user],
+    key customer ID Customer,
+    webuser ID [$user],
+    createTime datetime
+);
+
+--开放客服
+MAP OpenCustomersMap (
+    key customer ID Customer,
+    createTime datetime,
+);
+
+--当前轻代理
+BOOK CustomerNowSalesBOOK (
+    key customer ID Customer,
+    sales ID [$user],
+    validity datetime
+);
+
+
+--受保护客户，一次性使用
+MAP ProtectedCustomersMap (
+    key customer ID Customer,
+    key sales ID [$user],
+    validity datetime
+);
+
+
+/** 添加客户*/
+ACTION CreateMyCustomer(
+    unit ID MyCustomerUnit,
+    no bigint,
+    name char(50) not null,
+    firstName char(50),
+    lastName char(50),
+    gender char(5),
+    salutation char(10),
+    telephone char(50),
+    mobile char(50),
+    newcustomerid bigint
+)returns ret (
+    code bigint
+){
+    var myCustomerId ID, counts int;
+    TUID MyCustomer into myCustomerId set
+        name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit, user = $user,
+        salutation=salutation, birthDay=now(), telephone=telephone,mobile=mobile,isValid=1,createTime=now();
+
+    --判断是否被占用
+    set     counts = count(1)
+    from    CustomerNowSalesBOOK
+    where   customer in (
+                select   b.id
+                from    Customer.Contact as a
+                        join Customer as b on a.owner=b.id
+                where   a.content=mobile 
+            ) 
+            and ( sales is null or sales <> $user );
+    set counts = ifnull(counts,0);
+
+    if(counts > 0){
+       into ret select 1 as code;
+    }else{
+       into ret select 0 as code;
+    }
+
+    if( newcustomerid > 0){
+        var webuser ID [$user];
+        set webuser = a.webuser from NewMyCustomerBook as a where a.customer = newcustomerid;
+        BOOK CustomerMyCustomerMap at ($user, myCustomerId) set customer=newcustomerid,webuser=webuser;
+        delete from NewMyCustomerBook where customer = newcustomerid;
+    }
+};
+
+/** 添加客户单位*/
+ACTION CreateMyCustomerUnit(
+    name char(50) not null
+)returns ret (
+    id ID MyCustomerUnit
+){
+    var unitId bigint;
+    set unitId = a.id from MyCustomerUnit as a where a.user=$user and a.name = name limit 1;
+
+    if( unitId is null ) {
+        TUID MyCustomerUnit into unitId unique($user, name) set
+            no = null, createTime=now(), isValid=1;
+    }
+    into ret select unitId as id;
+};
+
+
+/**修改mycustomer 和customer的关系*/
+ACTION UpateCustomerMyCustomerMap(
+    mycustomer ID MyCustomer,
+    customer ID Customer,
+    webuser ID [$user]
+){
+     BOOK CustomerMyCustomerMap at ($user, mycustomer) set customer=customer,webuser=webuser;
+
+     delete from NewMyCustomerBook where sales=$user and customer = customer and webuser=webuser;
+};
+
+
+

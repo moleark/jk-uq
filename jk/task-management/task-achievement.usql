@@ -1,4 +1,45 @@
-/**计算绩效**/
+
+--业绩计算规则
+BOOK AchievementRuleBook(
+    key Type int, --1：客户，2：直属销售，3： 二级销售
+    key MinAmount dec(12, 2),
+    key MaxAmount dec(12, 2),
+    value dec(12, 2) ,
+    TeamCount smallint,
+);
+
+--销售业绩
+BOOK SalesAchievementBook(
+    key user ID [$user],
+
+    Level int not null default 1, --级别 ： 1：铜牌； 2:金牌；3:钻石；（级别 ：0：普通； 1：铜牌； 2:金牌；3:钻石；）
+
+    oneSaleVolume dec(12, 2) not null default 0 , --客户销量
+    twoSaleVolume dec(12, 2) not null default 0 , --直属团队销量
+    threeSaleVolume dec(12, 2) not null default 0 , --二级团队销量
+
+    oneAchievement dec(12, 2) not null default 0 , --客户销量提成
+    twoAchievement dec(12, 2) not null default 0 , --二级团队销量提成
+    threeAchievement dec(12, 2) not null default 0 , --二级团队销量提成
+);
+
+
+--业绩历史记录
+History AchievementHistory (
+    date,
+    sales ID [$user],    --销售
+    order ID,
+    price dec(12, 2) not null,
+    agentprices dec(12, 2) not null,
+    Types int,
+    mycustomer ID MyCustomer,
+    customer ID Customer,
+    Amount dec(12, 2) not null,
+    status smallint default 1,
+);
+
+
+/**计算收益**/
 ACTION ComputeAchievement(
 )
 returns ret (
@@ -36,7 +77,7 @@ returns ret (
         --step.1.2.计算绩效
         var  oneAchievement dec(12, 2);
         if( oneSaleVolume_1 <= oneMaxVolume ){
-            set oneAchievement = ((price - agentprices) * quantity * oneRate);
+            set oneAchievement = ((price - agentprices) * quantity * oneRate) / 1.13;
             into ret select   oneSaleVolume_1, oneMaxVolume , price, agentprices, quantity, 0 as oneRate_1, 0 as oneExcess, 0 as oneNotExcess, oneRate , oneAchievement as result;
         }else{
             var oneRate_1 dec(12, 2) , --超出部分提成比例
@@ -46,7 +87,7 @@ returns ret (
             set oneNotExcess = sumprice - (oneSaleVolume_1 - oneMaxVolume);
 
             set oneRate_1 = value from AchievementRuleBook where MinAmount < oneSaleVolume_1 and MaxAmount >= oneSaleVolume_1 and Type=1;
-            set oneAchievement = (((price - agentprices) * oneRate_1 * ( oneExcess / sumprice) ) + ((price - agentprices) * oneRate * ( oneNotExcess / sumprice) ) ) * quantity ;
+            set oneAchievement = ((((price - agentprices) * oneRate_1 * ( oneExcess / sumprice) ) + ((price - agentprices) * oneRate * ( oneNotExcess / sumprice) ) ) * quantity) /1.13 ;
 
             into ret select   oneSaleVolume_1, oneMaxVolume , price, agentprices, quantity, oneRate_1, oneExcess, oneNotExcess, oneRate , oneAchievement as result;
         }

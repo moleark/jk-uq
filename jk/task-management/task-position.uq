@@ -1,0 +1,46 @@
+
+--级别 邀请码
+MAP Position (
+    key user ID [$user],
+    post tinyint,       -- -1：被拒绝，0：待批准，1：销售员，2：轻代理，3: 渠道经理, 90:Admin
+    code bigint,
+);
+
+
+--层级关系树
+MAP Relation (
+    key parent ID [$user],
+    key children ID [$user],
+);
+
+
+
+/** 添加验证码*/
+ACTION CreatePosition (
+    invitacode bigint
+)
+RETURNS ret (
+    succeed tinyint,
+    code bigint
+)
+{
+    var parent ID [$user];
+    set parent =( select user from Position where code=invitacode );
+    if parent is null {
+        into ret select -1 as succeed, 0 as code;
+    }
+    else{
+        var code bigint;
+        set code = (select user from Position where user = $user);
+        if code is null {
+            set code = rand() * 100000000;
+            BOOK Position at ($user) set post=0, code=code;
+            into ret select 1 as succeed, code as code;
+
+            BOOK Relation at ( parent, $user );
+        }
+        else{
+            into ret select 0 as succeed, code as code;
+        }
+    }
+};

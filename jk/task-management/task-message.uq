@@ -1,0 +1,21 @@
+
+--消息
+TUID Message (
+    id,
+    date date,
+    user ID [$user],
+    peer ID [$user],
+    main note text,
+);
+
+--消息
+BOOK MessageBook (
+    key user ID [$user],
+    count bigint,
+);
+
+
+/** 清空消息*/
+ACTION UpdateNowMessage(){
+    BOOK MessageBook at ( $user) set count=0;
+};
