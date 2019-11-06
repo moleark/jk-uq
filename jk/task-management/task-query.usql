@@ -203,23 +203,22 @@ returns ret (
 
 /** 搜索业绩记录*/
 QUERY SearchAchievementHistory (
-     types int,
-     status int
+     types smallint,
+     status char(10),
 )
 returns ret (
     date datetime,
     sales ID [$user],
     mycustomer ID MyCustomer,
-    Amount dec(12, 2) not null,
-    Types int,
     order ID,
-    status smallint
+    ordertype char(20),
+    types smallint,
+    amount dec(12, 2) not null
 ) {
     
-    into ret select a.date, a.sales, a.mycustomer, a.Amount, a.Types, a.order, a.status
+    into ret select a.date, a.sales, a.mycustomer, a.order, a.ordertype, a.types, a.amount
     from    AchievementHistory as a
-    where   a.sales= $user and a.Types = types
-            and ( (status=0 and a.status in(1,2)) or a.status = status ) 
+    where   a.sales= $user and a.types = types
     order by a.date desc ;
 };
 
@@ -345,36 +344,37 @@ returns ret (
     code smallint
 ) {
     var mobile char(20), customerId ID, counts int;
+
     /**
-    --验证都以手机号为准，如果以后有更精确的信息再调整
-    --step.1.获取此客户的手机号
-    set mobile = mobile from MyCustomer where id = mycustomer limit 1;
+        --验证都以手机号为准，如果以后有更精确的信息再调整
+        --step.1.获取此客户的手机号
+        set mobile = mobile from MyCustomer where id = mycustomer limit 1;
 
-    --step.2.获取使用此手机号的CID
-    --获取Customer 使用用此手机号的CID
-    table customerlist ( customer ID Customer );
-    into   customerlist select b.id as customer
-    from    Customer.Contact as a
-            join Customer as b on a.owner=b.id
-    where   a.content = mobile and a.type = 'mobile';
+        --step.2.获取使用此手机号的CID
+        --获取Customer 使用用此手机号的CID
+        table customerlist ( customer ID Customer );
+        into   customerlist select b.id as customer
+        from    Customer.Contact as a
+                join Customer as b on a.owner=b.id
+        where   a.content = mobile and a.type = 'mobile';
 
-    --获取MyCustomer 使用此手机号的CID（这个是否还需要验证，因为有漏洞我随便把一个我当前客户的手机号改成其他人的 其他人验证的时候就是已绑定）
-    into   customerlist select a.customer
-    from    CustomerMyCustomerMap as a
-            join MyCustomer as b on a.mycustomer = b.id
-    where   b.mobile=mobile;
-    
-    --step.3.判断这些CID是否已有当前轻代理（除去自己）
-    set     counts = count(1)
-    from    CustomerNowSalesBOOK
-    where   customer in( select customer from customerlist ) 
-            and ( sales is null or sales <> $user );
-    
-    foreach customerList {
-        if exists(select a.customer from CustomerNowSalesBOOK as a where a.customer=customer) {
-            set counts= counts+ 1;
+        --获取MyCustomer 使用此手机号的CID（这个是否还需要验证，因为有漏洞我随便把一个我当前客户的手机号改成其他人的 其他人验证的时候就是已绑定）
+        into   customerlist select a.customer
+        from    CustomerMyCustomerMap as a
+                join MyCustomer as b on a.mycustomer = b.id
+        where   b.mobile=mobile;
+        
+        --step.3.判断这些CID是否已有当前轻代理（除去自己）
+        set     counts = count(1)
+        from    CustomerNowSalesBOOK
+        where   customer in( select customer from customerlist ) 
+                and ( sales is null or sales <> $user );
+        
+        foreach customerList {
+            if exists(select a.customer from CustomerNowSalesBOOK as a where a.customer=customer) {
+                set counts= counts+ 1;
+            }
         }
-    }
     **/
  
     --step.4.返回验证结果

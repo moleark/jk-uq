@@ -1,4 +1,3 @@
-
 --业绩计算规则
 BOOK AchievementRuleBook(
     key Type int, --1：客户，2：直属销售，3： 二级销售
@@ -21,6 +20,9 @@ BOOK SalesAchievementBook(
     oneAchievement dec(12, 2) not null default 0 , --客户销量提成
     twoAchievement dec(12, 2) not null default 0 , --二级团队销量提成
     threeAchievement dec(12, 2) not null default 0 , --二级团队销量提成
+
+    totalAchievement dec(12, 2) not null default 0 , --累计提成
+    totaWithdrawal dec(12, 2) not null default 0 , --累计提现
 );
 
 
@@ -28,16 +30,25 @@ BOOK SalesAchievementBook(
 History AchievementHistory (
     date,
     sales ID [$user],    --销售
-    order ID,
-    price dec(12, 2) not null,
-    agentprices dec(12, 2) not null,
-    Types int,
     mycustomer ID MyCustomer,
     customer ID Customer,
-    Amount dec(12, 2) not null,
-    status smallint default 1,
+    order ID,
+    ordertype char(10),
+    price dec(12, 2) not null,
+    agentprices dec(12, 2) not null,
+    types smallint,
+    amount dec(12, 2) not null,
 );
 
+/**
+SHEET Withdrawal ver 0.6 (
+    webUser ID [$user],
+    amount dec(12, 2) not null,
+)
+Action submit {
+    history AchievementHistory set sales=null, mycustomer=null, customer=null, amount=null, types=null, order=null, ordertype='withdrawal', price=null,agentprices=null ,amount = 0 ;
+};
+**/
 
 /**计算收益**/
 ACTION ComputeAchievement(
@@ -96,7 +107,7 @@ returns ret (
         --更新总销售额，A类绩效
         book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement;
         --记录A类绩效历史
-        history AchievementHistory set sales=sales, mycustomer=mycustomer, customer=customer, Amount=oneAchievement, Types=1, order=order, price=price,agentprices=agentprices ;
+        history AchievementHistory set sales=sales, mycustomer=mycustomer, customer=customer, amount=oneAchievement, types=1, order=order, ordertype='order', price=price,agentprices=agentprices ;
 
         --step.2.计算二级绩效
         var twosale ID [$user], threesale ID [$user];
@@ -157,7 +168,7 @@ returns ret (
                 --更新总销售额
                 book SalesAchievementBook at(twosale) set twoSaleVolume+=sumprice, twoAchievement+=twoAchievement;
                 --更新B类历史
-                history AchievementHistory set sales=twosale, mycustomer=mycustomer, customer=customer, Amount=twoAchievement, Types=2, order=order, price=price,agentprices=agentprices ;
+                history AchievementHistory set sales=twosale, mycustomer=mycustomer, customer=customer, amount=twoAchievement, types=2, order=order, ordertype='order', price=price,agentprices=agentprices ;
             }
 
             --step.3.计算三级绩效
@@ -216,7 +227,7 @@ returns ret (
                     book SalesAchievementBook at(threesale) set threeSaleVolume+=sumprice, threeAchievement+=threeAchievement;
                     --更新C类历史
                     history AchievementHistory
-                        set sales=threesale, mycustomer=mycustomer, customer=customer, Amount=threeAchievement,Types=3, order=order, price=price,agentprices=agentprices;
+                        set sales=threesale, mycustomer=mycustomer, customer=customer, amount=threeAchievement, types=3, order=order, ordertype='order', price=price,agentprices=agentprices;
                 }
             }
         }

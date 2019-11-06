@@ -1,3 +1,16 @@
+
+--平台账号账户信息
+MAP WebUserAccountMap (
+    key webuser ID [$user],
+    telephone char(20),
+    identitycard char(30),
+    identityicon char(30),
+    subbranchbank char(50),
+    bankaccountnumber  char(20),
+    bankaccountname  char(20),
+);
+
+
 --平台用户和内部员工关系
 MAP WebUserEmployeeMap (
     key webuser ID [$user],
