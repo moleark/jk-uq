@@ -197,7 +197,6 @@ returns ret (
     where   a.user = user;
 
     into ret select user,  oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  oneAchievement,  twoAchievement,  threeAchievement, teamCount, customerCount, activeCustomerCount;
-
 };
 
 
@@ -211,12 +210,13 @@ returns ret (
     sales ID [$user],
     mycustomer ID MyCustomer,
     order ID,
+    orderno ID,
     ordertype char(20),
     types smallint,
     amount dec(12, 2) not null
 ) {
     
-    into ret select a.date, a.sales, a.mycustomer, a.order, a.ordertype, a.types, a.amount
+    into ret select a.date, a.sales, a.mycustomer, a.order, a.orderno, a.ordertype, a.types, a.amount
     from    AchievementHistory as a
     where   a.sales= $user and a.types = types
     order by a.date desc ;
