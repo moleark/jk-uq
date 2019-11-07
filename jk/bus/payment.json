@@ -1,0 +1,34 @@
+{
+    "payment": [
+        {
+            "name": "taskid",
+            "type": "int"
+        },
+        {
+            "name": "agency",
+            "type": "id"
+        },
+        {
+            "name": "currency",
+            "type": "id"
+        },
+        {
+            "name": "price",
+            "type": "number"
+        }  
+    ],
+    "paymentresult": [
+        {
+            "name": "taskid",
+            "type": "int"
+        },
+        {
+            "name": "result",
+            "type": "int"
+        },
+        {
+            "name": "remarks",
+            "type": "string"
+        }   
+    ]
+}
