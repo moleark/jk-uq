@@ -1,8 +1,8 @@
 {
-    "payment": [
+    "paymentrequest": [
         {
             "name": "taskid",
-            "type": "int"
+            "type": "number"
         },
         {
             "name": "agency",
@@ -20,14 +20,14 @@
     "paymentresult": [
         {
             "name": "taskid",
-            "type": "int"
+            "type": "number"
         },
         {
             "name": "result",
-            "type": "int"
+            "type": "number"
         },
         {
-            "name": "remarks",
+            "name": "comments",
             "type": "string"
         }   
     ]
