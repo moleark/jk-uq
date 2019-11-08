@@ -41,3 +41,5 @@ TUID InvoiceInfo from JKCustomer(
     bank char(100),
     accountNo char(50),
 );
+
+TUID BuyerAccount from JKCustomer;

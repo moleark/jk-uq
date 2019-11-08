@@ -85,3 +85,19 @@ OPEN MAP CustomerContractor (
         bus webUserBus.CustomerContractor set customer = customer, contractor = contractor;
     }
 };
+
+OPEN TUID BuyerAccount (
+    id,
+    organization ID Organization,
+    main description char(200),
+    xyz char(5),
+    no char(30),
+    createTime datetime,
+    isValid smallint not null,
+    unique(no),
+);
+
+MAP CustomerBuyerAccount (
+    key customer ID Customer,
+    key buyerAccount ID BuyerAccount,
+);

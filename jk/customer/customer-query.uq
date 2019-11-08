@@ -44,4 +44,17 @@ returns ret (
    where    customer = customerId;
 };
 
-
+QUERY getBuyerAccountByNo(buyAccountNo char(30))
+returns ret (
+    buyerAccount bigint,
+    organization ID Organization,
+    description char(200),
+    xyz char(5),
+    no char(30),
+    createTime datetime,
+    isValid smallint
+) {
+   into ret select a.id as buyerAccount, a.organization, a.description, a.xyz, a.no, a.createTime, a.isValid
+   from     BuyerAccount as a
+   where    a.no = buyAccountNo and a.isValid = 1;
+};
