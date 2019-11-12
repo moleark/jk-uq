@@ -1,0 +1,14 @@
+import JKProduct = 百灵威系统工程部/product;
+
+TUID ProductX from JKProduct (
+    id,
+    arr PackX (
+        owner,
+        id,
+        jkcat char(50) not null,
+        main radiox dec(12,2),
+        main radioy dec(12,4),
+        main unit char(10),
+    ),
+    main imageUrl char(200),
+);

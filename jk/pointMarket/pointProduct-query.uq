@@ -1,0 +1,13 @@
+QUERY getPointProduct()
+returns ret(
+    product ID ProductX,           --产品编号
+    pack OF product.PackX,         --包装编号
+    point int,                     --所需积分
+    startDate date,                --生效时间
+    endDate date
+) {
+    
+    into ret SELECT	a.product, a.pack, a.point, a.startDate, a.endDate
+	FROM    ProductPoint AS a
+    order by a.point;
+};

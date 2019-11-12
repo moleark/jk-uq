@@ -1,0 +1,10 @@
+QUERY getPoints(customer ID customer)
+returns ret(
+    point int,
+    usedPoint int,
+    pointYear int
+) {
+    into ret SELECT point, usedPoint, pointYear
+    FROM PointBook 
+    WHERE customer = customer;
+};

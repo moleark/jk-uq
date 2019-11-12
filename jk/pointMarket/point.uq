@@ -1,0 +1,75 @@
+--可兑换产品表
+MAP ProductPoint (
+    key product ID ProductX not null,           --产品编号
+    key pack OF product.PackX not null,         --包装编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+);
+
+--积分明细表
+BOOK PointBook (
+    key customer ID Customer,   --客户编号
+    key pointYear int,          --年度
+    point int,                  --积分
+    usedPoint int,              --消耗的积分
+); 
+
+--积分变化表
+HISTORY PointHistory (
+    date,                       --生成时间
+    customer ID Customer,       --客户
+    pointYear int,              --积分年度
+    point int,                  --积分数(100 or -100)
+    user,                       --当前登录人
+    sheet,                      --单据
+    type,                       --不同的sheet类型
+    row,                        --子表的第几行
+);
+
+--兑换单表
+SHEET PointExchangeSheet ver 0.1 (
+    customer ID Customer,                   --客户编号
+    webUser ID WebUser,                     --用户编号
+    ARR exchangeItems (
+        product ID ProductX not null,       --产品编号
+        pack OF product.PackX not null,     --包装编号
+        point int,                          --单个积分值
+        quantity int not null,              --数量
+        subAmount int not null,             --小计
+    ),
+    amount int not null,                    --总计
+    shippingContact ID Contact,             --收货地址
+) 
+Action submit {
+    foreach exchangeItems {
+
+        var leftAmount bigint;
+        set leftAmount = subAmount;
+        
+        foreach ( var mPoint int, mUsedPoint int, pointYear int of
+            select  p.point, p.usedPoint, p.pointYear
+            from    PointBook as p
+            where   p.customer = customer
+            order by p.pointYear
+        ) {
+            if(leftAmount>0){
+                var p int;
+                if((mPoint - mUsedPoint) >= leftAmount) {
+                    set p = leftAmount;
+                }else{
+                    set p = (mPoint - mUsedPoint);
+                }
+ 
+                book PointBook at (customer, pointYear) set usedPoint += p;
+                history PointHistory
+                    set customer = customer, pointYear = pointYear, point = (0-p);
+
+                set leftAmount = leftAmount - p;
+                if(leftAmount <= 0){
+                    break;
+                }
+            }
+        }
+    }
+};
