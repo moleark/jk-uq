@@ -1,5 +1,5 @@
 --可兑换产品表
-MAP ProductPoint (
+MAP PointProduct (
     key product ID ProductX not null,           --产品编号
     key pack OF product.PackX not null,         --包装编号
     point int,                                  --所需积分

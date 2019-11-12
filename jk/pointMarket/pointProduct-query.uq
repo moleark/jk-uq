@@ -6,8 +6,7 @@ returns ret(
     startDate date,                --生效时间
     endDate date
 ) {
-    
     into ret SELECT	a.product, a.pack, a.point, a.startDate, a.endDate
-	FROM    ProductPoint AS a
+	FROM    PointProduct AS a
     order by a.point;
 };
