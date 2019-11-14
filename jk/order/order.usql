@@ -3,7 +3,7 @@ ACCESS accOrder(Order);
 SHEET Order ver 0.6 (
     webUser ID WebUser,
     organization ID Organization,
-    customer ID Customer,
+    customer ID BuyerAccount,
 
     ARR orderItems (
         product ID ProductX not null,
@@ -77,12 +77,16 @@ STATE Matching {
         set q.webUser = webUser;
     } {
         if (customer is null) {
+            /*
             var customerid int;
             foreach tb {
                 set customerid = customer;
             }
-            if (not customerid is null) {
-                bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customerid,
+            */
+            var buyerAccount int;
+            set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
+            if (not buyerAccount is null) {
+                bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
                     freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
@@ -158,4 +162,9 @@ BOOK OrderState (
     总金额 dec(12, 2),
     已付金额 dec(12, 2),
     发货完成 tinyint,
+);
+
+MAP OrderBuyerAccount (
+    key order ID $Sheet,
+    key buyerAccount ID BuyerAccount,
 );

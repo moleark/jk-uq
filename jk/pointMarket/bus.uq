@@ -1,0 +1,4 @@
+BUS pointBus from [百灵威系统工程部]/point
+    ACCEPT customerPoint {
+        book PointBook at (customer, pointYear) set point = point, usedPoint = usedPoint;
+    };
