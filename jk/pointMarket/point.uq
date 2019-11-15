@@ -21,7 +21,8 @@ HISTORY PointHistory (
     customer ID Customer,       --客户
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    user,                       --当前登录人
+    comments char(100) ,        --备注
+    user,                       --当前登录人    
     sheet,                      --单据
     type,                       --不同的sheet类型
     row,                        --子表的第几行
@@ -50,7 +51,7 @@ Action submit {
         foreach ( var mPoint int, mUsedPoint int, pointYear int of
             select  p.point, p.usedPoint, p.pointYear
             from    PointBook as p
-            where   p.customer = customer
+            where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3 and p.point - p.usedPoint > 0
             order by p.pointYear
         ) {
             if(leftAmount>0){
@@ -63,7 +64,7 @@ Action submit {
  
                 book PointBook at (customer, pointYear) set usedPoint += p;
                 history PointHistory
-                    set customer = customer, pointYear = pointYear, point = (0-p);
+                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no;
 
                 set leftAmount = leftAmount - p;
                 if(leftAmount <= 0){

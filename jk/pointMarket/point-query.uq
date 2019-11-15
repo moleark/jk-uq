@@ -1,10 +1,10 @@
-QUERY getPoints(customer ID customer)
+QUERY getPoints(customer ID Customer)
 returns ret(
     point int,
     usedPoint int,
     pointYear int
 ) {
-    into ret SELECT point, usedPoint, pointYear
-    FROM PointBook 
-    WHERE customer = customer;
+    into ret SELECT p.point, p.usedPoint, p.pointYear
+    FROM PointBook as p
+    WHERE p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
 };
