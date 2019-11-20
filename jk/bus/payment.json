@@ -1,8 +1,8 @@
 {
     "paymentrequest": [
         {
-            "name": "taskid",
-            "type": "number"
+            "name": "withdrawal",
+            "type": "id"
         },
         {
             "name": "agency",
@@ -13,13 +13,13 @@
             "type": "id"
         },
         {
-            "name": "price",
+            "name": "amount",
             "type": "number"
-        }  
+        }
     ],
     "paymentresult": [
         {
-            "name": "taskid",
+            "name": "withdrawal",
             "type": "number"
         },
         {
@@ -29,6 +29,6 @@
         {
             "name": "comments",
             "type": "string"
-        }   
+        }
     ]
 }
