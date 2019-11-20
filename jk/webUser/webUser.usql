@@ -11,7 +11,7 @@ OPEN TUID WebUser (
     -- createTime datetime,
 ) ON SAVE {
     if ($user > 0) {
-        if not exists(select 1 from WebUserCustomer where webUser = id)
+        if not exists(select 1 from WebUserBuyeraccount where webUser = id)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = id)
         and not exists(select 1 from PendingAuditWebUser where webUser = id){
             BOOK PendingAuditWebUser at(id);
@@ -33,7 +33,7 @@ OPEN MAP WebUserContact(
     address ID Address,
 ) ON SAVE {
     if ($user > 0){
-        if not exists(select 1 from WebUserCustomer where webUser = $user)
+        if not exists(select 1 from WebUserBuyeraccount where webUser = $user)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
         and not exists(select 1 from PendingAuditWebUser where webUser = $user){
             BOOK PendingAuditWebUser at($user);
@@ -50,7 +50,7 @@ OPEN MAP WebUserContacts (
     key contact ID Contact,
 ) ON SAVE {
     if($user > 0) {
-        if not exists(select 1 from WebUserCustomer where webUser = $user)
+        if not exists(select 1 from WebUserBuyeraccount where webUser = $user)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
         and not exists(select 1 from PendingAuditWebUser where webUser = $user){
             BOOK PendingAuditWebUser at($user);
