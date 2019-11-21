@@ -4,9 +4,10 @@ returns ret(
     pack OF product.PackX,         --包装编号
     point int,                     --所需积分
     startDate date,                --生效时间
-    endDate date
+    endDate date,                  --过期时间
+    imageUrl char(500)             --产品图片
 ) {
-    into ret SELECT	a.product, a.pack, a.point, a.startDate, a.endDate
+    into ret SELECT	a.product, a.pack, a.point, a.startDate, a.endDate, a.imageUrl
 	FROM    PointProduct AS a
     order by a.point;
 };

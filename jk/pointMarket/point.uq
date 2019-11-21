@@ -5,6 +5,7 @@ MAP PointProduct (
     point int,                                  --所需积分
     startDate date,                             --生效时间
     endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
 );
 
 --积分明细表
@@ -74,3 +75,13 @@ Action submit {
         }
     }
 };
+
+--平台订单表
+PENDING PlatformOrderPending (
+    id,
+    customer ID Customer not null,          --客户编号
+    orderId char(100),                      --平台单号
+    amount dec(12,2),                       --合同总额
+    currency ID Currency,                   --币种
+    date,
+);
