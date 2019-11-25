@@ -14,7 +14,7 @@ BOOK PointBook (
     key pointYear int,          --年度
     point int,                  --积分
     usedPoint int,              --消耗的积分
-); 
+);
 
 --积分变化表
 HISTORY PointHistory (
@@ -23,7 +23,7 @@ HISTORY PointHistory (
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
     comments char(100) ,        --备注
-    user,                       --当前登录人    
+    user,                       --当前登录人
     sheet,                      --单据
     type,                       --不同的sheet类型
     row,                        --子表的第几行
@@ -42,13 +42,17 @@ SHEET PointExchangeSheet ver 0.1 (
     ),
     amount int not null,                    --总计
     shippingContact ID Contact,             --收货地址
-) 
+)
 Action submit {
+    bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
+        shippingContact = shippingContact, amount = amount;
     foreach exchangeItems {
+        bus pointShopBus.exchangeExchangeSheet into exchangeItems add product = product, pack = pack,
+            quantity = quantity, point = point, subAmount = subAmount;
 
         var leftAmount bigint;
         set leftAmount = subAmount;
-        
+
         foreach ( var mPoint int, mUsedPoint int, pointYear int of
             select  p.point, p.usedPoint, p.pointYear
             from    PointBook as p
@@ -62,7 +66,7 @@ Action submit {
                 }else{
                     set p = (mPoint - mUsedPoint);
                 }
- 
+
                 book PointBook at (customer, pointYear) set usedPoint += p;
                 history PointHistory
                     set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no;
@@ -76,7 +80,7 @@ Action submit {
     }
 };
 
---平台订单表
+-- 平台订单表
 PENDING PlatformOrderPending (
     id,
     customer ID Customer not null,          --客户编号
@@ -84,4 +88,14 @@ PENDING PlatformOrderPending (
     amount dec(12,2),                       --合同总额
     currency ID Currency,                   --币种
     date,
+);
+
+MAP PlatformOrder (
+    key orderItemId char(50),
+    orderId char(50),
+    customer ID Customer not null,
+    platformOrderId char(50),
+    subAmount dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
 );
