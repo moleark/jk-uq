@@ -47,7 +47,7 @@ Action submit {
     bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
         shippingContact = shippingContact, amount = amount;
     foreach exchangeItems {
-        bus pointShopBus.exchangeExchangeSheet into exchangeItems add product = product, pack = pack,
+        bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
             quantity = quantity, point = point, subAmount = subAmount;
 
         var leftAmount bigint;
