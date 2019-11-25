@@ -29,7 +29,7 @@ SHEET Order ver 0.6 (
     invoiceType ID InvoiceType,
     invoiceInfo ID InvoiceInfo,
 
-    amount dec(12, 2),
+    amount dec(12, 2),          -- 订单明细中subamount汇总+运费+运费减免
     currency ID Currency,
     freightFee dec(12, 2),
     freightFeeRemitted dec(12, 2),
@@ -58,16 +58,23 @@ Action submit {
                 salesRegion = salesRegion;
     }
 
+    var bustype int;
+    set bustype = 2;
+    if(customer > 0) {
+        set bustype = 1;
+    }
+    bus orderBus.order set type = bustype, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
+        shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
+        amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
+        freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
+    foreach orderItems {
+        bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+    }
+
     if (customer > 0) {
-        bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
-            shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
-            amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-            freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
-        foreach orderItems {
-            bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
-        }
         STATE TO END;
     } else {
+
         STATE TO Matching;
     }
 }
@@ -86,12 +93,12 @@ STATE Matching {
             var buyerAccount int;
             set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
             if (not buyerAccount is null) {
-                bus pointBus.order set id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = buyerAccount,
+                bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
                     freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
                 foreach orderItems {
-                    bus pointBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+                    bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
                 STATE TO END;
             }
