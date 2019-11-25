@@ -1,8 +1,3 @@
-BUS pointBus from [百灵威系统工程部]/point
-    ACCEPT productInventory {
-        book ProductInventory at (warehouse, product, pack) set quantity = quantity;
-    };
-
 BUS warehouseBus from [百灵威系统工程部]/warehouse
     ACCEPT productInventory {
         book ProductInventory at (warehouse, product, pack) set quantity = quantity;
