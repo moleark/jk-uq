@@ -95,7 +95,15 @@ OPEN TUID BuyerAccount (
     createTime datetime,
     isValid smallint not null,
     unique(no),
-);
+) ON SAVE {
+    /-mysql
+    if `_$user` > 0 then
+        insert into `joint-uq-jk`.map_buyeraccount(id, `no`)
+        values (`_$id`, `_no`)
+        on duplicate key update `no` = values(`no`);
+    end if;
+    -/
+};
 
 MAP CustomerBuyerAccount (
     key customer ID Customer,

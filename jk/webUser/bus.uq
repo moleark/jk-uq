@@ -6,3 +6,9 @@ BUS webUserBusQuery from [百灵威系统工程部]/WebUser
         set customer = w.customer from WebUserCustomer as w where w.WebUser = webUser;
         into BUS select customer;
     };
+
+BUS orderBus from [百灵威系统工程部]/order
+    ACCEPT order {
+        if(type = 2)
+            book PendingAuditWebUser at (webUser);
+    };
