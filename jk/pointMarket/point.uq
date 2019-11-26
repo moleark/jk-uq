@@ -22,7 +22,7 @@ HISTORY PointHistory (
     customer ID Customer,       --客户
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    comments char(100) ,        --备注
+    comments char(1000) ,        --备注
     user,                       --当前登录人
     sheet,                      --单据
     type,                       --不同的sheet类型

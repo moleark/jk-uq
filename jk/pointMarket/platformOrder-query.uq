@@ -1,0 +1,53 @@
+ACTION IsCanUseOrder(
+    orderId char(100),
+    customer ID Customer
+)returns ret(
+    result  bigint, --返回结果
+    id      char(100)  --平台订单id
+){
+    var result  bigint,     
+        id      char(100);     
+    
+    set     id = p.platformOrderId
+    from    PlatformOrder as p
+    where   p.platformOrderId = orderId and p.customer=customer limit 1;
+    
+    if(id is null){
+        set result = 0;
+    }else{
+        set result = 1;
+    }
+    
+    into ret select result, id;
+};
+
+-- 添加平台订单积分
+ACTION AddPlatformOrderPoint(
+    orderId  char(100),
+    couponId  char(100),
+    customer ID Customer
+)returns ret(
+    result  bigint --返回结果
+){
+    var result      bigint,
+        pointYear   int,
+        mycomments  char(1000);
+    set pointYear = YEAR(NOW());
+    -- set mycomments = myOrderitemid;-- + "," + couponId
+
+    foreach ( var myOrderitemid char(100),myCustomer int, mySubamount char(100) of
+        select  p.orderitemid, p.customer, p.subamount
+        from    PlatformOrder as p
+        where   p.platformOrderId = orderId and p.customer=customer
+    ) {
+        book PointBook at (customer, pointYear) set point += mySubamount;
+        history PointHistory
+            set customer = customer, pointYear = pointYear, point = mySubamount, comments = myOrderitemid;
+    };
+    /-mysql
+    delete from tv_platformorder where platformorderid = `_orderId` and customer = `_customer`;
+    -/
+
+    set result = 1;
+    into ret select result;
+};
