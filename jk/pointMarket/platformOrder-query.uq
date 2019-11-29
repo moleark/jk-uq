@@ -5,19 +5,19 @@ ACTION IsCanUseOrder(
     result  bigint, --返回结果
     id      char(100)  --平台订单id
 ){
-    var result  bigint,     
-        id      char(100);     
-    
+    var result  bigint,
+        id      char(100);
+
     set     id = p.platformOrderId
     from    PlatformOrder as p
     where   p.platformOrderId = orderId and p.customer=customer limit 1;
-    
+
     if(id is null){
         set result = 0;
     }else{
         set result = 1;
     }
-    
+
     into ret select result, id;
 };
 
@@ -31,19 +31,26 @@ ACTION AddPlatformOrderPoint(
 ){
     var result      bigint,
         pointYear   int,
+        point int,
+        amount  dec(12, 2),
+        currency int,
         mycomments  char(1000);
-    set pointYear = YEAR(NOW());
-    -- set mycomments = myOrderitemid;-- + "," + couponId
+    set pointYear = YEAR(NOW()), point = 0, amount = 0;
 
-    foreach ( var myOrderitemid char(100),myCustomer int, mySubamount char(100) of
-        select  p.orderitemid, p.customer, p.subamount
+    foreach (var myOrderitemid char(100), myCustomer int, mySubamount dec(12, 2), mycurrency int of
+        select  p.orderitemid, p.customer, p.subamount, p.currency
         from    PlatformOrder as p
-        where   p.platformOrderId = orderId and p.customer=customer
+        where   p.platformOrderId = orderId and p.customer = customer
     ) {
-        book PointBook at (customer, pointYear) set point += mySubamount;
+        set point = point + mySubamount * 2;
+        set amount = amount + mySubamount;
+        set currency = mycurrency;
         history PointHistory
-            set customer = customer, pointYear = pointYear, point = mySubamount, comments = myOrderitemid;
+            set customer = customer, pointYear = pointYear, point = mySubamount * 2, comments = myOrderitemid;
     };
+    book PointBook at (customer, pointYear) set point += point;
+    bus pointShopBus.couponUsed
+        set orderId = orderId, webUser = $user, customer = customer, amount = amount, currency = currency, point = point, coupon = couponId;
     /-mysql
     delete from tv_platformorder where platformorderid = `_orderId` and customer = `_customer`;
     -/

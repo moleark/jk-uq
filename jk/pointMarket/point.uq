@@ -13,7 +13,7 @@ BOOK PointBook (
     key customer ID Customer,   --客户编号
     key pointYear int,          --年度
     point int,                  --积分
-    usedPoint int,              --消耗的积分
+    usedPoint int default 0,              --消耗的积分
 );
 
 --积分变化表
