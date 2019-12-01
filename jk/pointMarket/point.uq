@@ -78,6 +78,7 @@ Action submit {
             }
         }
     }
+    STATE TO END;
 };
 
 -- 平台订单表
