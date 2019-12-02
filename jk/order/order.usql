@@ -36,6 +36,8 @@ SHEET Order ver 0.6 (
     coupon ID Coupon,
     couponOffsetAmount dec(12, 2),
     couponRemitted dec(12,2),
+    point int,
+    comments char(1000),
     salesRegion ID SalesRegion,
 )
 Verify {
@@ -66,7 +68,7 @@ Action submit {
     bus orderBus.order set type = bustype, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
         shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-        freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
+        freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
     foreach orderItems {
         bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
@@ -96,7 +98,7 @@ STATE Matching {
                 bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
-                    freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, salesRegion = salesRegion;
+                    freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
                 foreach orderItems {
                     bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
