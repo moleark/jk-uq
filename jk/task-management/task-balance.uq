@@ -1,0 +1,93 @@
+
+BUS paymentBus ver 0.4 from [百灵威系统工程部]/easyBuziPayment
+    ACCEPT paymentresult (
+        withdrawal, result, comments
+    ){
+
+        var amount dec(12, 2)=0, webUser ID [$user]=47;
+        set amount=a.amount, webUser = a.webUser from WithdrawalStateBook as a where a.Withdrawal=withdrawal;
+       
+        --更新取款单状态 
+        --记录历史
+        if(result=1){
+            book WithdrawalStateBook at(withdrawal) set state = 2, webuser= webUser, comments=comments, createTime = now();
+            history WithdrawalStateHistory set withdrawal=withdrawal, state=2, comments=comments;
+            --付款结束后 等待提现  和提现金额同时减少
+            book SalesAchievementBook at(webUser) set waitWithdrawal-=amount, totalaWithdrawal-=amount;
+        }else{
+            book WithdrawalStateBook at(withdrawal) set state = 3, webuser= webUser, comments=comments, createTime = now();
+            history WithdrawalStateHistory set withdrawal=withdrawal, state=3, comments=comments;
+            --付款驳回后 等待提现减少
+            book SalesAchievementBook at(webUser) set waitWithdrawal-=amount;
+        }
+    };
+
+/**回款历史记录**/
+History BalanceHistory (
+    date,
+    sales ID [$user],    --销售
+    order ID,            --
+    orderNo ID,
+    ordertype char(10),
+    amount dec(12, 2) not null,
+    currency ID
+);
+
+/**取款单**/
+SHEET Withdrawal ver 0.6 (
+    webUser ID [$user],
+    amount dec(12, 2),
+    currency ID
+)
+Action submit {
+
+    --更新取款单状态
+    book WithdrawalStateBook at($id) set state = 1, comments='提现', createTime = now(), amount=amount, webuser=webuser;
+    history WithdrawalStateHistory set withdrawal=$id, state=1, comments='提现';
+
+    --更新取款总金额
+    book SalesAchievementBook at(webUser) set waitWithdrawal+=amount;
+
+    --记录取款历史    
+    var mycustomer ID MyCustomer, customer ID Customer;
+    set mycustomer = a.mycustomer, customer = a.customer from CustomerMyCustomerMap as a where a.webuser=webUser;
+    history BalanceHistory set sales=webUser, order=$id, orderNo=$sheet_no, ordertype='withdrawal', amount=amount, currency=currency;
+
+    --发送取款记录BUS
+    bus agentBus.paymentrequest set withdrawal=$id, agency=webUser, amount=amount, currency=currency;
+};
+
+TUID WithdrawalState(
+    ID,
+    name char(20)
+);
+
+BOOK WithdrawalStateBook(
+    key Withdrawal ID,
+    webuser ID [$user],
+    amount dec(12, 2),
+    state ID WithdrawalState,
+    comments char(100),
+    createTime datetime
+);
+
+History WithdrawalStateHistory(
+    date,
+    withdrawal ID,
+    state ID WithdrawalState,
+    comments char(100)
+);
+
+QUERY SearchWithdrawalStateQuery (
+     withdrawal ID
+)
+returns ret (
+    Withdrawal ID,
+    state ID WithdrawalState,
+    comments char(100),
+    createTime datetime
+) {
+    into ret select a.Withdrawal, a.state, a.comments, a.createTime
+    from    WithdrawalStateBook as a
+    where   a.withdrawal=  withdrawal;
+};

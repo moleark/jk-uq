@@ -101,13 +101,6 @@ MAP BizField (
     key field ID Field
 );
 
---我的客户和系统客户关联关系
-MAP CustomerMyCustomerMap (
-    key sales ID [$user],
-    key mycustomer ID MyCustomer,
-    customer ID Customer,
-    webuser ID [$user],
-);
 
 --任务状态记录
 BOOK TaskBook (

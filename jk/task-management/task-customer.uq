@@ -58,6 +58,14 @@ BOOK NewMyCustomerBook (
     createTime datetime
 );
 
+--我的客户和系统客户关联关系
+MAP CustomerMyCustomerMap (
+    key sales ID [$user],
+    key mycustomer ID MyCustomer,
+    customer ID Customer,
+    webuser ID [$user],
+);
+
 --开放客服
 MAP OpenCustomersMap (
     key customer ID Customer,
@@ -68,6 +76,8 @@ MAP OpenCustomersMap (
 BOOK CustomerNowSalesBOOK (
     key customer ID Customer,
     sales ID [$user],
+    webuser ID [$user],
+    types char(10),
     validity datetime
 );
 
@@ -120,7 +130,7 @@ ACTION CreateMyCustomer(
 
     if( newcustomerid > 0){
         var webuser ID [$user];
-        set webuser = a.webuser from NewMyCustomerBook as a where a.customer = newcustomerid;
+        set webuser = a.webuser from NewMyCustomerBook as a where a.customer = newcustomerid limit 1;
         BOOK CustomerMyCustomerMap at ($user, myCustomerId) set customer=newcustomerid,webuser=webuser;
         delete from NewMyCustomerBook where customer = newcustomerid;
     }

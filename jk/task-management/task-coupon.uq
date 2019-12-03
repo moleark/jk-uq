@@ -2,7 +2,7 @@
 OPEN TUID Coupon (
     id,
     code char(12),
-    types  char(10),
+    types  char(20),
     user ID [$user],
     customer ID Customer,
     validitydate date,
@@ -17,7 +17,7 @@ OPEN TUID Coupon (
 MAP CouponOrderMap (
     key coupon ID Coupon,
     key order ID,
-    key customer ID,
+    key webuser ID,
 );
 
 
@@ -44,17 +44,18 @@ ACTION CreateCoupon(
 /** 验证优惠码是否可用*/
 ACTION IsCanUseCoupon (
     code char(20),
-    customer ID Customer
+    webUser ID [$user]
 )
 returns ret (
     result  bigint,
     id      bigint,
     code   char(20),
     user   ID [$user],
-    customer ID Customer,
+    webuser ID [$user],
     discount dec(12,2),
     preferential dec(12,2),
     validitydate datetime,
+    types char(10),
     isValid smallint
 )
 {
@@ -62,7 +63,7 @@ returns ret (
     id              bigint,     --优惠码id
     validitydate    datetime,   --有效期
     isValid         smallint,   --是否有效
-    customerX ID    Customer,   --指定客户CID
+    webUserX ID     [$user],    --
     discount        dec(12,2),  --折扣
     preferential    dec(12,2),  --金额
     orderX          char(50),   --被使用的订单
@@ -75,7 +76,7 @@ returns ret (
             sales=c.user,                   --轻代理
             isValid=c.isValid,              --是否有效
             validitydate=c.validitydate,    --有效期
-            customerX=c.customer,           --CID
+            webUserX=c.customer,            --CID
             discount = c.discount, 
             preferential=  c.preferential,
             coupon = c.code,
@@ -85,17 +86,16 @@ returns ret (
 
     --判断是否被订单使用, 一个优惠码只能被同一个客户使用一次
     --如果是积分码，则没有次数,和当前轻代理的的限制
-    if(types="coupon"){
-        set orderX = ( select co.order from CouponOrderMap as co where co.coupon = id and co.customer = customer  );
-        --获取客户的当前轻代理
-        set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.customer = customer limit 1 ); --当前轻代理
-    }
-    
+  
+    set orderX = ( select co.order from CouponOrderMap as co where co.coupon = id and co.webuser = webUser limit 1 );
+    --获取客户的当前轻代理
+    set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser limit 1 ); --当前轻代理
+
     if ( coupon is null ) {
         set result = 0;  --不存在
     } else if ( isValid <> 1 or validitydate < now() ) {
         set result = 2;  --无效的优惠码
-    } else if ( customer <> customerX) {
+    } else if ( webUser <> webUserX) {
         set result = 3;  --不是指定的客户
     } else if (not orderX is null) {
         set result = 4;  --已经被使用
@@ -105,14 +105,8 @@ returns ret (
         set result = 6;  --轻代理不能用自己的优惠码下单
     } else {
         set result = 1;  --正常
-        /**
-        --取消BUS的发送，如果购物车需要查询订单的使用记录通过VT的方式
-        bus couponBus.coupon set id=id, code=code, user=sales, customer=customerX, discount=discount,
-            preferential=preferential, validitydate=validitydate, isValid=isValid;
-        bus couponBus.coupon send;
-        **/
     };
-    into ret select result, id, code, sales as user, customerX as customer, discount, preferential, validitydate, isValid;
+    into ret select result, id, code, sales as user, webUserX as webuser, discount, preferential, validitydate, types, isValid;
 };
 
 

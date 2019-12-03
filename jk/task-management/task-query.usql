@@ -155,7 +155,7 @@ returns ret (
     code bigint
 ) {
     if (position){
-        into ret select user,post, code from Position where code = position;
+        into ret select user, post, code from Position where code = position;
     }else{
         into ret select user,post, code from Position where user = $user;
     }
@@ -176,34 +176,48 @@ returns ret (
     threeAchievement dec(12, 2),
     teamCount bigint,
     customerCount bigint,
-    activeCustomerCount bigint
+    activeCustomerCount bigint,
+    totalOrderCount bigint,
+    totalReceivableAmount  dec(12, 2),
+    totalaWithdrawal dec(12, 2),
+    waitWithdrawal dec(12, 2)
 ) {
     var teamCount bigint, customerCount bigint, activeCustomerCount bigint;
     set teamCount = ifnull(count(1),0) from Relation where parent=$user;
     set customerCount = ifnull(count(1),0) from MyCustomer where user=$user;
-    set activeCustomerCount= ifnull(count(1),0) from CustomerNowSalesBOOK where sales=$user;
+    set activeCustomerCount= ifnull(count(1),0) 
+    from    CustomerNowSalesBOOK as cn 
+            join CustomerMyCustomerMap as cm on cn.customer = cm.customer 
+    where   cn.sales=$user;
 
     set teamCount = ifnull(teamCount,0);
     set customerCount = ifnull(customerCount,0);
     set activeCustomerCount = ifnull(activeCustomerCount,0);
 
-
-    var oneSaleVolume dec(12, 2) = 0, twoSaleVolume dec(12, 2) =0, threeSaleVolume dec(12, 2)=0,
-        oneAchievement dec(12, 2)=0, twoAchievement dec(12, 2)=0, threeAchievement dec(12, 2)=0;
+    var oneSaleVolume dec(12, 2)=0, twoSaleVolume dec(12, 2)=0, threeSaleVolume dec(12, 2)=0,
+        oneAchievement dec(12, 2)=0, twoAchievement dec(12, 2)=0, threeAchievement dec(12, 2)=0, 
+        totalOrderCount bigint, totalReceivableAmount dec(12, 2)=0, totalaWithdrawal dec(12, 2)=0, waitWithdrawal dec(12, 2)=0;
 
     set     oneSaleVolume = a.oneSaleVolume, twoSaleVolume = a.twoSaleVolume, threeSaleVolume = a.threeSaleVolume,
-            oneAchievement = a.oneAchievement, twoAchievement = a.twoAchievement, threeAchievement = a.threeAchievement
+            oneAchievement = a.oneAchievement, twoAchievement = a.twoAchievement, threeAchievement = a.threeAchievement,
+            totalOrderCount = a.totalOrderCount, totalReceivableAmount=a.totalReceivableAmount, totalaWithdrawal = a.totalaWithdrawal, waitWithdrawal=a.waitWithdrawal
     from    SalesAchievementBook as a
     where   a.user = user;
 
-    into ret select user,  oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  oneAchievement,  twoAchievement,  threeAchievement, teamCount, customerCount, activeCustomerCount;
+    set totalOrderCount = ifnull(totalOrderCount,0);
+
+    into ret select user,  
+                    oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  
+                    oneAchievement,  twoAchievement,  threeAchievement, 
+                    teamCount, customerCount, activeCustomerCount, 
+                    totalOrderCount, totalReceivableAmount, totalaWithdrawal, waitWithdrawal;
 };
 
 
 /** 搜索业绩记录*/
 QUERY SearchAchievementHistory (
      types smallint,
-     status char(10),
+     state smallint
 )
 returns ret (
     date datetime,
@@ -213,13 +227,36 @@ returns ret (
     orderno ID,
     ordertype char(20),
     types smallint,
-    amount dec(12, 2) not null
+    amount dec(12, 2) not null,
+    state smallint
+) {  
+    into ret select a.date, a.sales, b.mycustomer, a.order, a.orderno, a.ordertype, a.types, a.amount, o.state
+    from    AchievementHistory as a
+            left join CustomerMyCustomerMap as b on a.webuser = b.webuser
+            left join OrderStateBook as o on a.order = o.order
+    where   a.sales= $user and a.types = types and ( state = 0 or ( state=1 and ( o.state = 1 or o.state is null ) ) )
+    order by a.date desc ;
+};
+
+
+/** 搜索余额记录*/
+QUERY SearchBalanceHistory (
+     ordertype  char(10)
+)
+returns ret (
+    date datetime ,
+    sales ID [$user],
+    order ID,        
+    orderNo ID,
+    ordertype char(10),
+    amount dec(12, 2) not null,
+    currency ID
 ) {
     
-    into ret select a.date, a.sales, a.mycustomer, a.order, a.orderno, a.ordertype, a.types, a.amount
-    from    AchievementHistory as a
-    where   a.sales= $user and a.types = types
-    order by a.date desc ;
+    into ret select a.date, a.sales, a.order, a.orderNo, a.ordertype, a.amount, a.currency
+    from    BalanceHistory as a
+    where   a.sales = $user 
+    order by a.date desc;
 };
 
 /** 搜索我的团队*/
@@ -265,13 +302,14 @@ PAGE (
     address ID Address,
     addressString char(400),
     validity date,
-    isOccupy smallint
+    isOccupy smallint,
+    webuser ID [$user]
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.mobile, c.gender, c.birthDay, c.email, c.wechat,
                 c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
-                cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy
+                cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy, cyc.webuser
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
             left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
@@ -282,7 +320,7 @@ PAGE (
 
 
 /** 搜索我的活跃客户*/
-QUERY searchMyCustomerActive(key char(100), type int)
+QUERY searchMyCustomerActive( key char(100), type int )
 PAGE (
     id bigint start 0,
     unit ID MyCustomerUnit,
@@ -487,6 +525,6 @@ PAGE (
             join WebUserEmployeeMap as we on m.employee=we.employee
             JOIN TaskBizJKTaskType as jkt on jkt.jktype = m.jktype
     where   we.webuser=$user and m.completeTime is null and m.id > $pageStart and ( m.description like key2 or key is null )
-            and m.isValid is null
+            and m.isValid is null and m.createTime > now()
     limit $pageSize;
 };

@@ -1,0 +1,20 @@
+{
+    "paymentrequest": [
+        {
+            "name": "withdrawal",
+            "type": "id"
+        },
+        {
+            "name": "agency",
+            "type": "id"
+        },
+        {
+            "name": "currency",
+            "type": "id"
+        },
+        {
+            "name": "amount",
+            "type": "number"
+        }
+    ]
+}
