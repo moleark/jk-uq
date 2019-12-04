@@ -27,3 +27,35 @@ returns ret(
     where   c.city = city and c.isValid = 1
     order by c.order;
 };
+
+QUERY GetProvinceByName(country int, provinceName char(20))
+returns ret(
+    province ID Province
+) {
+    Into ret select p.id as Province
+    from    Province as p
+    where   p.country = country and p.isValid = 1
+            and p.chineseName = provinceName;
+};
+
+QUERY GetCityByName(province int, cityName char(20))
+returns ret(
+    city ID City
+) {
+    Into ret select c.id as City
+    from    City as c
+    where   c.province = province and c.chineseName = cityName 
+            and c.isValid = 1;
+};
+
+QUERY GetCountyByName(city int, countyName char(20))
+returns ret(
+    county ID County
+) {
+    Into ret select c.id as County
+    from    County as c
+    where   c.city = city and c.chineseName = countyName 
+            and c.isValid = 1;
+};
+
+
