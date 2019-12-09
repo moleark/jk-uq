@@ -30,10 +30,24 @@ ACTION AddPlatformOrderPoint(
     result  bigint --返回结果
 ){
     var result      bigint,
-        pointYear   int,
         point int,
         amount  dec(12, 2),
-        currency int,
+        currency int;
+    set point = 0, amount = 0;
+
+    foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myPlatformOrderId char(50),
+        mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
+        select  p.orderItemId, p.orderId, p.customer, p.platformOrderId, p.subAmount, p.amount, p.currency
+        from    PlatformOrder as p
+        where   p.platformOrderId = orderId and p.customer = customer
+    ) {
+        set point = point + mySubamount;
+        set amount = amount + mySubamount;
+        book PlatformOrderUsed at (myOrderItemId) set orderId = myOrderId, customer = myCustomer, platformOrderId = myPlatformOrderId,
+            subAmount = mySubamount, amount = myAmount, currency = myCurrency, coupon = couponId;
+    }
+    /*
+        pointYear   int,
         mycomments  char(1000);
     set pointYear = YEAR(NOW()), point = 0, amount = 0;
 
@@ -49,11 +63,13 @@ ACTION AddPlatformOrderPoint(
             set customer = customer, pointYear = pointYear, point = mySubamount * 2, comments = myOrderitemid;
     };
     book PointBook at (customer, pointYear) set point += point;
-    bus pointShopBus.couponUsed
-        set orderId = orderId, webUser = $user, customer = customer, amount = amount, currency = currency, point = point, coupon = couponId;
     /-mysql
     delete from tv_platformorder where platformorderid = `_orderId` and customer = `_customer`;
     -/
+    */
+
+    bus pointShopBus.couponUsed
+        set orderId = orderId, webUser = $user, customer = customer, amount = amount, currency = currency, point = point, coupon = couponId;
 
     set result = 1;
     into ret select result;

@@ -1,6 +1,24 @@
 BUS pointShopBus from [百灵威系统工程部]/pointShop;
+BUS webUserBus from [百灵威系统工程部]/webUser;
 
 BUS pointBus from [百灵威系统工程部]/point
     ACCEPT customerPoint {
         book PointBook at (customer, pointYear) set point = point, usedPoint = usedPoint;
+    };
+
+BUS orderBus from [百灵威系统工程部]/order
+    ACCEPT order
+    BUS webUserBus.getCustomerByWebUser as q into tb {
+        set q.webUser = webUser;
+    } {
+        var customerId int;
+        foreach tb {
+            set customerId = customer;
+        }
+        if(type = 1 or type = 3){
+            if(point > 0){
+                bus pointShopBus.couponUsed
+                    set orderId = no, webUser = webUser, customer = customerId, amount = amount, currency = currency, point = point, coupon = coupon;
+            }
+        }
     };

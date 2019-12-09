@@ -11,8 +11,8 @@ MAP PointProduct (
 --积分明细表
 BOOK PointBook (
     key customer ID Customer,   --客户编号
-    key pointYear int,          --年度
-    point int,                  --积分
+    key pointYear int not null,          --年度
+    point int not null default 0,                  --积分
     usedPoint int default 0,              --消耗的积分
 );
 
@@ -94,9 +94,36 @@ PENDING PlatformOrderPending (
 MAP PlatformOrder (
     key orderItemId char(50),
     orderId char(50),
+    customer ID BuyerAccount not null,
+    orderMaker ID Customer,
+    platformOrderId char(50),
+    description char(1000),
+    descriptionC char(1000),
+    radiox dec(12, 2),
+    radioy dec(12, 4),
+    unit char(10),
+    quantity int,
+    price dec(12, 2),
+    subAmount dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
+    mark char(10),
+);
+
+MAP PlatformOrderUsed (
+    key orderItemId char(50),
+    orderId char(50),
     customer ID Customer not null,
     platformOrderId char(50),
     subAmount dec(12, 2),
     amount dec(12, 2),
     currency ID Currency,
+    coupon int,
+);
+
+MAP CustomerCoupon (
+    key customer ID Customer,
+    key webUser ID WebUser,
+    key coupon int,
+    createDate date,
 );

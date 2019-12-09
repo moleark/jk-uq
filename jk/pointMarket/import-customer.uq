@@ -1,4 +1,5 @@
 import JKCustomer = 百灵威系统工程部/customer;
 
 TUID Customer from JKCustomer;
+TUID BuyerAccount from JKCustomer;
 TUID Contact from JKCustomer;

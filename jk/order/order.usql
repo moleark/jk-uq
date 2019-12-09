@@ -8,7 +8,7 @@ SHEET Order ver 0.6 (
     ARR orderItems (
         product ID ProductX not null,
         pack OF product.PackX not null,
-        price dec(12, 2) not null,
+        price dec(12, 2) not null,          -- 最终的成交价（即折后价格）
         quantity int not null,
         subAmount dec(12, 2) not null,
         refrigerationFee dec(12, 2),
