@@ -10,7 +10,7 @@ ACTION IsCanUseOrder(
 
     set     id = p.platformOrderId
     from    PlatformOrder as p
-    where   p.platformOrderId = orderId and p.customer=customer limit 1;
+    where   p.platformOrderId = orderId and p.orderMaker = customer limit 1;
 
     if(id is null){
         set result = 0;
@@ -38,9 +38,10 @@ returns ret(
     currency ID Currency,
     mark char(10)
 ) {
-    into ret SELECT p.customer,p.orderMaker,p.platformOrderId,p.description,p.descriptionC,p.radiox,p.radioy,p.unit,p.quantity,p.price,p.subAmount,p.amount,p.currency,p.mark
+    into ret SELECT p.customer, p.orderMaker, p.platformOrderId, p.description, p.descriptionC,
+            p.radiox, p.radioy, p.unit, p.quantity, p.price, p.subAmount, p.amount, p.currency, p.mark
     FROM PlatformOrder as p
-    where  p.platformOrderId=platformOrderId;
+    where  p.platformOrderId = platformOrderId;
 };
 
 
@@ -55,9 +56,10 @@ ACTION GetLastPlatFormOrder(
 
     set     platformOrderId = p.platformOrderId
     from    PlatformOrder as p
-    left join PlatformOrderUsed as u on u.platformorderid=p.platformorderid
-    where   p.customer=customer and p.mark<>'C' and u.platformorderid is null order by p.platformorderid desc limit 1;
-    
+            left join PlatformOrderUsed as u on u.platformorderid=p.platformorderid
+    where   p.orderMaker = customer and p.mark<>'C' and u.platformorderid is null
+    order by p.platformorderid desc limit 1;
+
     -- set     platformOrderId = p.platformOrderId
     -- from    PlatformOrder as p
     -- where   p.customer=customer and p.mark<>'C' order by p.platformorderid desc limit 1;
@@ -82,20 +84,21 @@ ACTION AddPlatformOrderPoint(
     var result      bigint,
         point int,
         amount  dec(12, 2),
+        orderMaker int,
         currency int;
-    set point = 0, amount = 0;
+    set point = 0, amount = 0, orderMaker = 0;
 
-    
-
-    foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myPlatformOrderId char(50),
+    foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myOrderMaker int, myPlatformOrderId char(50),
         mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
-        select  p.orderItemId, p.orderId, p.customer, p.platformOrderId, p.subAmount, p.amount, p.currency
+        select  p.orderItemId, p.orderId, p.customer, p.orderMaker, p.platformOrderId, p.subAmount, p.amount, p.currency
         from    PlatformOrder as p
-        where   p.platformOrderId = orderId and p.customer = customer and p.mark<>'C'
+        where   p.platformOrderId = orderId and p.orderMaker = customer and p.mark<>'C'
     ) {
         set point = point + mySubamount;
         set amount = amount + mySubamount;
-        book PlatformOrderUsed at (myOrderItemId) set orderId = myOrderId, customer = myCustomer, platformOrderId = myPlatformOrderId,
+        set orderMaker = myOrderMaker;
+        book PlatformOrderUsed at (myOrderItemId) set orderId = myOrderId, customer = myCustomer
+            platformOrderId = myPlatformOrderId,
             subAmount = mySubamount, amount = myAmount, currency = myCurrency, coupon = couponId;
     }
 
@@ -107,7 +110,7 @@ ACTION AddPlatformOrderPoint(
     foreach (var myOrderitemid char(100), myCustomer int, mySubamount dec(12, 2), mycurrency int of
         select  p.orderitemid, p.customer, p.subamount, p.currency
         from    PlatformOrder as p
-        where   p.platformOrderId = orderId and p.customer = customer
+        where   p.platformOrderId = orderId and p.orderMaker = customer
     ) {
         set point = point + mySubamount * 2;
         set amount = amount + mySubamount;
@@ -119,10 +122,10 @@ ACTION AddPlatformOrderPoint(
     */
 
     /-mysql
-    delete from tv_platformorder where platformorderid = `_orderId` and customer = `_customer`;
+    delete from tv_platformorder where platformorderid = `_orderId` and orderMaker = `_customer`;
     -/
     bus pointShopBus.couponUsed
-        set orderId = orderId, webUser = $user, customer = customer, amount = amount, currency = currency, point = point, coupon = couponId;
+        set orderId = orderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
 
     set result = 1;
     into ret select result;
@@ -135,10 +138,9 @@ ACTION AddUsedCoupon(
     result  bigint --返回结果
 ){
     var result      bigint;
-    
+
     book CustomerCoupon at (customer,$user,couponId) set CreateDate = now();  -- set customer = customer, webUser = $user, coupon = couponId;
-        
+
     set result = 1;
     into ret select result;
 };
-
