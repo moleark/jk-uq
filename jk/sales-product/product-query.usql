@@ -181,7 +181,7 @@ select * from mysql.eventCache enable;
 */
 
 
-QUERY GetPack(brandName char(20), origin char(50), pack char(20))
+QUERY GetPack(brandName char(20), origin char(50), radiox int, radioy float, unit char(20))
 returns ret(
     product ID ProductX,
     pack ID ProductX.PackX
@@ -190,7 +190,9 @@ returns ret(
     from     Brand as b
              join ProductX as p on b.id = p.brand
              join ProductX.PackX as pp on p.id = pp.owner
-    where    b.name = brandName
+    where    b.name = brandName 
              and p.origin = origin
-             and (pp.radioy + pp.unit) = pack;
+             and pp.radiox = radiox
+             and pp.radioy = radioy
+             and pp.unit = unit;
 };
