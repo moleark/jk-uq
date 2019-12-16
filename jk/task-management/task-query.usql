@@ -1,4 +1,4 @@
-QUERY SearchTask ( )
+QUERY SearchTask ( customer ID MyCustomer )
 returns ret (
     id bigint,
     description char(100),
@@ -15,15 +15,23 @@ returns ret (
     remindDate date,
     createTime date
 ) {
-
-    into ret select t.id, t.description, t.customer, t.type, tt.name as typeName, t.biz, bt.name as bizName
+    into ret select t.id, t.description, t.customer, t.type, 'qualify' as typeName, t.biz, 'nonreagent' as bizName
         , t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, tb.remindDate, t.createTime
     from Task as t
          join TaskBook as tb on t.id = tb.task
-         join TaskType as tt on t.type = tt.id
-         join BizType  as bt on t.biz = bt.id
-    where tb.principal = $user
+    where tb.principal = $user and ( t.customer = customer or customer = 0 )
     order by t.deadline;
+
+    /**
+    into ret select t.id, t.description, t.customer, t.type--, tt.name as typeName, t.biz, bt.name as bizName
+        , t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, tb.remindDate, t.createTime
+    from Task as t
+         --join TaskType as tt on t.type = tt.id
+         --join BizType  as bt on t.biz = bt.id
+         left join TaskBook as tb on t.id = tb.task
+    where tb.principal = $user and ( t.customer = customer or customer = 0 )
+    order by t.deadline;
+    **/
 };
 
 /** 搜索本任务的流转过程*/
@@ -45,21 +53,37 @@ returns ret (
 
 
 /** 搜索客户历史沟通记录*/
-QUERY SearchHistoryTaskByCustomer ( customerid ID MyCustomer )
+QUERY SearchHistoryTaskByCustomer ( 
+    customerid ID MyCustomer,  
+    types int
+)
 returns ret (
     date datetime,
-    task ID Task,
+    id bigint,
+    description char(1000),
+    customer ID MyCustomer,
+    deadline date,
+    type ID TaskType,
+    biz ID BizType,
     status ID TaskStatus,
-    principal ID Employee,
     resultType char(5),
     result char(1000)
 ) {
-    into ret SELECT	ht.date, ht.task, ht.status, ht.principal, ht.resultType, ht.result
-    FROM    Taskhistory as ht
-            join Task as t on ht.task = t.id
-    where   t.customer = customerid
-    order by ht.DATE desc
-    limit 200;
+    if( types = 1 ){
+        into ret SELECT	t.createTime as date, t.id, t.description, t.customer, t.deadline, t.type, t.biz, ht.status, ht.resultType, ht.result
+        from    Task as t 
+                left join Taskhistory as ht on ht.task = t.id
+        where   t.customer = customerid
+        order by ifnull(ht.DATE, now()) desc, t.id desc
+        limit 5;
+    } else {
+        into ret SELECT	t.createTime as date, t.id, t.description, t.customer, t.deadline, t.type, t.biz, ht.status, ht.resultType, ht.result
+        from    Task as t 
+                left join Taskhistory as ht on ht.task = t.id
+        where   t.customer = customerid
+        order by ifnull(ht.DATE, now()) desc, t.id desc
+        limit 100;
+    }
 };
 
 
@@ -224,13 +248,14 @@ returns ret (
     sales ID [$user],
     mycustomer ID MyCustomer,
     order ID,
-    orderno ID,
+    orderno char(50),
     ordertype char(20),
     types smallint,
     amount dec(12, 2) not null,
+    orderAmount dec(12, 2) not null,
     state smallint
 ) {  
-    into ret select a.date, a.sales, b.mycustomer, a.order, a.orderno, a.ordertype, a.types, a.amount, o.state
+    into ret select a.date, a.sales, b.mycustomer, a.order, a.orderno, a.ordertype, a.types, a.amount, a.price as orderAmount, o.state
     from    AchievementHistory as a
             left join CustomerMyCustomerMap as b on a.webuser = b.webuser
             left join OrderStateBook as o on a.order = o.order
@@ -248,12 +273,11 @@ returns ret (
     sales ID [$user],
     order ID,        
     orderNo ID,
-    ordertype char(10),
     amount dec(12, 2) not null,
     currency ID
 ) {
     
-    into ret select a.date, a.sales, a.order, a.orderNo, a.ordertype, a.amount, a.currency
+    into ret select a.date, a.sales, a.order, a.orderNo, a.amount, a.currency
     from    BalanceHistory as a
     where   a.sales = $user 
     order by a.date desc;
@@ -416,7 +440,8 @@ returns ret (
     **/
  
     --step.4.返回验证结果
-    if(select a.customer from CustomerNowSalesBOOK as a where a.customer=customer) {
+    set counts = count(1) from CustomerNowSalesBOOK where customer=customer and sales <> $user;
+    if (counts > 0 ) {
        into ret select 1 as code;
     } else {
        into ret select 0 as code;

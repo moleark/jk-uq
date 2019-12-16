@@ -48,7 +48,7 @@ History AchievementHistory (
     sales ID [$user],    --销售
     webuser ID [$user],  
     order ID,
-    orderNo ID,
+    orderNo char(50),
     ordertype char(10), --作废
     price dec(12, 2) not null,
     agentprices dec(12, 2) not null,
@@ -77,7 +77,7 @@ returns ret (
     oneRate dec(12, 2),
     result dec(12, 2)
 ) {
-    foreach ( var sales ID, webuser ID, order ID, orderno ID, quantity int, price dec(12, 2), agentprices dec(12, 2), coupontype char(10) of
+    foreach ( var sales ID, webuser ID, order ID, orderno char(50), quantity int, price dec(12, 2), agentprices dec(12, 2), coupontype char(10) of
             select  sales, webuser, order, orderno, 1 , price, agentprices, types
             from    CustomerOrderPending
             where   sales = $user
