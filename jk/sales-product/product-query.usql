@@ -184,9 +184,10 @@ select * from mysql.eventCache enable;
 QUERY GetPack(brandName char(20), origin char(50), radiox dec(12, 2), radioy dec(12, 4), unit char(20))
 returns ret(
     product ID ProductX,
-    pack ID ProductX.PackX
+    pack ID ProductX.PackX,
+    jkcat char(50)
 ) {
-    Into ret select p.id as product, pp.id as pack
+    Into ret select p.id as product, pp.id as pack, pp.jkcat as jkcat
     from     Brand as b
              join ProductX as p on b.id = p.brand
              join ProductX.PackX as pp on p.id = pp.owner
