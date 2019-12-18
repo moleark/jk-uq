@@ -85,7 +85,8 @@ ACTION AddPlatformOrderPoint(
         point int,
         amount  dec(12, 2),
         orderMaker int,
-        currency int;
+        currency int,
+        innerOrderId char(50);
     set point = 0, amount = 0, orderMaker = 0;
 
     foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myOrderMaker int, myPlatformOrderId char(50),
@@ -97,6 +98,7 @@ ACTION AddPlatformOrderPoint(
         set point = point + mySubamount;
         set amount = amount + mySubamount;
         set orderMaker = myOrderMaker;
+        set innerOrderId = myOrderId;
         book PlatformOrderUsed at (myOrderItemId) set orderId = myOrderId, customer = myCustomer
             platformOrderId = myPlatformOrderId,
             subAmount = mySubamount, amount = myAmount, currency = myCurrency, coupon = couponId;
@@ -125,7 +127,7 @@ ACTION AddPlatformOrderPoint(
     delete from tv_platformorder where platformorderid = `_orderId` and orderMaker = `_customer`;
     -/
     bus pointShopBus.couponUsed
-        set orderId = orderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
+        set orderId = innerOrderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
 
     set result = 1;
     into ret select result;
