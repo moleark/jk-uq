@@ -1,0 +1,32 @@
+{
+    "orderAudit": [
+        {
+            "name": "saleOrderId",
+            "type": "string"
+        },
+        {
+            "name": "saleOrderItemId",
+            "type": "string"
+        },
+        {
+            "name": "packageId",
+            "type": "string"
+        },
+        {
+            "name": "quantity",
+            "type": "number"
+        },
+        {
+            "name": "customerId",
+            "type": "string"
+        },
+        {
+            "name": "result",
+            "type": "string"
+        },
+        {
+            "name": "reason",
+            "type": "string"
+        }
+    ]
+}

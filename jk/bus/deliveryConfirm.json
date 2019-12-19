@@ -1,0 +1,64 @@
+{
+    "deliveryConfirm": [
+        {
+            "name": "outBoundItemId",
+            "type": "string"
+        },
+        {
+            "name": "outBoundId",
+            "type": "string"
+        },
+        {
+            "name": "warehouseName",
+            "type": "string"
+        },
+        {
+            "name": "logisticsCompanyId",
+            "type": "string"
+        },
+        {
+            "name": "logisticsNumber",
+            "type": "string"
+        },
+        {
+            "name": "deliveryGoodsTime",
+            "type": "string"
+        },
+        {
+            "name": "deliveryAddress",
+            "type": "string"
+        },
+        {
+            "name": "saleOrderId",
+            "type": "string"
+        },
+        {
+            "name": "saleOrderItemId",
+            "type": "string"
+        },
+        {
+            "name": "packageId",
+            "type": "string"
+        },
+        {
+            "name": "quantity",
+            "type": "number"
+        },
+        {
+            "name": "operatorId",
+            "type": "string"
+        },
+        {
+            "name": "operatorName",
+            "type": "string"
+        },
+        {
+            "name": "operatorPhone",
+            "type": "string"
+        },
+        {
+            "name": "customerId",
+            "type": "string"
+        }
+    ]
+}
