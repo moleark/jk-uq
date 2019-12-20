@@ -134,14 +134,13 @@ ACTION AddPlatformOrderPoint(
 };
 
 ACTION AddUsedCoupon(
-    couponId  char(50),
-    customer ID Customer
+    couponId  char(50)
 )returns ret(
     result  bigint --返回结果
 ){
     var result      bigint;
 
-    book CustomerCoupon at (customer,$user,couponId) set CreateDate = now();  -- set customer = customer, webUser = $user, coupon = couponId;
+    book CustomerCoupon at ($user) set couponId = couponId, CreateDate = now();  -- set customer = customer, webUser = $user, coupon = couponId;
 
     set result = 1;
     into ret select result;

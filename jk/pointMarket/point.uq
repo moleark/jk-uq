@@ -122,8 +122,7 @@ MAP PlatformOrderUsed (
 );
 
 MAP CustomerCoupon (
-    key customer ID Customer,
     key webUser ID WebUser,
-    key coupon int,
+    coupon int,
     createDate date,
 );
