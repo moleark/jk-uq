@@ -1,10 +1,13 @@
 QUERY getPoints(customer ID Customer)
 returns ret(
-    point int,
+    totalLeftPoint int,
+    effectiveLeftPoint int,
     usedPoint int,
     pointYear int
 ) {
-    into ret SELECT p.point, p.usedPoint, p.pointYear
+    into ret SELECT (p.totalPoint + p.tempPoint - p.usedPoint - p.tempUsedPoint) as totalLeftPoint,
+            (p.point + p.tempPoint - p.usedPoint - p.tempUsedPoint) as effectiveLeftPoint,
+            p.usedPoint, p.pointYear
     FROM PointBook as p
     WHERE p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
 };

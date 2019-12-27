@@ -83,11 +83,12 @@ ACTION AddPlatformOrderPoint(
 ){
     var result      bigint,
         point int,
+        pointYear int,
         amount  dec(12, 2),
         orderMaker int,
         currency int,
         innerOrderId char(50);
-    set point = 0, amount = 0, orderMaker = 0;
+    set pointYear = YEAR(NOW()), point = 0, amount = 0, orderMaker = 0;
 
     foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myOrderMaker int, myPlatformOrderId char(50),
         mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
@@ -95,7 +96,7 @@ ACTION AddPlatformOrderPoint(
         from    PlatformOrder as p
         where   p.platformOrderId = orderId and p.orderMaker = customer and p.mark<>'C'
     ) {
-        set point = point + mySubamount;
+        set point = point + mySubamount * 2;
         set amount = amount + mySubamount;
         set orderMaker = myOrderMaker;
         set innerOrderId = myOrderId;
@@ -104,34 +105,14 @@ ACTION AddPlatformOrderPoint(
             subAmount = mySubamount, amount = myAmount, currency = myCurrency, coupon = couponId;
     }
 
-    /*
-        pointYear   int,
-        mycomments  char(1000);
-    set pointYear = YEAR(NOW()), point = 0, amount = 0;
-
-    foreach (var myOrderitemid char(100), myCustomer int, mySubamount dec(12, 2), mycurrency int of
-        select  p.orderitemid, p.customer, p.subamount, p.currency
-        from    PlatformOrder as p
-        where   p.platformOrderId = orderId and p.orderMaker = customer
-    ) {
-        set point = point + mySubamount * 2;
-        set amount = amount + mySubamount;
-        set currency = mycurrency;
-        history PointHistory
-            set customer = customer, pointYear = pointYear, point = mySubamount * 2, comments = myOrderitemid;
-    };
-    book PointBook at (customer, pointYear) set point += point;
-    */
-
-    /-mysql
-    delete from tv_platformorder where platformorderid = `_orderId` and orderMaker = `_customer`;
-    -/
+    book PointBook at (customer, pointYear) set tempPoint += point;
     bus pointShopBus.couponUsed
         set orderId = innerOrderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
 
     set result = 1;
     into ret select result;
 };
+
 
 ACTION AddUsedCoupon(
     couponId  char(50)

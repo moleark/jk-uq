@@ -1,9 +1,11 @@
 BUS pointShopBus from [百灵威系统工程部]/pointShop;
 BUS webUserBus from [百灵威系统工程部]/webUser;
 
-BUS pointBus from [百灵威系统工程部]/point
+BUS pointBus from [百灵威系统工程部]/pointShop
     ACCEPT customerPoint {
-        book PointBook at (customer, pointYear) set point = point, usedPoint = usedPoint;
+        -- 同时将临时积分清空
+        book PointBook at (customer, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint,
+        tempPoint = 0, tempUsedPoint = 0;
     };
 
 BUS orderBus from [百灵威系统工程部]/order
