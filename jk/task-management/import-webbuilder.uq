@@ -1,0 +1,8 @@
+import JKWebBuilder = 百灵威系统工程部/webBuilder;
+
+TUID POST from JKWebBuilder (
+    id,
+    main caption char(100),
+    main discription char(200)
+);
+ 

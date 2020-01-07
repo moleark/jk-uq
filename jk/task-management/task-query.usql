@@ -447,6 +447,7 @@ returns ret (
        into ret select 0 as code;
     }
 };
+ 
 
 QUERY searchCustomerMyCustomerMap(mycustomer ID MyCustomer)
 returns ret (

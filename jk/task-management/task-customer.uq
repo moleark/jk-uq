@@ -163,6 +163,8 @@ ACTION UpateCustomerMyCustomerMap(
 
      delete from NewMyCustomerBook where sales=$user and customer = customer and webuser=webuser;
 };
+ 
+
 
 
 

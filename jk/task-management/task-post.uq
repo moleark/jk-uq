@@ -1,0 +1,56 @@
+
+History MyCustomerPostHistory(
+    date,
+    customer ID MyCustomer,
+    post ID POST
+);
+
+
+ACTION AddMyCustomerPost(
+        customer ID MyCustomer,
+        post ID POST
+){
+     history MyCustomerPostHistory set customer=customer, post = post;
+};
+
+
+/** 搜索我的客户*/
+QUERY SearchMyCustomerByPost(key char(100), post ID POST)
+PAGE (
+    id bigint start 0,
+    unit ID MyCustomerUnit,
+    no char(30),
+    name char(50),
+    firstName char(50),
+    lastName char(50),
+    telephone char(20),
+    mobile char(20),
+    gender char(5),
+    birthDay date,
+    email char(30),
+    wechat char(20),
+    teacher char(20),
+    potential smallint,
+    research smallint,
+    salutation char(10),
+    createTime date,
+    address ID Address,
+    addressString char(400),
+    validity date,
+    isOccupy smallint,
+    webuser ID [$user]
+) {
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+    PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.mobile, c.gender, c.birthDay, c.email, c.wechat,
+                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
+                cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy, cyc.webuser
+    from    MyCustomer as c
+            join MyCustomerUnit as u on c.unit =u.id
+            left join MyCustomerPostHistory as mp on mp.customer = c.id and mp.post = post
+            left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
+            left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
+    where   c.id > $pageStart and c.user = $user and c.isValid=1 and (c.name like key2 or u.name like key2 )
+            and mp.post is null
+    limit $pageSize;
+};

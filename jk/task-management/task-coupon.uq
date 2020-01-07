@@ -85,11 +85,17 @@ returns ret (
     where   c.code = code;
 
     --判断是否被订单使用, 一个优惠码只能被同一个客户使用一次
-    --如果是积分码，则没有次数,和当前轻代理的的限制
+    --如果是积分码，则没有次数,和当前轻代理的的限制--然后改成了和优惠码一致
   
     set orderX = ( select co.order from CouponOrderMap as co where co.coupon = id and co.webuser = webUser limit 1 );
     --获取客户的当前轻代理
-    set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser limit 1 ); --当前轻代理
+    --如果是积分券 没有当前轻代理或者 当前轻代理是 0  则可以使用
+    --如果是优惠券 没有当前轻代理 则可以使用
+    if ( types= 'coupon' ){
+        set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser limit 1 ); --当前轻代理
+    } else {
+        set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser and c.sales<>0 limit 1 ); --当前销售 
+    }
 
     if ( coupon is null ) {
         set result = 0;  --不存在
