@@ -10,3 +10,23 @@ OPEN TUID employee (
     unique(no),
     search(name),
 );
+
+--岗位/角色表
+OPEN TUID Role (
+    id,
+    no char(50) not null,
+    name char(50) not null,
+    note char(200),
+    IsValid smallint not null default 1,
+    CreateTime datetime,
+    unique(no),
+    search(name),
+);
+
+--员工与角色的关系表
+OPEN MAP EmployeeRole (
+    key employee ID employee,
+    key role ID Role,
+    StartTime datetime,  --开始时间
+    EndTime datetime,    --结束时间
+);
