@@ -84,9 +84,6 @@ returns ret (
             where   sales = $user
     ) {
 
-        --step.1.添加订单状态
-        BOOK OrderStateBook at( order ) set state = 0, amount = price,payAmount = 0;
-
         var sumprice  dec(12, 2);
         set sumprice = price * quantity;
 
@@ -130,6 +127,8 @@ returns ret (
             book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement, totalOrderCount += 1;
             --记录A类绩效历史
             history AchievementHistory set sales=sales, webuser=webuser, amount=oneAchievement, types=1, order=order, orderno=orderno, ordertype='coupon', price=price, agentprices=agentprices;
+            --添加订单状态
+            BOOK OrderStateBook at( order ) set state = 0, amount = price,payAmount = 0;
 
             --step.2.计算二级绩效
             var twosale ID [$user], threesale ID [$user];

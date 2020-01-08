@@ -49,7 +49,7 @@ ACTION ComputeBalance(){
         foreach (var sales ID, amount dec(12, 2) of
             select  a.sales, ( paymentAmount / a.price * a.amount )
             from    AchievementHistory as a 
-            where   a.order = order
+            where   a.order = order and a.price > 0
         ) {
             if(state = 1){
                 --累计回款
@@ -68,9 +68,10 @@ ACTION ComputeBalance(){
 
         --记录回款状态
         var paystate int;
-        set paystate = case when (paymentAmount + payAmount)> amount then 1 else 0 end
-        from OrderStateBook
-        where order = order;    
+        set paystate = case when (paymentAmount + a.payAmount)>=a.amount then 1 else 0 end
+        from OrderStateBook as a
+        where a.order = order
+        limit 1;    
 
         BOOK OrderStateBook at( order ) set payAmount+=paymentAmount, state = paystate; 
     }

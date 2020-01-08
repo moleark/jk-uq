@@ -259,7 +259,7 @@ returns ret (
     from    AchievementHistory as a
             left join CustomerMyCustomerMap as b on a.webuser = b.webuser
             left join OrderStateBook as o on a.order = o.order
-    where   a.sales= $user and a.types = types and ( state = 0 or ( state=1 and ( o.state = 1 or o.state is null ) ) )
+    where   a.sales= $user and a.types = types and ( state = 0 or ( state=1 and o.state = 0 ) )
     order by a.date desc ;
 };
 
