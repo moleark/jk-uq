@@ -112,6 +112,8 @@ MAP PlatformOrder (
     amount dec(12, 2),
     currency ID Currency,
     mark char(10),
+    createDate datetime,
+    index idx_ordermaker,
 );
 
 MAP PlatformOrderUsed (
