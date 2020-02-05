@@ -32,6 +32,11 @@ OPEN MAP EmployeeRole (
 );
 
 
+--员工和内部关联关系
+MAP WebuserEmployee( 
+    key webuser ID [$user], --负责人
+    key employee ID Employee
+);
 
 /** 搜索员工*/
 QUERY SearchEmployee(key char(100))
@@ -43,13 +48,15 @@ PAGE (
     lastName char(20),
     title char(20),
     Status char(2),
-    CreateTime datetime
+    CreateTime datetime,
+    webuser ID [$user]
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
 
-    PAGE select e.id, e.no, e.name, e.firstName, e.lastName, e.title, e.Status, e.CreateTime
+    PAGE select e.id, e.no, e.name, e.firstName, e.lastName, e.title, e.Status, e.CreateTime, w.webuser
     from    employee as e
+            join WebuserEmployee as w on e.id = w.employee
     where   e.id > $pageStart and (e.title like key2 or e.name like key2 )
     order by e.id
     limit $pageSize;
