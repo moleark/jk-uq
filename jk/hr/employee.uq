@@ -1,7 +1,7 @@
 OPEN TUID employee (
     id,
     no char(20) not null,
-    name char(30) not null,
+    main name char(30) not null,
     firstName char(20),
     lastName char(20),
     title char(20),
@@ -49,12 +49,13 @@ PAGE (
     title char(20),
     Status char(2),
     CreateTime datetime,
-    webuser ID [$user]
+    webuser ID [$user],
+    employee ID Employee
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
 
-    PAGE select e.id, e.no, e.name, e.firstName, e.lastName, e.title, e.Status, e.CreateTime, w.webuser
+    PAGE select e.id, e.no, e.name, e.firstName, e.lastName, e.title, e.Status, e.CreateTime, w.webuser,w.employee
     from    employee as e
             join WebuserEmployee as w on e.id = w.employee
     where   e.id > $pageStart and (e.title like key2 or e.name like key2 )
