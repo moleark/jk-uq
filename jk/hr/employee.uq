@@ -14,8 +14,8 @@ OPEN TUID employee (
 --岗位/角色表
 OPEN TUID Role (
     id,
-    no char(50) not null,
-    name char(50) not null,
+    main no char(50) not null,
+    main name char(50) not null,
     note char(200),
     IsValid smallint not null default 1,
     CreateTime datetime,

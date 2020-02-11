@@ -1,0 +1,23 @@
+/** 搜索标准款信息*/
+QUERY SearchChemical(key char(100))
+PAGE (
+    id bigint start 0,
+    no bigint,
+    CAS char(20),
+    description char(1000),
+    descriptoinCN char(1000),
+    molecularFomula char(200),
+    molecularWeight dec(12, 4),
+    mdlNumber char(12)
+) {
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+
+    PAGE select w.id, w.no, w.CAS,w.description,w.descriptoinCN,w.molecularFomula,w.molecularWeight,w.mdlNumber
+    from    Chemical as w
+    where   1=1 
+            and (key is null or ( w.CAS like key2 or w.description like key2 or w.descriptoinCN like key2))
+            and w.id > $pageStart 
+    order by w.id
+    limit $pageSize;
+};
