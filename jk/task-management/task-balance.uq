@@ -47,7 +47,7 @@ ACTION ComputeBalance(){
         where   sales = $user
     ) {
         foreach (var sales ID, amount dec(12, 2) of
-            select  a.sales, ( paymentAmount / a.price * a.amount )
+            select  a.sales, ( paymentAmount / a.price * a.amount ) as amount
             from    AchievementHistory as a 
             where   a.order = order and a.price > 0
         ) {

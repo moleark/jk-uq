@@ -122,3 +122,40 @@ MAP CustomerDepartment (
     key customer ID Customer,
     key department ID Department
 );
+
+
+TUID Research (
+    id,
+    main name char(200),
+    no char(30),
+    createTime datetime 
+);
+
+MAP ResearchRelation (
+    key child ID Research,
+    key parent ID Research
+);
+  
+MAP CustomerResearch (
+    key customer ID Customer,
+    key research ID Research
+);
+ 
+TUID Post (
+    id,
+    main name char(200),
+    no char(30),
+    createTime datetime 
+);
+
+MAP PostRelation (
+    key child ID Post,
+    key parent ID Post
+);
+
+MAP CustomerPost  (
+    key customer ID Customer,
+    key post ID Post
+);
+
+
