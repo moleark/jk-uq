@@ -115,6 +115,7 @@ BOOK TaskFieldBook (
     key task ID Task,
     key field ID Field,
     value bigint,
+    note text
 );
 
 --任务完结产品
@@ -164,7 +165,7 @@ ACTION CompletionTask(
     result char(1000),
     ARR fields (
         fieldName char(100),
-        value bigint
+        value text
     )
 ) {
     history TaskHistory
@@ -175,7 +176,7 @@ ACTION CompletionTask(
     foreach fields {
         var fieldId ID;
         tuid Field into fieldId unique(fieldName);
-        book TaskFieldBook at(taskId, fieldId) set value=value;
+        book TaskFieldBook at(taskId, fieldId) set value=1, note = value;
     }
 };
 

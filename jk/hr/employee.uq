@@ -31,11 +31,15 @@ OPEN MAP EmployeeRole (
     EndTime datetime,    --结束时间
 );
 
-
 --员工和内部关联关系
-MAP WebuserEmployee( 
+OPEN MAP WebuserEmployee( 
     key webuser ID [$user], --负责人
-    key employee ID Employee
+    key employee ID employee
+);
+
+OPEN MAP EmployeeRelation (
+    key parent ID employee,
+    key child ID employee
 );
 
 /** 搜索员工*/

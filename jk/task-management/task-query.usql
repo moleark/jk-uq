@@ -89,8 +89,8 @@ returns ret (
 
 /** 搜索客户历史沟通记录*/
 QUERY SearchHistoryTaskByEmployee( )
-returns ret (
-    id bigint,
+PAGE (
+    id bigint start 0,
     description char(100),
     customer ID MyCustomer,
     type ID TaskType,
@@ -105,17 +105,15 @@ returns ret (
     createTime date
 ) {
 
-    into ret select t.id, t.description, t.customer, t.type, tt.name as typeName, t.biz, bt.name as bizName
+    PAGE select t.id, t.description, t.customer, t.type, tt.name as typeName, t.biz, bt.name as bizName
         , t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, t.createTime
     from Task as t
             join TaskType as tt on t.type = tt.id
             join BizType  as bt on t.biz = bt.id
-    where   t.id in (
-                SELECT	ht.task
-                FROM    Taskhistory as ht
-                where   ht.principal = $user and ht.status in( 3, 4 )
-            )
-    order by t.deadline;
+            join Taskhistory as ht on ht.task = t.id and ht.principal = $user  and ht.status in( 3, 4 )
+    where   t.id > $pageStart
+    order by ht.date  desc 
+    limit $pageSize;
 };
 
 /** 搜索完结*/
@@ -124,9 +122,10 @@ returns ret (
     task ID Task,
     field char(100),
     value bigint,
+    note text,
     fieldName char(100)
 ) {
-    into ret SELECT	tf.task, tf.field, tf.value, f.name as fieldName
+    into ret SELECT	tf.task, tf.field, tf.value, tf.note, f.name as fieldName
     FROM    TaskFieldBook as  tf
             join Field as f on tf.field = f.id
     where   tf.task = taskid;
@@ -199,6 +198,7 @@ returns ret (
     twoAchievement dec(12, 2),
     threeAchievement dec(12, 2),
     teamCount bigint,
+    innerteamCount bigint,
     customerCount bigint,
     activeCustomerCount bigint,
     totalOrderCount bigint,
@@ -208,9 +208,15 @@ returns ret (
     level int
 
 ) {
-    var teamCount bigint, customerCount bigint, activeCustomerCount bigint;
+    var teamCount bigint, innerteamCount bigint, customerCount bigint, activeCustomerCount bigint;
     set teamCount = ifnull(count(1),0) from Relation where parent=$user;
+    set innerteamCount = ifnull(count(1),0) 
+    from    WebuserEmployee as a 
+            join EmployeeRelation as b on a.employee = b.parent
+    where a.webuser = $user;
+    
     set customerCount = ifnull(count(1),0) from MyCustomer where user=$user;
+    
     set activeCustomerCount= ifnull(count(1),0) 
     from    CustomerNowSalesBOOK as cn 
             join CustomerMyCustomerMap as cm on cn.customer = cm.customer 
@@ -235,7 +241,7 @@ returns ret (
     into ret select user,  
                     oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  
                     oneAchievement,  twoAchievement,  threeAchievement, 
-                    teamCount, customerCount, activeCustomerCount, 
+                    teamCount, innerteamCount, customerCount, activeCustomerCount, 
                     totalOrderCount, totalReceivableAmount, totalaWithdrawal, waitWithdrawal, level;
 };
 
@@ -506,7 +512,7 @@ returns ret (
     where   m.user = $user;
 };
 
-/** 搜索平台客户*/
+/** 搜索平台客户
 QUERY SearchWebUser(
     key char(100)
 )
@@ -523,9 +529,29 @@ PAGE (
     where   m.id > $pageStart and ( m.name like key2 or key is null )
     limit $pageSize;
 };
+*/
+
+QUERY SearchCustomerOrder(
+    _mycustomer ID MyCustomer,
+    _ordertype char(20)
+)
+returns ret (
+    customer ID customer,
+    webuser id [$user],
+    order ID,
+    orderNo char(50),
+    date date
+){
+    into ret select  a.customer, a.webuser, b.order, b.orderNo, b.date
+    from    CustomerMyCustomerMap as a
+            join AchievementHistory as b on a.webuser = b.webuser and b.types = 1
+    where   a.mycustomer = _mycustomer and b.ordertype = _ordertype
+    order by b.date desc
+    limit 5;
+};
+
 
 /**
-
 **/
 QUERY SearchJKTask(
     key char(100)
@@ -556,3 +582,5 @@ PAGE (
             and m.isValid is null and m.createTime > now()
     limit $pageSize;
 };
+
+

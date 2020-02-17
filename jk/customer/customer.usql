@@ -109,3 +109,16 @@ MAP CustomerBuyerAccount (
     key customer ID Customer,
     key buyerAccount ID BuyerAccount,
 );
+
+TUID Department (
+    id,
+    organization ID Organization,
+    main name char(200),
+    no char(30),
+    createTime datetime 
+);
+
+MAP CustomerDepartment (
+    key customer ID Customer,
+    key department ID Department
+);

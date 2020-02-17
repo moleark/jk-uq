@@ -5,3 +5,32 @@ TUID employee from JKHr (
     firstName char(20),
     lastName char(20),
 );
+
+MAP WebuserEmployee from JKHr (
+    key webuser ID [$user], --负责人
+    key employee ID Employee
+);
+
+MAP EmployeeRelation from JKHr (
+    key parent ID employee,
+    key child ID employee
+);
+
+
+
+/** 搜索员工*/
+QUERY SearchSubordinate(key char(100))
+returns ret (
+    webuser ID [$user],
+    employee ID Employee,
+    taskcount bigint
+) {
+    into ret select c.webuser, c.employee,
+            ( select count(*) from TaskHistory as h where h.principal = c.webuser) as taskcount
+    from    WebuserEmployee as a 
+            join EmployeeRelation as b on a.employee = b.parent
+            join WebuserEmployee as c on b.child = c.employee
+    where  a.webuser = $user;
+};
+
+
