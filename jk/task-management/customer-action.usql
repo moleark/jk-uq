@@ -1,0 +1,75 @@
+
+/** 添加客户*/
+ACTION CreateMyCustomer(
+    unit ID MyCustomerUnit,
+    no bigint,
+    name char(50) not null,
+    firstName char(50),
+    lastName char(50),
+    gender char(5),
+    salutation char(10),
+    telephone char(50),
+    mobile char(50),
+    newcustomerid bigint
+)returns ret (
+    code bigint
+){
+    var myCustomerId ID, counts int;
+    TUID MyCustomer into myCustomerId set
+        name=name, firstName=firstName, lastName=lastName, gender=gender, unit = unit, user = $user,
+        salutation=salutation, birthDay=now(), telephone=telephone,mobile=mobile,isValid=1,createTime=now();
+
+    --判断是否被占用
+    set     counts = count(1)
+    from    CustomerNowSalesBOOK
+    where   customer in (
+                select   b.id
+                from    Customer.Contact as a
+                        join Customer as b on a.owner=b.id
+                where   a.content=mobile 
+            ) 
+            and ( sales is null or sales <> $user );
+    set counts = ifnull(counts,0);
+
+    if(counts > 0){
+       into ret select 1 as code;
+    }else{
+       into ret select 0 as code;
+    }
+
+    if( newcustomerid > 0){
+        var webuser ID [$user];
+        set webuser = a.webuser from NewMyCustomerBook as a where a.customer = newcustomerid limit 1;
+        BOOK CustomerMyCustomerMap at ($user, myCustomerId) set customer=newcustomerid,webuser=webuser;
+        delete from NewMyCustomerBook where customer = newcustomerid;
+    }
+};
+
+/** 添加客户单位*/
+ACTION CreateMyCustomerUnit(
+    name char(50) not null
+)returns ret (
+    id ID MyCustomerUnit
+){
+    var unitId bigint;
+    set unitId = a.id from MyCustomerUnit as a where a.user=$user and a.name = name limit 1;
+
+    if( unitId is null ) {
+        TUID MyCustomerUnit into unitId unique($user, name) set
+            no = null, createTime=now(), isValid=1;
+    }
+    into ret select unitId as id;
+};
+
+
+/**修改mycustomer 和customer的关系*/
+ACTION UpateCustomerMyCustomerMap(
+    mycustomer ID MyCustomer,
+    customer ID Customer,
+    webuser ID [$user]
+){
+     BOOK CustomerMyCustomerMap at ($user, mycustomer) set customer=customer,webuser=webuser;
+
+     delete from NewMyCustomerBook where sales=$user and customer = customer and webuser=webuser;
+};
+ 

@@ -79,7 +79,7 @@ returns ret (
     result dec(12, 2)
 ) {
     foreach ( var sales ID, webuser ID, order ID, orderno char(50), quantity int, price dec(12, 2), agentprices dec(12, 2), coupontype char(10) of
-            select  sales, webuser, order, orderno, 1 as quantity , price, agentprices, types
+            select  sales, webuser, order, orderno, 1 as quantity , price, agentprices, types as coupontype
             from    CustomerOrderPending
             where   sales = $user
     ) {

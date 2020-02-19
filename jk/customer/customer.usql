@@ -114,7 +114,7 @@ TUID Department (
     id,
     organization ID Organization,
     main name char(200),
-    no char(30),
+    no char(100),
     createTime datetime 
 );
 
@@ -127,7 +127,7 @@ MAP CustomerDepartment (
 TUID Research (
     id,
     main name char(200),
-    no char(30),
+    no char(100),
     createTime datetime 
 );
 
@@ -144,7 +144,7 @@ MAP CustomerResearch (
 TUID Post (
     id,
     main name char(200),
-    no char(30),
+    no char(100),
     createTime datetime 
 );
 
