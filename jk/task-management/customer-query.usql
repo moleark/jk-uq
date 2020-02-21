@@ -21,29 +21,21 @@ PAGE (
     createTime date,
     address ID Address,
     addressString char(400),
-    validity date,
-    isOccupy smallint,
-    webuser ID [$user]
+    validity date
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.mobile, c.gender, c.birthDay, c.email, c.wechat,
-                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString,
-                cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy, cyc.webuser
+                c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString, cb.validity
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
             left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
             left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
-            left join CustomerDepartment as cp on cp.customer = c.id 
-            left join Department as dp on dp.id = cp.department
     where   c.id > $pageStart 
             and c.user = $user 
             and c.isValid=1 
-            and (
-                    c.name like key2 or 
-                    u.name like key2 or 
-                    dp.name like key2 
-                )
+            and (c.name like key2 or u.name like key2 )
+                 
     limit $pageSize;
 };
 
