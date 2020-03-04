@@ -24,3 +24,105 @@ Map SalesRegionWarehouse (
     deliveryTimeDescription char(100),
     sequence int,
 );
+
+
+-- 库区
+TUID StockArea(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    currentLevel char(20) not null, -- HB1K1
+    isValid smallint not null,
+    createTime datetime 
+);
+
+-- 库房 与 库区关联表
+Map WarehouseStockArea(
+    key warehouse ID Warehouse,
+    key stockArea ID StockArea
+);
+
+-- 库存房间 
+TUID StockRoom(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    currentLevel char(20) not null, -- HB1K1A
+    isValid smallint not null,
+    createTime datetime 
+);
+
+-- 库存区域 与 库存房间关联表
+Map StockAreaStockRoom(
+    key stockArea ID StockArea,
+    key stockRoom ID StockRoom
+);
+
+-- 货架
+TUID Shelf(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    currentLevel char(20) not null, -- HB1K1A001
+    isValid smallint not null,
+    createTime datetime 
+);
+
+-- 库存房间 与 货架 关联表
+Map StockRoomShelf(
+    key stockRoom ID StockRoom,
+    key shelf ID Shelf
+);
+
+-- 货架层
+TUID ShelfLevel(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    currentLevel char(20) not null, -- HB1K1A001A
+    isValid smallint not null,
+    createTime datetime 
+);
+
+--货架 与 货架层关联表
+Map ShelfShelfLevel(
+    key shelf ID Shelf,
+    key shelfLevel ID ShelfLevel
+);
+
+-- 货架位置
+BOOK ShelfLocation(
+    id,
+    no int not null,
+    createTime datetime
+);
+
+--包装单位类型（例如：A\A+\A-\B）
+BOOK PackageType(
+    id,
+    no char(10) not null,
+    main Range char(50) not null,
+    isValid smallint not null,
+    createTime datetime 
+); 
+
+-- 货架层与包装类型配置表（货架层允许放置的包装类型、货位数量和货位最多放置产品数量配置）
+Map ShelfLevelPackageType(
+    key shelfLevel ID ShelfLevel,
+    key packageType ID PackageType,
+    number int,
+    maxQty int，
+    createTime datetime
+);
+
+-- 已使用过的货架层记录表（已使用过的货架层放在此表中记录，生成货架时候会使用）
+TUID ShelfLevelUsed(
+    key shelfLevel ID ShelfLevel,
+    key packageType ID PackageType,
+    number int,
+    maxQty int，
+    createTime datetime
+);
+
+-- 入库记录表、货架上架记录表、出库记录表、货架下架记录表 
+--
