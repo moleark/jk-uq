@@ -27,76 +27,94 @@ Map SalesRegionWarehouse (
 
 
 -- 库区
-TUID StockArea(
+TUID WarehouseBuilding (
     id,
     no char(10) not null,
     main name char(50) not null,
-    currentLevel char(20) not null, -- HB1K1
+    warehouse ID Warehouse not null,
     isValid smallint not null,
-    createTime datetime 
+    createTime datetime,
+    search(name),
 );
 
+/*
 -- 库房 与 库区关联表
 Map WarehouseStockArea(
     key warehouse ID Warehouse,
     key stockArea ID StockArea
 );
+*/
 
 -- 库存房间 
-TUID StockRoom(
+TUID WarehouseRoom (
     id,
     no char(10) not null,
     main name char(50) not null,
-    currentLevel char(20) not null, -- HB1K1A
+    warehosueBuilding ID WarehouseBuilding not null,
+    // currentLevel char(20) not null, -- HB1K1A
     isValid smallint not null,
-    createTime datetime 
+    createTime datetime,
+    search(name) 
 );
 
+/*
 -- 库存区域 与 库存房间关联表
 Map StockAreaStockRoom(
     key stockArea ID StockArea,
     key stockRoom ID StockRoom
 );
+*/
 
 -- 货架
-TUID Shelf(
+TUID Shelf (
     id,
     no char(10) not null,
     main name char(50) not null,
-    currentLevel char(20) not null, -- HB1K1A001
+    WarehouseRoom ID WarehouseRoom not null,
+    // currentLevel char(20) not null, -- HB1K1A001
     isValid smallint not null,
-    createTime datetime 
+    createTime datetime, 
+    search(name),
 );
 
+/*
 -- 库存房间 与 货架 关联表
 Map StockRoomShelf(
     key stockRoom ID StockRoom,
     key shelf ID Shelf
 );
+*/
 
 -- 货架层
-TUID ShelfLevel(
+TUID ShelfLayer (
     id,
     no char(10) not null,
     main name char(50) not null,
-    currentLevel char(20) not null, -- HB1K1A001A
+    shelf ID Shelf not null,
+    // currentLevel char(20) not null, -- HB1K1A001A
     isValid smallint not null,
     createTime datetime 
 );
 
+/*
 --货架 与 货架层关联表
 Map ShelfShelfLevel(
     key shelf ID Shelf,
     key shelfLevel ID ShelfLevel
 );
+*/
 
 -- 货架位置
-BOOK ShelfLocation(
+BOOK ShelfBlock (
     id,
-    no int not null,
-    createTime datetime
+    no char(10) not null,
+    main name char(50) not null,
+    shelfLayer ID ShelfLayer not null,
+    createTime datetime,
+    search(name),
 );
 
+/*
 --包装单位类型（例如：A\A+\A-\B）
 BOOK PackageType(
     id,
@@ -126,3 +144,4 @@ TUID ShelfLevelUsed(
 
 -- 入库记录表、货架上架记录表、出库记录表、货架下架记录表 
 --
+*/
