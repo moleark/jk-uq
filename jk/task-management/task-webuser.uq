@@ -1,4 +1,11 @@
 
+--好友昵称
+BOOK PeerAssignedBook(
+    key user ID [$user],
+    key peer ID [$user],
+    Assigned char(100),
+);
+
 --平台账号账户信息
 MAP WebUserAccountMap (
     key webuser ID [$user],
@@ -10,13 +17,11 @@ MAP WebUserAccountMap (
     bankaccountnumber char(20)
 );
 
-
 --平台用户和内部员工关系
 MAP WebUserEmployeeMap (
     key webuser ID [$user],
     key employee ID employee,
 );
-
 
 /** 修改粉丝的自定义名称*/
 ACTION SavePeerAssigned(

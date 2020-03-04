@@ -38,7 +38,27 @@ BOOK SalesAchievementBook(
     totalAchievement dec(12, 2) not null default 0 , --累计提成
     totalReceivableAmount dec(12, 2) not null default 0 , --累计到账金额
     totalaWithdrawal dec(12, 2) not null default 0 , --累计提现金额
-    waitWithdrawal dec(12, 2) not null default 0 , --等待提现的金额
+    waitWithdrawal dec(12, 2) not null default 0 , --等待提现的金额 
+);
+
+--销售团队统计表
+BOOK SalesTeamBook(
+    key user ID [$user],
+    totalTeamCount dec(12, 2) not null default 0 , --团队数量
+    totalInnerTeamCount dec(12, 2) not null default 0 , --内部团队数量
+);
+
+--销售客户统计表
+BOOK SalesCustomerBook(
+    key user ID [$user],
+    customerCount dec(12, 2) not null default 0 , --客户数量
+    unitCount dec(12, 2) not null default 0 , --单位数量
+);
+
+--销售任务绩效报表
+BOOK SalesTaskAchievement(
+    key user ID [$user],
+    totalTaskCount dec(12, 2) not null default 0 , --已完结任务数量
 );
 
 

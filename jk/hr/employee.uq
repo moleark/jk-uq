@@ -66,3 +66,37 @@ PAGE (
     order by e.id
     limit $pageSize;
 };
+
+ 
+/** 搜索员工名称*/
+QUERY SearchEmployeeByid(
+    _id ID [$user]
+)
+returns ret (
+    id ID employee,
+    name char(30),
+    firstName char(20),
+    lastName char(20),
+    title char(20),
+   
+) {
+    into ret select e.id, e.name, e.firstName, e.lastName, e.title
+    from    WebuserEmployee as w
+            join employee as e on w.employee = e.id
+    where   w.webuser = _id;
+};
+
+/** 搜索员工*/
+QUERY SearchTeam(key char(100))
+PAGE (
+    id bigint start 0,
+    webuser ID [$user],
+    employee ID Employee
+) {
+    PAGE select a.webuser as id c.webuser, c.employee
+    from    WebuserEmployee as a 
+            join EmployeeRelation as b on a.employee = b.parent
+            join WebuserEmployee as c on b.child = c.employee
+    where  a.webuser = $user and a.webuser > $pageStart
+    limit $pageSize;
+};

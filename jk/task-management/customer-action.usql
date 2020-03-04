@@ -43,6 +43,8 @@ ACTION CreateMyCustomer(
         BOOK CustomerMyCustomerMap at ($user, myCustomerId) set customer=newcustomerid,webuser=webuser;
         delete from NewMyCustomerBook where customer = newcustomerid;
     }
+
+     book SalesCustomerBook at($user) set customerCount+=1;
 };
 
 /** 添加客户单位*/
@@ -59,6 +61,8 @@ ACTION CreateMyCustomerUnit(
             no = null, createTime=now(), isValid=1;
     }
     into ret select unitId as id;
+
+    book SalesCustomerBook at($user) set unitCount+=1;
 };
 
 

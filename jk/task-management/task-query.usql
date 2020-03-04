@@ -1,7 +1,7 @@
 QUERY SearchTask ( customer ID MyCustomer )
 returns ret (
     id bigint,
-    description char(100),
+    description text,
     customer ID MyCustomer,
     type ID TaskType,
     typeName char(50),
@@ -13,14 +13,14 @@ returns ret (
     priorty int,
     deadline date,
     remindDate date,
-    createTime date
+    createTime datetime
 ) {
     into ret select t.id, t.description, t.customer, t.type, 'qualify' as typeName, t.biz, 'nonreagent' as bizName
         , t.sourceID, t.sourceType, t.sourceNo, t.priorty, t.deadline, tb.remindDate, t.createTime
     from Task as t
          join TaskBook as tb on t.id = tb.task
     where tb.principal = $user and ( t.customer = customer or customer = 0 )
-    order by t.deadline;
+    order by t.deadline, t.id;
 
     /**
     into ret select t.id, t.description, t.customer, t.type--, tt.name as typeName, t.biz, bt.name as bizName
@@ -208,36 +208,33 @@ returns ret (
     level int
 
 ) {
-    var teamCount bigint, innerteamCount bigint, customerCount bigint, activeCustomerCount bigint;
-    set teamCount = ifnull(count(1),0) from Relation where parent=$user;
-    set innerteamCount = ifnull(count(1),0) 
-    from    WebuserEmployee as a 
-            join EmployeeRelation as b on a.employee = b.parent
-    where a.webuser = $user;
+
+    --step.1.获取团队信息
+    var teamCount bigint =0, innerteamCount bigint =0;
+    set innerteamCount =  totalInnerTeamCount , teamCount = totalTeamCount 
+    from  SalesTeamBook where user = $user;
     
-    set customerCount = ifnull(count(1),0) from MyCustomer where user=$user;
-    
+    --step.2.获取客户信息
+    var customerCount bigint =0, activeCustomerCount bigint=0;
+    set customerCount = customerCount 
+    from SalesCustomerBook where user = $user; 
+    --获取活跃客户
     set activeCustomerCount= ifnull(count(1),0) 
     from    CustomerNowSalesBOOK as cn 
             join CustomerMyCustomerMap as cm on cn.customer = cm.customer 
     where   cn.sales=$user;
-
-    set teamCount = ifnull(teamCount,0);
-    set customerCount = ifnull(customerCount,0);
-    set activeCustomerCount = ifnull(activeCustomerCount,0);
-
+ 
+    --step.3.获取业绩
     var oneSaleVolume dec(12, 2)=0, twoSaleVolume dec(12, 2)=0, threeSaleVolume dec(12, 2)=0,
         oneAchievement dec(12, 2)=0, twoAchievement dec(12, 2)=0, threeAchievement dec(12, 2)=0, 
-        totalOrderCount bigint, totalReceivableAmount dec(12, 2)=0, totalaWithdrawal dec(12, 2)=0, waitWithdrawal dec(12, 2)=0, level int ;
+        totalOrderCount bigint =0 , totalReceivableAmount dec(12, 2)=0, totalaWithdrawal dec(12, 2)=0, waitWithdrawal dec(12, 2)=0, level int ;
 
     set     oneSaleVolume = a.oneSaleVolume, twoSaleVolume = a.twoSaleVolume, threeSaleVolume = a.threeSaleVolume,
             oneAchievement = a.oneAchievement, twoAchievement = a.twoAchievement, threeAchievement = a.threeAchievement,
             totalOrderCount = a.totalOrderCount, totalReceivableAmount=a.totalReceivableAmount, totalaWithdrawal = a.totalaWithdrawal, waitWithdrawal=a.waitWithdrawal, level= a.Level
     from    SalesAchievementBook as a
     where   a.user = user;
-
-    set totalOrderCount = ifnull(totalOrderCount,0);
-
+ 
     into ret select user,  
                     oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  
                     oneAchievement,  twoAchievement,  threeAchievement, 

@@ -13,7 +13,7 @@ TUID MyCustomer (
     main mobile char(100),
     main gender char(5),
     main birthDay date,
-    main email char(100),
+    main email char(100) null,
     main wechat char(20),
     main teacher char(20),
     main potential smallint,
@@ -36,7 +36,7 @@ TUID MyCustomerUnit (
     id,
     user ID [$user],
     no bigint,
-    main name char(50) not null,
+    main name char(200) not null,
     createTime datetime,
     ARR Contact (
         owner,
@@ -137,4 +137,13 @@ MAP CustomerOfficePost (
     key customer ID Customer,
     key officpost ID OfficePost
 );
-
+ 
+ 
+--导客户用临时使用
+MAP  Importcustomerdata (
+    key customer ID Customer,
+    key organization ID Organization,
+    key sales char(30),
+    note text,
+    validity datetime
+);
