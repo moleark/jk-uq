@@ -1,0 +1,38 @@
+TUID CASInterval (
+    id,
+    salesRegion ID SalesRegion,
+    start char(30) not null,
+    end char(30),
+    index idx_salesregion(salesRegion),
+);
+
+MAP CASInSalesRegion (
+    key salesRegion ID SalesRegion,
+    key casInterval id CASInterval not null,
+    CAS char(30) not null,
+);
+
+TUID SortNameIntervalGroup (
+    id,
+    name char(10),
+);
+
+MAP SortNameIntervalGroupSalesRegion (
+    key salesRegion ID salesRegion not null,
+    key group ID SortNameIntervalGroup not null,
+);
+
+TUID SortNameInterval (
+    id,
+    salesRegion ID SalesRegion,
+    group ID SortNameIntervalGroup,
+    start char(30) not null,
+    end char(30),
+    index idx_salesregion_group(salesRegion, group),
+);
+
+MAP SortNameInSalesRegion (
+    key salesRegion ID SalesRegion,
+    key sortNameInterval ID SortNameInterval not null,
+    product ID ProductX not null,
+);
