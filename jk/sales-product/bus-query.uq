@@ -3,7 +3,7 @@ BUS pointBus from [百灵威系统工程部]/point
 
         foreach (var packid bigint, agentPrice dec(12, 2)
             of
-            select  ap.pack, ap.agentPrice
+            select  ap.pack as packid, ap.agentPrice
             from    packs as p
                     join AgentPrice as ap on p.packid = ap.pack and p.salesRegion = ap.salesRegion
         ){
