@@ -10,13 +10,13 @@ MAP PointProduct (
 
 --积分明细表
 BOOK PointBook (
-    key customer ID Customer,   --客户编号
-    key pointYear int not null,          --年度
-    point int not null default 0,                  --积分
-    totalPoint int not null default 0,
-    usedPoint int default 0,              --消耗的积分
-    tempPoint int not null default 0,
-    tempUsedPoint int not null default 0
+    key customer ID Customer,   -- 客户编号，不是webuser
+    key pointYear int not null,          -- 积分所在年度
+    point int not null default 0,           -- 总有效积分
+    totalPoint int not null default 0,      -- 总积分
+    usedPoint int default 0,                -- 消耗的积分
+    tempPoint int not null default 0,       -- 在tonva系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
+    tempUsedPoint int not null default 0    -- 在tonva系统消耗的临死积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
 );
 
 --积分变化表
@@ -56,8 +56,8 @@ Action submit {
         var leftAmount bigint;
         set leftAmount = subAmount;
 
-        foreach ( var mPoint int, mUsedPoint int, tempUsedPoint int, pointYear int of
-            select  p.point, p.usedPoint, p.tempUsedPoint, p.pointYear
+        foreach (var mPoint int, mUsedPoint int, tempUsedPoint int, pointYear int of
+            select  p.point as mPoint, p.usedPoint as mUsedPoint, p.tempUsedPoint, p.pointYear
             from    PointBook as p
             where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3
                     and (p.point - p.usedPoint - p.tempUsedPoint) > 0
