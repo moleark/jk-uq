@@ -98,7 +98,7 @@ OPEN TUID BuyerAccount (
 ) ON SAVE {
     /-mysql
     if `_$user` > 0 then
-        insert into `joint-uq-jk`.map_buyeraccount(id, `no`)
+        insert into `joint-uq-jk`.map_customer_buyeraccount(id, `no`)
         values (`_$id`, `_no`)
         on duplicate key update `no` = values(`no`);
     end if;
