@@ -33,12 +33,12 @@ returns ret(
     orderMaker ID Customer,
     point dec(12, 2)
 ) {
-    into ret SELECT  p.orderId, p.orderMaker, sum(p.subAmount) * 2 as point 
+    into ret SELECT  orderId, orderMaker, sum(p.subAmount) * 2 as point 
     FROM    PlatformOrder as p
     where   p.orderMaker = customer and p.mark <> 'C' 
-            and p.orderItemId not in ( select orderItemId from PlatformOrderUsed )
+            and not p.orderItemId in ( select orderItemId from PlatformOrderUsed )
             and p.CreateDate > startDate
-    group   by p.orderId, p.orderMaker 
+    group   by p.orderId as orderId, p.orderMaker as orderMaker
     order   by sum(p.subAmount) desc limit 1;
 };
 
