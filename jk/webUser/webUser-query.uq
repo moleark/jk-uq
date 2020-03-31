@@ -81,3 +81,35 @@ ACTION auditPendingUserRefuse(
         }
     }
 };
+
+QUERY SearchHavingRefuseUser()
+PAGE (
+    id bigint desc,
+    webUser ID WebUser,
+    reason ID AuditPendingUserRefuseReason,
+    comments char(100),
+    date datetime
+) {
+    PAGE select p.webUser as id, p.webUser,  p.reason,  p.comments, p.date
+    from    WebUserAuditRefuseHistory as p
+    where   p.webUser < $pageStart
+    order by p.webUser desc
+    limit $pageSize;
+};
+ 
+ 
+QUERY SearchHavingAuditUser()
+PAGE (
+    id bigint desc,
+    webUser ID WebUser,
+    customer ID Customer,
+    date datetime
+){
+    PAGE select p.webUser as id,  p.webUser, p.customer, p.date
+    from    WebUserAuditHistory as p
+    where   p.webUser < $pageStart
+    order by p.webUser desc
+    limit $pageSize;
+};
+
+
