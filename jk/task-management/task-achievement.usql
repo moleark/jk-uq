@@ -46,6 +46,15 @@ BOOK SalesTeamBook(
     key user ID [$user],
     totalTeamCount dec(12, 2) not null default 0 , --团队数量
     totalInnerTeamCount dec(12, 2) not null default 0 , --内部团队数量
+
+    teamCount bigint not null default 0 , --团队数量
+    innerTeamCount bigint not null default 0 , --内部团队数量
+
+    orderCount bigint not null default 0,  --订单数量
+    orderAmount  dec(12, 2) not null default 0, --订单金额
+
+    taskCount bigint not null default 0 --完结任务数
+    
 );
 
 --销售客户统计表
@@ -310,8 +319,10 @@ returns ret (
     oneAchievement dec(12, 2),
     twoAchievement dec(12, 2),
     threeAchievement dec(12, 2),
+    
     teamCount bigint,
     innerteamCount bigint,
+    
     customerCount bigint,
     activeCustomerCount bigint,
     totalOrderCount bigint,
@@ -324,7 +335,7 @@ returns ret (
 
     --step.1.获取团队信息
     var teamCount bigint =0, innerteamCount bigint =0;
-    set innerteamCount =  totalInnerTeamCount , teamCount = totalTeamCount 
+    set innerteamCount =  innerteamCount , teamCount = teamCount 
     from  SalesTeamBook where user = $user;
     
     --step.2.获取客户信息
@@ -354,6 +365,25 @@ returns ret (
                     teamCount, innerteamCount, customerCount, activeCustomerCount, 
                     totalOrderCount, totalReceivableAmount, totalaWithdrawal, waitWithdrawal, level;
 };
+
+
+
+/** 搜索团队绩效 **/
+QUERY SearchTeamAchievement (
+)
+returns ret (
+    orderCount bigint,
+    taskCount  bigint,
+    orderAmount dec(12, 2)
+) {
+    var orderCount bigint =0, taskCount bigint = 0, orderAmount dec(12, 2) = 0 ;
+    set orderCount = orderCount , taskCount = taskCount, orderAmount =orderAmount
+    from  SalesTeamBook 
+    where user = $user;
+
+    into ret select orderCount, taskCount, orderAmount;
+};
+ 
 
 
 QUERY SearchTaskHistoryCount (
