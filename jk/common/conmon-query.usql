@@ -58,4 +58,12 @@ returns ret(
             and c.isValid = 1;
 };
 
-
+QUERY SearchPackType()
+returns ret (
+    id bigint,
+    name char(8)
+) { 
+    into ret select p.id, p.name
+    from PackType as p
+    order by p.name;
+};

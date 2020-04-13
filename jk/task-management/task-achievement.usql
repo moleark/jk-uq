@@ -294,3 +294,77 @@ returns ret (
     提成 = （成交价 -  代理价） * 提成比例
 
 **/
+
+
+
+
+/** 搜索业绩*/
+QUERY SearchAchievement (
+     user ID [$user]
+)
+returns ret (
+    user ID [$user],
+    oneSaleVolume dec(12, 2),
+    twoSaleVolume dec(12, 2),
+    threeSaleVolume dec(12, 2),
+    oneAchievement dec(12, 2),
+    twoAchievement dec(12, 2),
+    threeAchievement dec(12, 2),
+    teamCount bigint,
+    innerteamCount bigint,
+    customerCount bigint,
+    activeCustomerCount bigint,
+    totalOrderCount bigint,
+    totalReceivableAmount  dec(12, 2),
+    totalaWithdrawal dec(12, 2),
+    waitWithdrawal dec(12, 2),
+    level int
+
+) {
+
+    --step.1.获取团队信息
+    var teamCount bigint =0, innerteamCount bigint =0;
+    set innerteamCount =  totalInnerTeamCount , teamCount = totalTeamCount 
+    from  SalesTeamBook where user = $user;
+    
+    --step.2.获取客户信息
+    var customerCount bigint =0, activeCustomerCount bigint=0;
+    set customerCount = customerCount 
+    from SalesCustomerBook where user = $user; 
+    --获取活跃客户
+    set activeCustomerCount= ifnull(count(1),0) 
+    from    CustomerNowSalesBOOK as cn 
+            join CustomerMyCustomerMap as cm on cn.customer = cm.customer 
+    where   cn.sales=$user;
+ 
+    --step.3.获取业绩
+    var oneSaleVolume dec(12, 2)=0, twoSaleVolume dec(12, 2)=0, threeSaleVolume dec(12, 2)=0,
+        oneAchievement dec(12, 2)=0, twoAchievement dec(12, 2)=0, threeAchievement dec(12, 2)=0, 
+        totalOrderCount bigint =0 , totalReceivableAmount dec(12, 2)=0, totalaWithdrawal dec(12, 2)=0, waitWithdrawal dec(12, 2)=0, level int ;
+
+    set     oneSaleVolume = a.oneSaleVolume, twoSaleVolume = a.twoSaleVolume, threeSaleVolume = a.threeSaleVolume,
+            oneAchievement = a.oneAchievement, twoAchievement = a.twoAchievement, threeAchievement = a.threeAchievement,
+            totalOrderCount = a.totalOrderCount, totalReceivableAmount=a.totalReceivableAmount, totalaWithdrawal = a.totalaWithdrawal, waitWithdrawal=a.waitWithdrawal, level= a.Level
+    from    SalesAchievementBook as a
+    where   a.user = user;
+ 
+    into ret select user,  
+                    oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  
+                    oneAchievement,  twoAchievement,  threeAchievement, 
+                    teamCount, innerteamCount, customerCount, activeCustomerCount, 
+                    totalOrderCount, totalReceivableAmount, totalaWithdrawal, waitWithdrawal, level;
+};
+
+
+QUERY SearchTaskHistoryCount (
+     user ID [$user]
+)
+returns ret (
+    counts int
+){
+
+    into ret select   count(*) as counts
+    from     TaskHistory
+    where    principal = $user;
+};
+ 
