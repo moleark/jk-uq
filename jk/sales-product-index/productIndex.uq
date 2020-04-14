@@ -6,9 +6,9 @@ TUID CASInterval (
     index idx_salesregion(salesRegion),
 );
 
-MAP CASInSalesRegion (
-    key salesRegion ID SalesRegion,
-    key casInterval id CASInterval not null,
+TUID CASInInterval (
+    id,
+    casInterval ID CASInterval not null,
     CAS char(30) not null,
 );
 
@@ -32,7 +32,6 @@ TUID SortNameInterval (
 );
 
 MAP SortNameInSalesRegion (
-    key salesRegion ID SalesRegion,
     key sortNameInterval ID SortNameInterval not null,
-    product ID ProductX not null,
+    key product ID ProductX not null,
 );

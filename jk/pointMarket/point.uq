@@ -13,8 +13,8 @@ BOOK PointBook (
     key customer ID Customer,   -- 客户编号，不是webuser
     key pointYear int not null,          -- 积分所在年度
     point int not null default 0,           -- 总有效积分
-    totalPoint int not null default 0,      -- 总积分
     usedPoint int default 0,                -- 消耗的积分
+    totalPoint int not null default 0,      -- 总积分
     tempPoint int not null default 0,       -- 在tonva系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
     tempUsedPoint int not null default 0    -- 在tonva系统消耗的临死积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
 );
@@ -128,7 +128,7 @@ MAP PlatformOrderUsed (
 );
 
 MAP CustomerCoupon (
-    key webUser ID WebUser,
+    key webUser ID WebUser,     -- WebUser编号，不是Customer
     coupon int,
     createDate date,
 );
