@@ -20,6 +20,13 @@ MAP CouponOrderMap (
     key webuser ID,
 );
 
+--优惠券订单
+History CouponSendHistory (
+    date,
+    coupon ID Coupon,
+    webuser ID [$user]
+);
+
 
 /** 添加优惠码*/
 ACTION CreateCoupon(
@@ -29,7 +36,6 @@ ACTION CreateCoupon(
 )returns ret (
     code char(8)
 ){
-
     var code varchar(12), head bigint,  customer ID Customer;
     set code = ( RAND() * 100000000) + 100000000;
     set code = substr(code, 1, 8);
@@ -38,7 +44,6 @@ ACTION CreateCoupon(
     TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
                 discount=discount, types=types, createTime=now(), isValid=1;
     into ret select code;
-
 };
 
 /** 验证优惠码是否可用*/
@@ -113,6 +118,22 @@ returns ret (
         set result = 1;  --正常
     };
     into ret select result, id, code, sales as user, webUserX as webuser, discount, preferential, validitydate, types, isValid;
+};
+
+
+/**记录发送优惠码的功能**/
+ACTION AddCouponSendHistory(
+    code char(20)
+){
+    var coupon ID Coupon;
+    set coupon = a.id from Coupon as a where a.code = code;
+    if(coupon){
+        var yeara char(10), montha char(10), daya char(10), alldate char(20);
+        set yeara =  year( now() ),  montha = month( now() ), daya = day( now() );
+         
+        book Achievement at( '2020-04-21' , 0 ,$user ) set sendCreditsCount += 1;
+        history CouponSendHistory set coupon = coupon, webUser = $user;   
+    }
 };
 
 

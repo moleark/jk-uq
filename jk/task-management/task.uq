@@ -170,7 +170,8 @@ ACTION CompletionTask(
         tuid Field into fieldId unique(fieldName);
         book TaskFieldBook at(taskId, fieldId) set value=1, note = value;
     }
-    book SalesTaskAchievement at($user) set totalTaskCount+=1; 
+
+    book Achievement at(now(),0,$user)set endTaskCount+=1; 
 };
 
 /** 完结任务--客户资料*/

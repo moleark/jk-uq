@@ -38,7 +38,7 @@ RETURNS ret (
             into ret select 1 as succeed, code as code;
 
             BOOK Relation at ( parent, $user );
-            BOOK SalesTeamBook at($user) set totalTeamCount+=1;
+            BOOK SalesTeamBook at($user) set teamCount+=1;
         }
         else{
             into ret select 0 as succeed, code as code;

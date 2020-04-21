@@ -10,6 +10,8 @@ ACTION AddMyCustomerPost(
         customer ID MyCustomer,
         post ID POST
 ){
+
+     book Achievement at( now(), 0 ,$user ) set sendCreditsCount += 1;
      history MyCustomerPostHistory set customer=customer, post = post;
 };
 

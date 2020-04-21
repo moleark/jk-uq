@@ -44,33 +44,29 @@ BOOK SalesAchievementBook(
 --销售团队统计表
 BOOK SalesTeamBook(
     key user ID [$user],
-    totalTeamCount dec(12, 2) not null default 0 , --团队数量
-    totalInnerTeamCount dec(12, 2) not null default 0 , --内部团队数量
-
     teamCount bigint not null default 0 , --团队数量
-    innerTeamCount bigint not null default 0 , --内部团队数量
-
-    orderCount bigint not null default 0,  --订单数量
-    orderAmount  dec(12, 2) not null default 0, --订单金额
-
-    taskCount bigint not null default 0 --完结任务数
-    
+    innerTeamCount bigint not null default 0 , --内部团队数量    
 );
 
+
+BOOK Achievement (
+    key date  date,
+    key manage ID [$user],
+    key user ID [$user],
+    endTaskCount      int not null default 0 , --完结任务数量
+    sendCreditsCount  int not null default 0 , --发积分码数量
+    sendPostCount     int not null default 0 , --发积贴文数量
+    orderCount        int not null default 0 , --订单数
+    saleVolume dec(12, 2) not null default 0   --销量
+);
+ 
 --销售客户统计表
 BOOK SalesCustomerBook(
     key user ID [$user],
     customerCount dec(12, 2) not null default 0 , --客户数量
     unitCount dec(12, 2) not null default 0 , --单位数量
 );
-
---销售任务绩效报表
-BOOK SalesTaskAchievement(
-    key user ID [$user],
-    totalTaskCount dec(12, 2) not null default 0 , --已完结任务数量
-);
-
-
+ 
 /**业绩历史记录**/
 History AchievementHistory (
     date,
@@ -149,6 +145,7 @@ returns ret (
         if( coupontype = 'credits' ){
             --更新总销售额，A类绩效
             book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=0, totalOrderCount += 1;
+            book Achievement at( now(), 0 ,$user ) set orderCount +=1,  saleVolume+=sumprice;
             --记录A类绩效历史
             history AchievementHistory set sales=sales, webuser=webuser, amount=0, types=1, order=order, orderno=orderno, ordertype='credits', price=price, agentprices=agentprices;
         } else {
@@ -370,20 +367,92 @@ returns ret (
 
 /** 搜索团队绩效 **/
 QUERY SearchTeamAchievement (
+    _manage ID [$user],
+    _year int,
+    _type char(10)
 )
 returns ret (
-    orderCount bigint,
-    taskCount  bigint,
-    orderAmount dec(12, 2)
+    yeara   char(10),
+    montha  char(20),
+    endTaskCount      int,
+    sendCreditsCount  int,
+    sendPostCount     int,
+    orderCount        int,
+    saleVolume dec(12, 2)
 ) {
-    var orderCount bigint =0, taskCount bigint = 0, orderAmount dec(12, 2) = 0 ;
-    set orderCount = orderCount , taskCount = taskCount, orderAmount =orderAmount
-    from  SalesTeamBook 
-    where user = $user;
+    if(_type = 'day'){
+        VAR calcTick INT, weekTick INT;
+        SET calcTick = unix_timestamp();
+        SET weekTick = 1*24*3600;
 
-    into ret select orderCount, taskCount, orderAmount;
+        into ret select max(year(a.date)) as yeara ,  'day' as montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where   a.manage = _manage
+                and a.date>=FROM_UNIXTIME(calcTick - weekTick);
+    } else if(_type = 'month'){
+
+        into ret select yeara , montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where    a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara, month(a.date) as montha;
+
+        into ret select yeara , 'all' as montha , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from   Achievement as a
+        where  a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara;
+    }
 };
- 
+
+/** 搜索团队绩效明细 **/
+QUERY SearchTeamAchievementDetail (
+    _manage ID [$user],
+    _year int,
+    _type char(10)
+)
+PAGE (
+    id bigint desc,
+    yeara   char(10),
+    montha  char(20),
+    user ID [$user],
+    endTaskCount      int,
+    sendCreditsCount  int,
+    sendPostCount     int,
+    orderCount        int,
+    saleVolume dec(12, 2)
+) {
+    if(_type = 'day'){
+
+        VAR calcTick INT, weekTick INT;
+        SET calcTick = unix_timestamp();
+        SET weekTick = 1*24*3600;
+
+        PAGE select 0 as id, max(year(a.date)) as yeara, 'day' as montha,  user, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where   a.manage = _manage
+                and a.date>=FROM_UNIXTIME(calcTick - weekTick)
+        group by a.user
+        order by sum(a.saleVolume) desc;
+
+    } else if(_type = 'all'){
+        PAGE select 0 as id,  yeara , 'all' as montha,  user  , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from   Achievement as a
+        where  a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara, a.user 
+        order by  sum(a.saleVolume)  desc ;
+    }else{
+        PAGE select  0 as id,  yeara , montha, user , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where    a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara, month(a.date) as montha, a.user 
+        order by sum(a.saleVolume) desc;
+    }
+};
 
 
 QUERY SearchTaskHistoryCount (
