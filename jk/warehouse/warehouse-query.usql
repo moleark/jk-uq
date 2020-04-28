@@ -46,8 +46,8 @@ returns ret(
     var qty int;
     set qty = quantity;
 
-    foreach ( var product1 bigint, pack1 bigint, warehouse bigint, warehouseQuantity int, order int of
-    select pi.product, pi.pack, pi.warehouse, pi.quantity, wsc.sequence
+    foreach ( var product1 bigint, pack1 bigint, warehouse bigint, warehouseQuantity int of
+    select pi.product as product1, pi.pack as pack1, pi.warehouse, pi.quantity as warehouseQuantity
     from    ProductInventory as pi
             join warehouse as w on w.id = pi.warehouse
             join WarehouseSupportCity as wsc on w.id = wsc.warehouse
