@@ -104,6 +104,7 @@ Map ShelfShelfLevel(
 );
 */
 
+/*
 -- 货架位置
 BOOK ShelfBlock (
     id,
@@ -114,7 +115,6 @@ BOOK ShelfBlock (
     search(name),
 );
 
-/*
 --包装单位类型（例如：A\A+\A-\B）
 BOOK PackageType(
     id,

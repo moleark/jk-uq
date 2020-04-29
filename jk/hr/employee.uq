@@ -93,7 +93,7 @@ PAGE (
     webuser ID [$user],
     employee ID Employee
 ) {
-    PAGE select a.webuser as id c.webuser, c.employee
+    PAGE select a.webuser as id, c.webuser, c.employee
     from    WebuserEmployee as a 
             join EmployeeRelation as b on a.employee = b.parent
             join WebuserEmployee as c on b.child = c.employee
