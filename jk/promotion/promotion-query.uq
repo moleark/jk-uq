@@ -13,9 +13,8 @@ returns ret(
     from    PromotionPackDiscount as ppd
             join Promotion as p on ppd.promotion = p.id
             join PromotionSalesRegion as pr on pr.promotion = p.id
-            join PromotionLanguage as pl on pl.promotion = p.id
+            left join PromotionLanguage as pl on pl.promotion = p.id and pl.language = language
     where   p.startDate < now() and ifnull(p.endDate, '2099-01-01') > now()
             and ppd.product = product and ppd.pack = pack
-            and pr.salesRegion = salesRegion
-            and pl.language = language;
+            and pr.salesRegion = salesRegion;
 };
