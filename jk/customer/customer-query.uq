@@ -22,7 +22,7 @@ returns ret (
 ) {
    into ret select a.owner as customer
    from     Customer.Contact as a
-   where    a.content=key;
+   where    a.content = key;
 };
 
 QUERY getCustomerByNo(customerNo char(30))
