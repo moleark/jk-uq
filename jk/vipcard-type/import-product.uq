@@ -1,0 +1,3 @@
+import JKProduct = 百灵威系统工程部/product;
+
+TUID Brand from JKProduct;
