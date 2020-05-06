@@ -1,7 +1,8 @@
 OPEN TUID VIPCardType (
     id,
-    name char(10) not null,
-    description char(50) not null,
+    main name char(10) not null,
+    main description char(50) not null,
+    unique(name),
 );
 
 MAP VIPCardTypeDiscount (

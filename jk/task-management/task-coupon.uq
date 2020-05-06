@@ -40,6 +40,7 @@ ACTION CreateCoupon(
     discount dec(12, 2),
     types  char(10)
 )returns ret (
+    coupon ID Coupon,
     code char(8)
 ){
     var code varchar(12), head bigint,  customer ID Customer;
@@ -49,7 +50,7 @@ ACTION CreateCoupon(
     var couponId ID;
     TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
                 discount=discount, types=types, createTime=now(), isValid=1;
-    into ret select code;
+    into ret select couponId as coupon, code;
 };
 
 /** 验证优惠码是否可用*/
