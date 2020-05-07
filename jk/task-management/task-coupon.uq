@@ -12,6 +12,12 @@ OPEN TUID Coupon (
     isValid  smallint default 1,
 );
 
+MAP VIPCardForWebUser(
+    key sales ID [$user],
+    key webuser ID [$user],
+    key vipCard ID Coupon,
+    key vipCardType ID VIPCardType,
+);
 
 --优惠券订单
 MAP CouponOrderMap (
@@ -34,6 +40,7 @@ ACTION CreateCoupon(
     discount dec(12, 2),
     types  char(10)
 )returns ret (
+    coupon ID Coupon,
     code char(8)
 ){
     var code varchar(12), head bigint,  customer ID Customer;
@@ -43,7 +50,7 @@ ACTION CreateCoupon(
     var couponId ID;
     TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
                 discount=discount, types=types, createTime=now(), isValid=1;
-    into ret select code;
+    into ret select couponId as coupon, code;
 };
 
 /** 验证优惠码是否可用*/
@@ -109,7 +116,7 @@ returns ret (
     } else if ( webUser <> webUserX) {
         set result = 3;  --不是指定的客户
     } else if (not orderX is null) {
-        set result = 4;  --已经被使用
+        set result = 4;  --当前user已经使用了该券
     } else if ( not nowsales is null and nowsales <> sales )  {
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
     } else if ( sales = $user )  {

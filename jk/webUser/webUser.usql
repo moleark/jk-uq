@@ -94,7 +94,7 @@ OPEN MAP WebUserCustomer(
     }
 };
 
-MAP WebUserBuyerAccount (
+MAP WebUserBuyerAccount ver 0.02 (
     key webUser ID WebUser,
     key buyerAccount ID BuyerAccount,
 );

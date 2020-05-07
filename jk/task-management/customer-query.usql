@@ -139,7 +139,7 @@ returns ret (
 
 /**判断客户是否被绑定**/
 QUERY MyCustomerIsOccupy(
-        customer ID Customer
+    customer ID Customer
 )
 returns ret (
     code smallint
@@ -276,5 +276,3 @@ returns ret (
     from    CustomerMyCustomerMap
     where   mycustomer=mycustomer;
 };
-
-

@@ -1,0 +1,12 @@
+OPEN TUID VIPCardType (
+    id,
+    main name char(10) not null,
+    main description char(50) not null,
+    unique(name),
+);
+
+MAP VIPCardTypeDiscount (
+    key vipCard ID VIPCardType,
+    key brand ID Brand,
+    discount dec(12, 4) not null,
+);
