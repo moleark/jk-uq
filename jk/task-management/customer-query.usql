@@ -179,9 +179,14 @@ returns ret (
     **/
  
     --step.4.返回验证结果
-    set counts = count(1) from CustomerNowSalesBOOK where customer=customer and sales <> $user;
-    if (counts > 0 ) {
-       into ret select 1 as code;
+    var nowsales ID [$user];
+    set nowsales = sales from CustomerNowSalesBOOK where customer = customer;
+    if (nowsales) {
+        if(nowsales = $user){
+            into ret select 1 as code;
+        }else{
+           into ret select 2 as code; 
+        }
     } else {
        into ret select 0 as code;
     }
