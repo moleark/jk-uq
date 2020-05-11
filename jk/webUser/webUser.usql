@@ -102,7 +102,7 @@ MAP WebUserBuyerAccount ver 0.02 (
 
 
 
-
+/* begin WebUser审核相关的uq */
 BOOK PendingAuditWebUser (
     key webUser ID WebUser,
 );
@@ -125,4 +125,29 @@ HISTORY WebUserAuditRefuseHistory(
     reason ID AuditPendingUserRefuseReason,
     comments char(100),
     user,
+);
+/* end WebUser审核相关的uq */
+
+MAP WebUserVIPCard(
+    key webUser ID WebUser,
+    key vipCard int not null,
+    key vipCardType ID VIPCardType,
+    vipCardCode int not null,
+    createDate date,
+    expiredDate date,
+);
+
+MAP WebUserCoupon(
+    key webUser ID WebUser,
+    key coupon int not null,
+    key couponType ID VIPCardType,
+    couponCode int not null,
+    createDate date,
+    expiredDate date,
+);
+
+MAP WebUserCouponUsed(
+    key webUser ID WebUser,
+    key coupon int not null,
+    usedDate date,
 );

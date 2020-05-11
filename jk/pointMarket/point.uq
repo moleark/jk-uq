@@ -131,4 +131,19 @@ MAP CustomerCoupon (
     key webUser ID WebUser,     -- WebUser编号，不是Customer
     coupon int,
     createDate date,
+    expiredDate date,
+);
+
+MAP WebUserCredits (
+    key webUser ID WebUser,     -- WebUser编号，不是Customer
+    key credits int not null,
+    creditsCode int not null,
+    createDate date,
+    expiredDate date,
+);
+
+MAP WebUserCreditsUsed (
+    key webUser ID WebUser,     -- WebUser编号，不是Customer
+    key credits int not null,
+    usedDate date,
 );
