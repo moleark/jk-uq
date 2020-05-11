@@ -180,7 +180,7 @@ returns ret (
  
     --step.4.返回验证结果
     var nowsales ID [$user];
-    set nowsales = sales from CustomerNowSalesBOOK where customer = customer;
+    set nowsales = sales from CustomerNowSalesBOOK where customer = customer limit 1;
     if (nowsales) {
         if(nowsales = $user){
             into ret select 1 as code;

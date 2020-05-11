@@ -1,0 +1,20 @@
+{
+    "assistAchievements": [
+        {
+            "name": "sales",
+            "type": "id"
+        },
+        {
+            "name": "year",
+            "type": "number"
+        },
+        {
+            "name": "month",
+            "type": "number"
+        },
+        {
+            "name": "amount",
+            "type": "number"
+        }
+    ]
+}

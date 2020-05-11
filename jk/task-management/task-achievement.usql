@@ -59,6 +59,15 @@ BOOK Achievement (
     orderCount        int not null default 0 , --订单数
     saleVolume dec(12, 2) not null default 0   --销量
 );
+
+
+BOOK AssistAchievements(
+  key year  char(10),
+  key month  char(10),
+  key sales  ID [$user], 
+  Amount dec(12, 2) not null default 0
+);
+
  
 --销售客户统计表
 BOOK SalesCustomerBook(

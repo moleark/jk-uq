@@ -1,0 +1,12 @@
+{
+    "orderOWner": [
+        {
+            "name": "order",
+            "type": "id"
+        },
+        {
+            "name": "sales",
+            "type": "id"
+        }
+    ]
+}
