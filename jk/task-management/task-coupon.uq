@@ -151,7 +151,7 @@ ACTION AddCouponSendHistory(
 
 
 /** 搜索我的优惠码*/
-QUERY SearchCoupon( key char(100))
+QUERY SearchCoupon( key char(100), types char(20))
 PAGE (
     id bigint start 0,
     code bigint,
@@ -168,6 +168,7 @@ PAGE (
     PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid
     from    Coupon as m
     where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
+            and m.types = types 
     order by m.createTime desc
     limit $pageSize;
 };

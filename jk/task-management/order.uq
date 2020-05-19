@@ -129,7 +129,7 @@ BUS salestaskbus ver 0.4 from [百灵威系统工程部]/salestask
     ACCEPT assistAchievements (
        sales, year, month, amount
     ){
-        BOOK AssistAchievements at( sales, year, month ) set amount = amount;
+        BOOK AssistAchievements at( year, month, sales ) set amount = amount;
     };
  
 

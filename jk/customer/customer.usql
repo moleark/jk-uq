@@ -123,22 +123,19 @@ MAP CustomerDepartment (
     key department ID Department
 );
 
+ 
 
-TUID Research (
+TUID Domain (
     id,
     main name char(200),
+    parent ID Domain,
     no char(100),
     createTime datetime 
 );
 
-MAP ResearchRelation (
-    key child ID Research,
-    key parent ID Research
-);
-  
-MAP CustomerResearch (
+MAP CustomerDomain (
     key customer ID Customer,
-    key research ID Research
+    key domain ID Domain
 );
  
 TUID Post (

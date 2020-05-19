@@ -62,9 +62,9 @@ BOOK Achievement (
 
 
 BOOK AssistAchievements(
-  key year  char(10),
-  key month  char(10),
-  key sales  ID [$user], 
+  key year  int,
+  key month int,
+  key sales ID [$user], 
   Amount dec(12, 2) not null default 0
 );
 

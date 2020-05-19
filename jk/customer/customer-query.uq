@@ -58,3 +58,18 @@ returns ret (
    from     BuyerAccount as a
    where    a.no = buyAccountNo and a.isValid = 1;
 };
+
+ 
+QUERY SearchDomain(
+    _parent ID Domain
+)
+PAGE (
+    id bigint desc,
+    name char(100)
+) {
+    PAGE select b.id, b.name
+    from    Domain as b
+    where   b.id < $pageStart and b.parent = _parent
+    order by b.id desc 
+    limit $pageSize;
+};
