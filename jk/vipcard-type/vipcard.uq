@@ -10,3 +10,10 @@ MAP VIPCardTypeDiscount (
     key brand ID Brand,
     discount dec(12, 4) not null,
 );
+
+
+-- 客户单位的级别
+MAP OrganizationVIPLevel (
+    key organization ID Organization,
+    key vipCardLevel ID VIPCardType,
+);

@@ -13,8 +13,8 @@ OPEN TUID Coupon (
 );
 
 MAP VIPCardForWebUser(
-    key sales ID [$user],
     key webuser ID [$user],
+    key sales ID [$user],
     key vipCard ID Coupon,
     key vipCardType ID VIPCardType,
 );
@@ -42,6 +42,7 @@ History CouponSendHistory (
 
 /** 添加优惠码*/
 ACTION CreateCoupon(
+    webUser int,
     validitydate date,
     discount dec(12, 2),
     types  char(10)
@@ -49,13 +50,13 @@ ACTION CreateCoupon(
     coupon ID Coupon,
     code char(8)
 ){
-    var code varchar(12), head bigint,  customer ID Customer;
+    var code varchar(12); -- , head bigint,  customer ID Customer;
     set code = ( RAND() * 100000000) + 100000000;
     set code = substr(code, 1, 8);
  
     var couponId ID;
-    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
-                discount=discount, types=types, createTime=now(), isValid=1;
+    TUID Coupon into couponId set user = $user, code = code, validitydate = validitydate, customer = webUser,
+                discount = discount, types = types, createTime = now(), isValid = 1;
     into ret select couponId as coupon, code;
 };
 
