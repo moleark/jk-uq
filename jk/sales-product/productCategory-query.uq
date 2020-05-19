@@ -139,7 +139,7 @@ ACTION CountProductCategoryInclusion() {
     declare categoryId, parentId, subId, n, ng int default 0;
 	truncate table tv_productcategoryinclusion;
 
-    update  tv_productcategory set isLeaf = 1 where $unit = _$unit and isLaef = 0;
+    update  tv_productcategory set isLeaf = 1 where $unit = _$unit and isLeaf = 0;
     UPDATE  tv_productcategory AS a, tv_productcategory AS b
     SET a.isLeaf = 0
     WHERE   b.$unit = a.$unit AND b.parent = a.id AND a.isLeaf = 1;
