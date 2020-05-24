@@ -25,6 +25,12 @@ MAP VIPCardDiscount(
     discount dec(12, 4) not null,
 );
 
+
+MAP BottomDiscount (
+    key brand ID Brand,
+    discount dec(12, 4) not null, 
+);
+
 --优惠券订单
 MAP CouponOrderMap (
     key coupon ID Coupon,
