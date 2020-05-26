@@ -42,7 +42,7 @@ BUS orderpaymentBus ver 0.4 from [百灵威系统工程部]/SalesTask
 ACTION ComputeBalance(){
 
     foreach ( var nowid int, order ID, orderNo char(50), paymentAmount dec(12, 2), state int of
-        select  id, order, orderNo, paymentAmount, state
+        select  id as nowId, order, orderNo, paymentAmount, state
         from    OrderPaymentPending
         where   sales = $user
     ) {
