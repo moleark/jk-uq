@@ -10,10 +10,6 @@ BUS pointBus from [百灵威系统工程部]/point
             into bus.agentPriceResult select packid, agentPrice;
         }
     };
-
-
-
-BUS pointBus from [百灵威系统工程部]/point
     QUERY getRetailPrice {
 
         foreach (var brand bigint, packid bigint, retailPrice dec(12, 2)
