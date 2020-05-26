@@ -12,7 +12,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
     BUS webUserBus.getCustomerByWebUser as q into tbs {
         set q.webUser = webUser;
     }
-    BUS pointBus.getAgentPrice into tb {
+    BUS pointBus.getRetailPrice into tb {
         set customer = 0;
         foreach orderItems {
             into packs select pack as packid, salesRegionX as salesRegion;
@@ -57,9 +57,11 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
             foreach orderItems {
                 var agentprices dec(12, 2);
                 set agentprices = null;
-                foreach tb.agentPriceResult {
+                foreach tb.getRetailPriceResult {
                     if(pack = packid){
-                        set agentprices = agentprice;          
+                        var discount dec(12, 4);
+                        set a.discount = discount from BottomDiscount as a where a.brand = brand;
+                        set agentprices = retailPrice * ( 1 - discount );
                     }
                 }
                 --如果没有获取代理价则代理价等于销售价格
