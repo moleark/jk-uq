@@ -98,7 +98,7 @@ OPEN TUID BuyerAccount (
 ) ON SAVE {
     /-mysql
     if `_$user` > 0 then
-        insert into `joint-uq-jk`.map_buyeraccount(id, `no`)
+        insert into `joint-uq-jk`.map_customer_buyeraccount(id, `no`)
         values (`_$id`, `_no`)
         on duplicate key update `no` = values(`no`);
     end if;
@@ -114,7 +114,7 @@ TUID Department (
     id,
     organization ID Organization,
     main name char(200),
-    no char(30),
+    no char(100),
     createTime datetime 
 );
 
@@ -123,28 +123,25 @@ MAP CustomerDepartment (
     key department ID Department
 );
 
+ 
 
-TUID Research (
+TUID Domain (
     id,
     main name char(200),
-    no char(30),
+    parent ID Domain,
+    no char(100),
     createTime datetime 
 );
 
-MAP ResearchRelation (
-    key child ID Research,
-    key parent ID Research
-);
-  
-MAP CustomerResearch (
+MAP CustomerDomain (
     key customer ID Customer,
-    key research ID Research
+    key domain ID Domain
 );
  
 TUID Post (
     id,
     main name char(200),
-    no char(30),
+    no char(100),
     createTime datetime 
 );
 

@@ -38,10 +38,44 @@ BOOK SalesAchievementBook(
     totalAchievement dec(12, 2) not null default 0 , --累计提成
     totalReceivableAmount dec(12, 2) not null default 0 , --累计到账金额
     totalaWithdrawal dec(12, 2) not null default 0 , --累计提现金额
-    waitWithdrawal dec(12, 2) not null default 0 , --等待提现的金额
+    waitWithdrawal dec(12, 2) not null default 0 , --等待提现的金额 
+);
+
+--销售团队统计表
+BOOK SalesTeamBook(
+    key user ID [$user],
+    teamCount bigint not null default 0 , --团队数量
+    innerTeamCount bigint not null default 0 , --内部团队数量    
 );
 
 
+BOOK Achievement (
+    key date  date,
+    key manage ID [$user],
+    key user ID [$user],
+    endTaskCount      int not null default 0 , --完结任务数量
+    sendCreditsCount  int not null default 0 , --发积分码数量
+    sendPostCount     int not null default 0 , --发积贴文数量
+    orderCount        int not null default 0 , --订单数
+    saleVolume dec(12, 2) not null default 0   --销量
+);
+
+
+BOOK AssistAchievements(
+  key year  int,
+  key month int,
+  key sales ID [$user], 
+  Amount dec(12, 2) not null default 0
+);
+
+ 
+--销售客户统计表
+BOOK SalesCustomerBook(
+    key user ID [$user],
+    customerCount dec(12, 2) not null default 0 , --客户数量
+    unitCount dec(12, 2) not null default 0 , --单位数量
+);
+ 
 /**业绩历史记录**/
 History AchievementHistory (
     date,
@@ -120,6 +154,7 @@ returns ret (
         if( coupontype = 'credits' ){
             --更新总销售额，A类绩效
             book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=0, totalOrderCount += 1;
+            book Achievement at( now(), 0 ,$user ) set orderCount +=1,  saleVolume+=sumprice;
             --记录A类绩效历史
             history AchievementHistory set sales=sales, webuser=webuser, amount=0, types=1, order=order, orderno=orderno, ordertype='credits', price=price, agentprices=agentprices;
         } else {
@@ -274,3 +309,170 @@ returns ret (
     提成 = （成交价 -  代理价） * 提成比例
 
 **/
+
+
+
+
+/** 搜索业绩*/
+QUERY SearchAchievement (
+     user ID [$user]
+)
+returns ret (
+    user ID [$user],
+    oneSaleVolume dec(12, 2),
+    twoSaleVolume dec(12, 2),
+    threeSaleVolume dec(12, 2),
+    oneAchievement dec(12, 2),
+    twoAchievement dec(12, 2),
+    threeAchievement dec(12, 2),
+    
+    teamCount bigint,
+    innerteamCount bigint,
+    
+    customerCount bigint,
+    activeCustomerCount bigint,
+    totalOrderCount bigint,
+    totalReceivableAmount  dec(12, 2),
+    totalaWithdrawal dec(12, 2),
+    waitWithdrawal dec(12, 2),
+    level int
+
+) {
+
+    --step.1.获取团队信息
+    var teamCount bigint =0, innerteamCount bigint =0;
+    set innerteamCount =  innerteamCount , teamCount = teamCount 
+    from  SalesTeamBook where user = $user;
+    
+    --step.2.获取客户信息
+    var customerCount bigint =0, activeCustomerCount bigint=0;
+    set customerCount = customerCount 
+    from SalesCustomerBook where user = $user; 
+    --获取活跃客户
+    set activeCustomerCount= ifnull(count(1),0) 
+    from    CustomerNowSalesBOOK as cn 
+            join CustomerMyCustomerMap as cm on cn.customer = cm.customer 
+    where   cn.sales=$user;
+ 
+    --step.3.获取业绩
+    var oneSaleVolume dec(12, 2)=0, twoSaleVolume dec(12, 2)=0, threeSaleVolume dec(12, 2)=0,
+        oneAchievement dec(12, 2)=0, twoAchievement dec(12, 2)=0, threeAchievement dec(12, 2)=0, 
+        totalOrderCount bigint =0 , totalReceivableAmount dec(12, 2)=0, totalaWithdrawal dec(12, 2)=0, waitWithdrawal dec(12, 2)=0, level int ;
+
+    set     oneSaleVolume = a.oneSaleVolume, twoSaleVolume = a.twoSaleVolume, threeSaleVolume = a.threeSaleVolume,
+            oneAchievement = a.oneAchievement, twoAchievement = a.twoAchievement, threeAchievement = a.threeAchievement,
+            totalOrderCount = a.totalOrderCount, totalReceivableAmount=a.totalReceivableAmount, totalaWithdrawal = a.totalaWithdrawal, waitWithdrawal=a.waitWithdrawal, level= a.Level
+    from    SalesAchievementBook as a
+    where   a.user = user;
+ 
+    into ret select user,  
+                    oneSaleVolume,  twoSaleVolume,  threeSaleVolume,  
+                    oneAchievement,  twoAchievement,  threeAchievement, 
+                    teamCount, innerteamCount, customerCount, activeCustomerCount, 
+                    totalOrderCount, totalReceivableAmount, totalaWithdrawal, waitWithdrawal, level;
+};
+
+
+
+/** 搜索团队绩效 **/
+QUERY SearchTeamAchievement (
+    _manage ID [$user],
+    _year int,
+    _type char(10)
+)
+returns ret (
+    yeara   char(10),
+    montha  char(20),
+    endTaskCount      int,
+    sendCreditsCount  int,
+    sendPostCount     int,
+    orderCount        int,
+    saleVolume dec(12, 2)
+) {
+    if(_type = 'day'){
+        VAR calcTick INT, weekTick INT;
+        SET calcTick = unix_timestamp();
+        SET weekTick = 1*24*3600;
+
+        into ret select max(year(a.date)) as yeara ,  'day' as montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where   a.manage = _manage
+                and a.date>=FROM_UNIXTIME(calcTick - weekTick);
+    } else if(_type = 'month'){
+
+        into ret select yeara , montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where    a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara, month(a.date) as montha;
+
+        into ret select yeara , 'all' as montha , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from   Achievement as a
+        where  a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara;
+    }
+};
+
+/** 搜索团队绩效明细 **/
+QUERY SearchTeamAchievementDetail (
+    _manage ID [$user],
+    _year int,
+    _type char(10)
+)
+PAGE (
+    id bigint desc,
+    yeara   char(10),
+    montha  char(20),
+    user ID [$user],
+    endTaskCount      int,
+    sendCreditsCount  int,
+    sendPostCount     int,
+    orderCount        int,
+    saleVolume dec(12, 2)
+) {
+    if(_type = 'day'){
+
+        VAR calcTick INT, weekTick INT;
+        SET calcTick = unix_timestamp();
+        SET weekTick = 1*24*3600;
+
+        PAGE select 0 as id, max(year(a.date)) as yeara, 'day' as montha,  user, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where   a.manage = _manage
+                and a.date>=FROM_UNIXTIME(calcTick - weekTick)
+        group by a.user
+        order by sum(a.saleVolume) desc;
+
+    } else if(_type = 'all'){
+        PAGE select 0 as id,  yeara , 'all' as montha,  user  , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from   Achievement as a
+        where  a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara, a.user 
+        order by  sum(a.saleVolume)  desc ;
+    }else{
+        PAGE select  0 as id,  yeara , montha, user , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+                ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+        from    Achievement as a
+        where    a.manage = _manage and year(a.date) = _year
+        group by year(a.date) as yeara, month(a.date) as montha, a.user 
+        order by sum(a.saleVolume) desc;
+    }
+};
+
+
+QUERY SearchTaskHistoryCount (
+     user ID [$user]
+)
+returns ret (
+    counts int
+){
+
+    into ret select   count(*) as counts
+    from     TaskHistory
+    where    principal = $user;
+};
+ 

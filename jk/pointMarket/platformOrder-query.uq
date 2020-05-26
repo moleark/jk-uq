@@ -21,6 +21,27 @@ ACTION IsCanUseOrder(
     into ret select result, id;
 };
 
+/*
+ * 获取可兑换积分的订单号及其积分值
+*/
+QUERY GetOrderDrawable(
+    customer ID Customer,
+    startDate datetime,
+) 
+returns ret(
+    orderId char(50),
+    orderMaker ID Customer,
+    point dec(12, 2)
+) {
+    into ret SELECT  orderId, orderMaker, sum(p.subAmount) * 2 as point 
+    FROM    PlatformOrder as p
+    where   p.orderMaker = customer and p.mark <> 'C' 
+            and not p.orderItemId in ( select orderItemId from PlatformOrderUsed )
+            and p.CreateDate > startDate
+    group   by p.orderId as orderId, p.orderMaker as orderMaker
+    order   by sum(p.subAmount) desc limit 1;
+};
+
 QUERY GetPlatFormOrder(platformOrderId char(50))
 returns ret(
     customer ID BuyerAccount not null,
@@ -92,7 +113,8 @@ ACTION AddPlatformOrderPoint(
 
     foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myOrderMaker int, myPlatformOrderId char(50),
         mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
-        select  p.orderItemId, p.orderId, p.customer, p.orderMaker, p.platformOrderId, p.subAmount, p.amount, p.currency
+        select  p.orderItemId as myOrderItemId, p.orderId as myOrderId, p.customer as myCustomer, p.orderMaker as myOrderMaker,
+                p.platformOrderId as myPlatformOrderId, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency
         from    PlatformOrder as p
         where   p.platformOrderId = orderId and p.orderMaker = customer and p.mark<>'C'
     ) {

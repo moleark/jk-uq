@@ -15,9 +15,8 @@ MAP EmployeeRelation from JKHr (
     key parent ID employee,
     key child ID employee
 );
-
-
-
+ 
+ 
 /** 搜索员工*/
 QUERY SearchSubordinate(key char(100))
 returns ret (

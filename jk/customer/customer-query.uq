@@ -22,7 +22,7 @@ returns ret (
 ) {
    into ret select a.owner as customer
    from     Customer.Contact as a
-   where    a.content=key;
+   where    a.content = key;
 };
 
 QUERY getCustomerByNo(customerNo char(30))
@@ -57,4 +57,19 @@ returns ret (
    into ret select a.id as buyerAccount, a.organization, a.description, a.xyz, a.no, a.createTime, a.isValid
    from     BuyerAccount as a
    where    a.no = buyAccountNo and a.isValid = 1;
+};
+
+ 
+QUERY SearchDomain(
+    _parent ID Domain
+)
+PAGE (
+    id bigint desc,
+    name char(100)
+) {
+    PAGE select b.id, b.name
+    from    Domain as b
+    where   b.id < $pageStart and b.parent = _parent
+    order by b.id desc 
+    limit $pageSize;
 };

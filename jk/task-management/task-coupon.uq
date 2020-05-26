@@ -12,6 +12,24 @@ OPEN TUID Coupon (
     isValid  smallint default 1,
 );
 
+MAP VIPCardForWebUser(
+    key webuser ID [$user],
+    key sales ID [$user],
+    key vipCard ID Coupon,
+    key vipCardType ID VIPCardType,
+);
+
+MAP VIPCardDiscount(
+    key coupon ID Coupon,
+    key brand ID Brand,
+    discount dec(12, 4) not null,
+);
+
+
+MAP BottomDiscount (
+    key brand ID Brand,
+    discount dec(12, 4) not null, 
+);
 
 --优惠券订单
 MAP CouponOrderMap (
@@ -20,25 +38,32 @@ MAP CouponOrderMap (
     key webuser ID,
 );
 
+--优惠券订单
+History CouponSendHistory (
+    date,
+    coupon ID Coupon,
+    webuser ID [$user]
+);
+
 
 /** 添加优惠码*/
 ACTION CreateCoupon(
+    webUser int,
     validitydate date,
     discount dec(12, 2),
     types  char(10)
 )returns ret (
+    coupon ID Coupon,
     code char(8)
 ){
-
-    var code varchar(12), head bigint,  customer ID Customer;
+    var code varchar(12); -- , head bigint,  customer ID Customer;
     set code = ( RAND() * 100000000) + 100000000;
     set code = substr(code, 1, 8);
  
     var couponId ID;
-    TUID Coupon into couponId set user= $user, code=code, validitydate=validitydate, customer=customer,
-                discount=discount, types=types, createTime=now(), isValid=1;
-    into ret select code;
-
+    TUID Coupon into couponId set user = $user, code = code, validitydate = validitydate, customer = webUser,
+                discount = discount, types = types, createTime = now(), isValid = 1;
+    into ret select couponId as coupon, code;
 };
 
 /** 验证优惠码是否可用*/
@@ -92,9 +117,9 @@ returns ret (
     --如果是积分券 没有当前轻代理或者 当前轻代理是 0  则可以使用
     --如果是优惠券 没有当前轻代理 则可以使用
     if ( types= 'coupon' ){
-        set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser limit 1 ); --当前轻代理
+        set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser and c.validity > now() limit 1   ); --当前轻代理
     } else {
-        set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser and c.sales<>0 limit 1 ); --当前销售 
+        set nowsales = ( select c.sales from CustomerNowSalesBOOK as c where c.webuser = webUser and c.validity > now() and c.sales<>0 limit 1 ); --当前销售 
     }
 
     if ( coupon is null ) {
@@ -104,7 +129,7 @@ returns ret (
     } else if ( webUser <> webUserX) {
         set result = 3;  --不是指定的客户
     } else if (not orderX is null) {
-        set result = 4;  --已经被使用
+        set result = 4;  --当前user已经使用了该券
     } else if ( not nowsales is null and nowsales <> sales )  {
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
     } else if ( sales = $user )  {
@@ -116,8 +141,24 @@ returns ret (
 };
 
 
+/**记录发送优惠码的功能**/
+ACTION AddCouponSendHistory(
+    code char(20)
+){
+    var coupon ID Coupon;
+    set coupon = a.id from Coupon as a where a.code = code;
+    if(coupon){
+        var yeara char(10), montha char(10), daya char(10), alldate char(20);
+        set yeara =  year( now() ),  montha = month( now() ), daya = day( now() );
+         
+        book Achievement at( '2020-04-21' , 0 ,$user ) set sendCreditsCount += 1;
+        history CouponSendHistory set coupon = coupon, webUser = $user;   
+    }
+};
+
+
 /** 搜索我的优惠码*/
-QUERY SearchCoupon( key char(100))
+QUERY SearchCoupon( key char(100), types char(20))
 PAGE (
     id bigint start 0,
     code bigint,
@@ -134,6 +175,7 @@ PAGE (
     PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid
     from    Coupon as m
     where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
+            and m.types = types 
     order by m.createTime desc
     limit $pageSize;
 };

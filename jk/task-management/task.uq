@@ -76,7 +76,7 @@ TUID TaskStatus (
     unique(name),
 );
 
---任务状态
+--项目
 TUID Project (
     id,
     main name char(200),
@@ -100,7 +100,6 @@ MAP BizField (
     key task ID Task,
     key field ID Field
 );
-
 
 --任务状态记录
 BOOK TaskBook (
@@ -140,14 +139,6 @@ BOOK TaskProjectBook (
     note text,
 );
 
-
---粉丝信息自定义
-BOOK PeerAssignedBook(
-    key user ID [$user],
-    key peer ID [$user],
-    Assigned char(100),
-);
-
 --任务流转记录
 History TaskHistory (
     date,
@@ -157,6 +148,7 @@ History TaskHistory (
     resultType char(5),
     result char(1000),
 );
+ 
 
 /** 完结任务*/
 ACTION CompletionTask(
@@ -178,6 +170,8 @@ ACTION CompletionTask(
         tuid Field into fieldId unique(fieldName);
         book TaskFieldBook at(taskId, fieldId) set value=1, note = value;
     }
+
+    book Achievement at(now(),0,$user)set endTaskCount+=1; 
 };
 
 /** 完结任务--客户资料*/

@@ -22,7 +22,8 @@ returns ret(
 ) {
     Into ret select cd.brand, cd.discount as discount
     from    CustomerDiscount as cd
-    where   cd.brand = brand
+    where   cd.customer = customer
+            and cd.brand = brand
             and cd.startDate < now()
             and ( cd.endDate is null or cd.endDate > now());
 };
