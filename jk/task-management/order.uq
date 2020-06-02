@@ -55,12 +55,12 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
             var sumAgentprice dec(12, 2);
             set sumAgentprice = 0;
             foreach orderItems {
-                var agentprices dec(12, 2);
+                var agentprices dec(12, 2), discount dec(12, 4);
                 set agentprices = null;
-                foreach tb.getRetailPriceResult {
+                foreach tb.retailPriceResult {
                     if(pack = packid){
-                        var discount dec(12, 4);
-                        set a.discount = discount from BottomDiscount as a where a.brand = brand;
+                        set discount = 0;
+                        set discount = a.discount  from BottomDiscount as a where a.brand = brand;
                         set agentprices = retailPrice * ( 1 - discount );
                     }
                 }

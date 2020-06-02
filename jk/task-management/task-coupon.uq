@@ -128,7 +128,7 @@ returns ret (
         set result = 2;  --无效的优惠码
     } else if ( webUser <> webUserX) {
         set result = 3;  --不是指定的客户
-    } else if (not orderX is null) {
+    } else if (not orderX is null and types <> 'vipcard' ) {
         set result = 4;  --当前user已经使用了该券
     } else if ( not nowsales is null and nowsales <> sales )  {
         set result = 5;  --不是当前的轻代理( 有当前轻代理 和 优惠码的轻代理 不相同 )
