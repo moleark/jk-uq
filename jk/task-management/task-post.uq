@@ -17,7 +17,7 @@ ACTION AddMyCustomerPost(
 
 
 /** 搜索我的客户*/
-QUERY SearchMyCustomerByPost(key char(100), post ID POST)
+QUERY SearchMyCustomerByPost(key char(100), post ID POST, domain ID Domain)
 PAGE (
     id bigint start 0,
     unit ID MyCustomerUnit,
@@ -40,7 +40,8 @@ PAGE (
                 (select count(*) from  MyCustomerPostHistory as mp where mp.customer = c.id and mp.post = post) as sharingTimes
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
-    where   c.id > $pageStart and c.user = $user 
+            join CustomerDomain as cr on cr.customer = c.id
+    where   c.id > $pageStart and c.user = $user  and cr.domain = domain
             and c.isValid=1 and (c.name like key2 or u.name like key2 )
     limit $pageSize;
 };

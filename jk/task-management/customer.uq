@@ -99,7 +99,7 @@ TUID Department (
 );
 
 MAP CustomerDepartment (
-    key customer ID Customer,
+    key customer ID MyCustomer,
     key department ID Department
 );
 
@@ -117,8 +117,13 @@ MAP ResearchRelation (
 );
   
 MAP CustomerResearch (
-    key customer ID Customer,
+    key customer ID MyCustomer,
     key research ID Research
+);
+ 
+MAP CustomerDomain (
+    key customer ID MyCustomer,
+    key domain ID Domain
 );
  
 TUID OfficePost (
@@ -134,7 +139,7 @@ MAP OfficePostRelation (
 );
 
 MAP CustomerOfficePost (
-    key customer ID Customer,
+    key customer ID MyCustomer,
     key officpost ID OfficePost
 );
  

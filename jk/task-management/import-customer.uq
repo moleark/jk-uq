@@ -29,3 +29,9 @@ MAP OrganizationCustomer from JKCustomer(
    key organization ID Organization,
     key customer ID Customer,
 );
+
+TUID Domain  from JKcustomer (
+    id,
+    main name char(200),
+    parent ID Domain,
+);
