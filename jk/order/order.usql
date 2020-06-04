@@ -1,9 +1,9 @@
 ACCESS accOrder(Order);
 
 SHEET Order ver 0.6 (
-    webUser ID WebUser,
+    webUser ID WebUser,         -- 当前的webuser
     organization ID Organization,
-    customer ID BuyerAccount,
+    customer ID BuyerAccount,   -- webUser相关的buyerAccount
 
     ARR orderItems (
         product ID ProductX not null,
