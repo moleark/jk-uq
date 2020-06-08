@@ -1,0 +1,24 @@
+{
+    "OrderHistory": [
+       { "name": "seller", "type": "string" },
+       { "name": "salesman", "type": "id" },
+       { "name": "customer", "type": "id" },
+       { "name": "buyerAccount", "type": "id" },
+       { "name": "organization", "type": "id" },
+       { "name": "brand", "type": "id" },
+       { "name": "product", "type": "id" },
+       { "name": "pack", "type": "id" },
+       { "name": "quantity", "type": "number" },
+       { "name": "price", "type": "number" },
+       { "name": "currency", "type": "id" },
+       { "name": "retail", "type": "number" },
+       { "name": "retailCurrency", "type": "id" },
+       { "name": "有效销售额", "type": "number" },
+       { "name": "税后销售收入", "type": "number" },
+       { "name": "抵达日期", "type": "string" },
+       { "name": "createDate", "type": "string" },
+       { "name": "salesRegion", "type": "id" },
+       { "name": "orderId", "type": "string" },
+       { "name": "orderItemId", "type": "string" }
+    ]
+}

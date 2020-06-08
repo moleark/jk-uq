@@ -84,7 +84,9 @@ OPEN TUID WebUserSettingType (
     main description char(20),
 );
 
--- WebUser 和 Customer的关联关系
+/* WebUser 和 Customer的关联关系
+数据来源：1.客户审核中本人CID对应的customerid；2.现在官网ClientInfo中的CID对应的customerid
+*/
 OPEN MAP WebUserCustomer(
     key webUser ID WebUser,
     customer ID Customer,
@@ -94,6 +96,10 @@ OPEN MAP WebUserCustomer(
     }
 };
 
+/*
+WebUser 和 采购方账号 的关联关系
+数据来源：1.客户审核中的老师CID对应的customerid; 2.
+*/
 MAP WebUserBuyerAccount ver 0.02 (
     key webUser ID WebUser,
     key buyerAccount ID BuyerAccount,
