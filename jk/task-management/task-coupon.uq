@@ -148,10 +148,9 @@ ACTION AddCouponSendHistory(
     var coupon ID Coupon;
     set coupon = a.id from Coupon as a where a.code = code;
     if(coupon){
-        var yeara char(10), montha char(10), daya char(10), alldate char(20);
-        set yeara =  year( now() ),  montha = month( now() ), daya = day( now() );
-         
-        book Achievement at( '2020-04-21' , 0 ,$user ) set sendCreditsCount += 1;
+        var alldate char(20);
+        set alldate =CONCAT( year( now() ), '-' , month( now() ), '-', day( now() ) );
+        book Achievement at( alldate, 0 ,$user ) set sendCreditsCount += 1;
         history CouponSendHistory set coupon = coupon, webUser = $user;   
     }
 };

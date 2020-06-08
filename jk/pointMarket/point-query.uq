@@ -11,3 +11,30 @@ returns ret(
     FROM PointBook as p
     WHERE p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
 };
+
+
+
+QUERY GetPointHistory(
+     key char(100)
+)
+PAGE (
+    id bigint desc,
+    date DATETIME,
+    point int,
+    customer ID Customer,      
+    pointYear int,              
+    comments char(1000) ,        
+    user ID [$user],                       
+    type int                      
+){
+
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+
+    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.customer, p.pointYear, p.comments, p.user, p.type
+    from    PointHistory as p
+    where   p.user = $user and unix_timestamp(p.date) < $pageStart
+            and ( p.comments like key2 or key is null )
+    order by  unix_timestamp(p.date) desc
+    limit $pageSize;
+};

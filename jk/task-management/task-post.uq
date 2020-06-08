@@ -1,6 +1,7 @@
 
 History MyCustomerPostHistory(
     date,
+    sales ID [$user],
     customer ID MyCustomer,
     post ID POST
 );
@@ -10,9 +11,8 @@ ACTION AddMyCustomerPost(
         customer ID MyCustomer,
         post ID POST
 ){
-
-     book Achievement at( now(), 0 ,$user ) set sendCreditsCount += 1;
-     history MyCustomerPostHistory set customer=customer, post = post;
+    book Achievement at( now(), 0 ,$user ) set sendPostCount += 1;
+    history MyCustomerPostHistory set sales = $user, customer=customer, post = post;
 };
 
 
@@ -40,8 +40,8 @@ PAGE (
                 (select count(*) from  MyCustomerPostHistory as mp where mp.customer = c.id and mp.post = post) as sharingTimes
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
-            join CustomerDomain as cr on cr.customer = c.id
-    where   c.id > $pageStart and c.user = $user  and cr.domain = domain
+            left join CustomerDomain as cr on cr.customer = c.id
+    where   c.id > $pageStart and c.user = $user and (cr.domain = domain or ifnull(domain,0) = 0)
             and c.isValid=1 and (c.name like key2 or u.name like key2 )
     limit $pageSize;
 };
