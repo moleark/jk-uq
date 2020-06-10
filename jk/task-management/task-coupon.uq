@@ -179,3 +179,14 @@ PAGE (
     limit $pageSize;
 };
 
+
+/** 搜索我的优惠码*/
+QUERY SearchBottomDiscount()
+returns ret (
+    brand ID Brand,
+    discount dec(12, 4) 
+){
+    into ret select m.brand, m.discount
+    from    BottomDiscount as m
+    order by case when m.brand in (1565,18 ,71) then 0 else 1 end, m.brand;
+};

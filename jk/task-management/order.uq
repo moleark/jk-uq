@@ -62,6 +62,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
                         set discount = 0;
                         set discount = a.discount  from BottomDiscount as a where a.brand = brand;
                         set agentprices = retailPrice * ( 1 - discount );
+                        set agentprices = case when price < agentprices then price else agentprices end;
                     }
                 }
                 --如果没有获取代理价则代理价等于销售价格
