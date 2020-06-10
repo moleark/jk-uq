@@ -14,3 +14,18 @@ Action submit {
 
     STATE TO END;
 };
+
+
+
+QUERY chekIsSignin()
+returns ret (
+    result int           
+){
+    var alldate char(20);
+    set alldate =CONCAT( year( now() ), '-' , month( now() ), '-', day( now() ) );
+    if exists( select 1 from PointHistory as a where a.type = 85 and a.date > alldate ){
+        into ret select 1 as result;
+    }else{
+        into ret select 0 as result;
+    }
+};
