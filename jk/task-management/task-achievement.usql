@@ -400,7 +400,7 @@ returns ret (
         where   a.manage = _manage
                 and a.date>=FROM_UNIXTIME(calcTick - weekTick);
     } else if(_type = 'month'){
-
+ 
         into ret select yeara , montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
@@ -457,7 +457,7 @@ PAGE (
         PAGE select  0 as id,  yeara , montha, user , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
-        where    a.manage = _manage and year(a.date) = _year
+        where    a.manage = _manage and year(a.date) = _year and month(a.date) = _type
         group by year(a.date) as yeara, month(a.date) as montha, a.user 
         order by sum(a.saleVolume) desc;
     }

@@ -1,6 +1,7 @@
  
 --签到表单
 SHEET SigninSheet ver 0.1 (
+    wwebuser ID [$user],                   --客户编号
     customer ID Customer,                   --客户编号
     amount int not null,                    --积分
 )
@@ -10,7 +11,7 @@ Action submit {
     set pointYear = year(now());
     book PointBook at (customer, pointYear) set tempUsedPoint += amount;
     history PointHistory
-        set customer = customer,  pointYear = pointYear, point = amount, comments=$sheet_no;
+        set customer = customer,  pointYear = pointYear, point = amount, user = wwebuser, comments=$sheet_no;
 
     STATE TO END;
 };

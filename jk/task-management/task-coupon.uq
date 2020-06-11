@@ -188,5 +188,6 @@ returns ret (
 ){
     into ret select m.brand, m.discount
     from    BottomDiscount as m
-    order by case when m.brand in (1565,18 ,71) then 0 else 1 end, m.brand;
+            left join Brand as b on m.brand = b.id 
+    order by case when m.brand in (1565,18 ,71) then 0 else 1 end, b.name;
 };
