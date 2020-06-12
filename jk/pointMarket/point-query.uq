@@ -40,7 +40,7 @@ PAGE (
 };
 
 
-QUERY chekIsSignin()
+QUERY checkIsSignin()
 returns ret (
     result int           
 ){
