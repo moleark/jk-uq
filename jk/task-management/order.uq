@@ -79,7 +79,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
                 PENDING CustomerOrderPending + ( sales:sales, webuser:webuser, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice, types:types ) to pid;
 
                 --如果是积分码则发送BUS到老系统里
-                if( types = 'credits' ){
+                if( types in( 'credits', 'coupon' ) ){
                     bus salesTaskBus.orderOWner set order=no, sales=sales;
                 }
             } 

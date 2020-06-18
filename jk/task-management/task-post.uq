@@ -31,13 +31,17 @@ PAGE (
     birthDay date,
     email char(30),
     wechat char(20),
-    sharingTimes int
+    sharingTimes int,
+    sharingCount int
 ) {
-    var key2 char(102);
+    var key2 char(102), startdate DATE ;
     set key2 = concat('%', key, '%');
+    set startdate = DATE( dateadd(week, -1, NOW() ) );
+
     PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, 
                 c.mobile, c.gender, c.birthDay, c.email, c.wechat,
-                (select count(*) from  MyCustomerPostHistory as mp where mp.customer = c.id and mp.post = post) as sharingTimes
+                (select count(1) from  MyCustomerPostHistory as mp where mp.customer = c.id and mp.post = post) as sharingTimes,
+                (select count(1) from  MyCustomerPostHistory as mp where mp.customer = c.id and mp.date >= startdate ) as sharingCount
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
             left join CustomerDomain as cr on cr.customer = c.id

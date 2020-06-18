@@ -390,15 +390,16 @@ returns ret (
     saleVolume dec(12, 2)
 ) {
     if(_type = 'day'){
-        VAR calcTick INT, weekTick INT;
-        SET calcTick = unix_timestamp();
-        SET weekTick = 1*24*3600;
+      
+        var startdate DATE;
+        set startdate = DATE( NOW() );
 
         into ret select max(year(a.date)) as yeara ,  'day' as montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
         where   a.manage = _manage
-                and a.date>=FROM_UNIXTIME(calcTick - weekTick);
+                and a.date>=startdate;
+                
     } else if(_type = 'month'){
  
         into ret select yeara , montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount

@@ -44,9 +44,8 @@ QUERY checkIsSignin()
 returns ret (
     result int           
 ){
-    var alldate char(20);
-    set alldate =CONCAT( year( now() ), '-' , month( now() ), '-', day( now() ) );
-    if exists( select 1 from PointHistory as a where a.type = 85 and a.date > alldate ){
+
+    if exists( select 1 from PointHistory as a where a.user = $user and DATE( a.date ) =  DATE( NOW() ) ){
         into ret select 1 as result;
     }else{
         into ret select 0 as result;
