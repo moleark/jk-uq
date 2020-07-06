@@ -2,13 +2,59 @@
 
 Action Signin(
     webuser ID [$user],    --客户编号
-    customer ID Customer,   --客户编号
     amount int not null     --积分
 ){
 
     var pointYear int;
     set pointYear = year(now());
-    book PointBook at (customer, pointYear) set tempPoint += amount;
+    book PointBook at (webuser, pointYear) set tempPoint += amount;
     history PointHistory
-        set customer = customer,  pointYear = pointYear, point = amount comments='签到';
+        set webUser = webuser,  pointYear = pointYear, source = 2, point = amount comments='签到';
 };
+
+
+
+-- 积分券匹配订单
+ACTION MatchingOrderPoint(
+    orderId     char(100),
+    couponId    char(100),
+    customer ID Customer
+ )returns ret(
+    result  bigint --返回结果
+){
+    var result      bigint,
+        point       int,
+        pointYear   int,
+        amount      dec(12, 2),
+        orderMaker  int,
+        currency    int,
+        innerOrderId char(50);
+    set pointYear = YEAR(NOW()), point = 0, amount = 0, orderMaker = 0;
+
+    foreach (var orderItemId char(50), myOrderMaker int, mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
+        select  p.orderItemId, p.orderMaker as myOrderMaker, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency
+        from    PointShopOrder as p
+        where   p.orderId = orderId and p.orderMaker = customer and p.mark<>'C'
+    ) {
+        set point = point + mySubamount;
+        set amount = amount + mySubamount;
+        set orderMaker = myOrderMaker;
+        set currency = myCurrency;      
+    }
+    
+    delete from WebUserCredits where webUser = $user and credits = couponId;
+    book WebUserCreditsUsed at ($user, couponId, orderId ) set  usedDate = now();
+    book PointBook at ( $user, pointYear) set tempPoint += point;
+    delete from PointShopOrder where orderId = orderId and orderMaker = customer;
+
+    bus pointShopBus.creditsOrderMatched
+        set orderId = orderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
+
+    bus pointShopBus.couponUsed
+        set orderId = orderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
+
+    set result = 1;
+    into ret select result;
+};
+
+ 

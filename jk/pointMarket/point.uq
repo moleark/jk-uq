@@ -10,8 +10,8 @@ MAP PointProduct (
 
 --积分明细表
 BOOK PointBook (
-    key customer ID Customer,   -- 客户编号，不是webuser
-    key pointYear int not null,          -- 积分所在年度
+    key webUser ID [$user],                 -- 是webuser
+    key pointYear int not null,             -- 积分所在年度
     point int not null default 0,           -- 总有效积分
     usedPoint int default 0,                -- 消耗的积分
     totalPoint int not null default 0,      -- 总积分
@@ -19,14 +19,23 @@ BOOK PointBook (
     tempUsedPoint int not null default 0    -- 在tonva系统消耗的临死积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
 );
 
+--积分明细（备份，当审核通过时吧这个积分记录复制到 PointBook ）
+BOOK PointBookByCustomer (
+    key customer ID Customer,   -- 客户编号，不是webuser
+    key pointYear int not null,             -- 积分所在年度
+    point int not null default 0,           -- 总有效积分
+    usedPoint int default 0,                -- 消耗的积分
+    totalPoint int not null default 0      -- 总积分
+);
+
 --积分变化表
 HISTORY PointHistory (
     date,                       --生成时间
-    customer ID Customer,       --客户
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    comments char(1000) ,        --备注
-    user,                       --当前登录人
+    source int,                 --积分来源
+    comments char(1000) ,       --备注
+    webUser ID [$user],         --客户
     sheet,                      --单据
     type,                       --不同的sheet类型
     row,                        --子表的第几行
@@ -59,7 +68,7 @@ Action submit {
         foreach (var mPoint int, mUsedPoint int, tempUsedPoint int, pointYear int of
             select  p.point as mPoint, p.usedPoint as mUsedPoint, p.tempUsedPoint, p.pointYear
             from    PointBook as p
-            where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3
+            where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
                     and (p.point - p.usedPoint - p.tempUsedPoint) > 0
             order by p.pointYear
         ) {
@@ -73,7 +82,7 @@ Action submit {
 
                 book PointBook at (customer, pointYear) set tempUsedPoint += p;
                 history PointHistory
-                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no;
+                    set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no;
 
                 set leftAmount = leftAmount - p;
                 if(leftAmount <= 0){
@@ -94,7 +103,7 @@ PENDING PlatformOrderPending (
     currency ID Currency,                   --币种
     date,
 );
-
+ 
 MAP PlatformOrder (
     key orderItemId char(50),
     orderId char(50),
@@ -116,6 +125,7 @@ MAP PlatformOrder (
     index idx_ordermaker,
 );
 
+ 
 MAP PlatformOrderUsed (
     key orderItemId char(50),
     orderId char(50),
@@ -125,6 +135,26 @@ MAP PlatformOrderUsed (
     amount dec(12, 2),
     currency ID Currency,
     coupon int,
+);
+ 
+
+MAP PointShopOrder (
+    key orderItemId char(50),
+    orderId char(50),
+    customer ID BuyerAccount not null,
+    orderMaker ID Customer,
+    description char(1000),
+    descriptionC char(1000),
+    radiox dec(12, 2),
+    radioy dec(12, 4),
+    unit char(10),
+    quantity int,
+    price dec(12, 2),
+    subAmount dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
+    mark char(10),
+    createDate datetime,
 );
 
 MAP CustomerCoupon (
@@ -145,5 +175,6 @@ MAP WebUserCredits (
 MAP WebUserCreditsUsed (
     key webUser ID WebUser,     -- WebUser编号，不是Customer
     key credits int not null,
+    key saleOrder char(50),
     usedDate date,
 );

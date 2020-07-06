@@ -1,17 +1,18 @@
-QUERY getPoints(customer ID Customer)
+QUERY getPoints(
+    webuser ID [$user]
+)
 returns ret(
     totalLeftPoint int,
     effectiveLeftPoint int,
     usedPoint int,
     pointYear int
 ) {
-    into ret SELECT (p.totalPoint + p.tempPoint - p.usedPoint - p.tempUsedPoint) as totalLeftPoint,
-            (p.point + p.tempPoint - p.usedPoint - p.tempUsedPoint) as effectiveLeftPoint,
+    into ret SELECT (p.totalPoint + p.tempPoint * 2 - p.usedPoint - p.tempUsedPoint) as totalLeftPoint,
+            (p.point + p.tempPoint * 2 - p.usedPoint - p.tempUsedPoint) as effectiveLeftPoint,
             p.usedPoint, p.pointYear
     FROM PointBook as p
-    WHERE p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
+    WHERE p.webUser = webuser and p.pointYear > YEAR(NOW()) - 3;
 };
-
 
 
 QUERY GetPointHistory(
@@ -21,20 +22,39 @@ PAGE (
     id bigint desc,
     date DATETIME,
     point int,
-    customer ID Customer,      
     pointYear int,              
     comments char(1000) ,        
-    user ID [$user],                       
-    type int                      
+    webUser ID [$user],                       
+    type int,
+    source int                      
 ){
-
     var key2 char(102);
     set key2 = concat('%', key, '%');
 
-    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.customer, p.pointYear, p.comments, p.user, p.type
+    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.webUser, p.type, p.source
     from    PointHistory as p
-    where   p.user = $user and unix_timestamp(p.date) < $pageStart
+    where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
             and ( p.comments like key2 or key is null )
+    order by  unix_timestamp(p.date) desc
+    limit $pageSize;
+};
+
+
+QUERY GetPointSigninHistory()
+PAGE (
+    id bigint desc,
+    date DATETIME,
+    point int,
+    pointYear int,              
+    comments char(1000) ,        
+    webUser ID [$user],                       
+    type int,
+    source int
+){
+    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.webUser, p.type, p.source
+    from    PointHistory as p
+    where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
+            and p.source = 2
     order by  unix_timestamp(p.date) desc
     limit $pageSize;
 };
@@ -45,7 +65,7 @@ returns ret (
     result int           
 ){
 
-    if exists( select 1 from PointHistory as a where a.user = $user and DATE( a.date ) =  DATE( NOW() ) ){
+    if exists( select 1 from PointHistory as a where a.source = 2 and a.webUser = $user and DATE( a.date ) =  DATE( NOW() ) ){
         into ret select 1 as result;
     }else{
         into ret select 0 as result;

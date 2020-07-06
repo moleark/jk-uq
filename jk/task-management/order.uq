@@ -96,7 +96,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
 
 
 BUS pointShopbus ver 0.4 from [百灵威系统工程部]/pointShop
-    ACCEPT couponUsed (
+    ACCEPT creditsOrderMatched (
         orderId, webUser, customer, amount, currency, point, coupon
     ){
        --step.1.获取优惠码所属销售和类型， 没有优惠码获取客户当前轻代理和关联类型

@@ -82,6 +82,12 @@ TUID Project (
     main name char(200),
 );
 
+MAP TaskOrder  (
+    key task ID Task,
+    key ordertype char(50),
+    key orderid char(50)
+);
+
 --业务类型关系
 MAP TaskBiz (
     key type ID TaskType,
