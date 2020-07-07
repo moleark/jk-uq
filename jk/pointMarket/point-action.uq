@@ -16,9 +16,10 @@ Action Signin(
 
 -- 积分券匹配订单
 ACTION MatchingOrderPoint(
-    orderId     char(100),
-    couponId    char(100),
-    customer ID Customer
+    _orderId     char(100),
+    _webuser     ID [$user],
+    _customer    ID Customer,
+    _createDate  datetime
  )returns ret(
     result  bigint --返回结果
 ){
@@ -29,29 +30,35 @@ ACTION MatchingOrderPoint(
         orderMaker  int,
         currency    int,
         innerOrderId char(50);
-    set pointYear = YEAR(NOW()), point = 0, amount = 0, orderMaker = 0;
+    set pointYear = YEAR(NOW()), point = 0, amount = 0;
 
     foreach (var orderItemId char(50), myOrderMaker int, mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
         select  p.orderItemId, p.orderMaker as myOrderMaker, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency
         from    PointShopOrder as p
-        where   p.orderId = orderId and p.orderMaker = customer and p.mark<>'C'
+        where   p.orderId = _orderId and p.orderMaker = _customer and p.mark<>'C'
     ) {
         set point = point + mySubamount;
         set amount = amount + mySubamount;
-        set orderMaker = myOrderMaker;
         set currency = myCurrency;      
     }
     
-    delete from WebUserCredits where webUser = $user and credits = couponId;
-    book WebUserCreditsUsed at ($user, couponId, orderId ) set  usedDate = now();
-    book PointBook at ( $user, pointYear) set tempPoint += point;
-    delete from PointShopOrder where orderId = orderId and orderMaker = customer;
-
+    var couponId int = 0;
+    set     couponId = a.credits 
+    from    WebUserCredits as a 
+    where   a.webuser = _webuser and a.createDate <= _createDate and a.expiredDate >= _createDate
+    limit 1;
+    
+    if(couponId <> 0 ){
+        delete from WebUserCredits where webUser = _webuser and credits = couponId;
+        book WebUserCreditsUsed at (_webuser, couponId, _orderId ) set  usedDate = now();
+        book PointBook at (_webuser, pointYear) set tempPoint += point;
+        bus pointShopBus.couponUsed
+            set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency, point = point, coupon = couponId;
+    }
+    
+    delete from PointShopOrder  where orderId = _orderId and  orderMaker = _customer;
     bus pointShopBus.creditsOrderMatched
-        set orderId = orderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
-
-    bus pointShopBus.couponUsed
-        set orderId = orderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
+        set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency, point = point, coupon = couponId;
 
     set result = 1;
     into ret select result;
