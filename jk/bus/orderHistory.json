@@ -1,7 +1,10 @@
 {
     "OrderHistory": [
+       { "name": "orderId", "type": "string" },
+       { "name": "orderItemId", "type": "string" },
        { "name": "seller", "type": "string" },
        { "name": "salesman", "type": "id" },
+       { "name": "salesRegion", "type": "id" },
        { "name": "customer", "type": "id" },
        { "name": "buyerAccount", "type": "id" },
        { "name": "organization", "type": "id" },
@@ -13,12 +16,12 @@
        { "name": "currency", "type": "id" },
        { "name": "retail", "type": "number" },
        { "name": "retailCurrency", "type": "id" },
+       { "name": "bottomPrice", "type": "number" },
+       { "name": "bottomPriceCurrency", "type": "id" },
        { "name": "有效销售额", "type": "number" },
        { "name": "税后销售收入", "type": "number" },
-       { "name": "抵达日期", "type": "string" },
-       { "name": "createDate", "type": "string" },
-       { "name": "salesRegion", "type": "id" },
-       { "name": "orderId", "type": "string" },
-       { "name": "orderItemId", "type": "string" }
+       { "name": "抵达日期", "type": "number" },
+       { "name": "mark", "type": "string" },
+       { "name": "createDate", "type": "number" }
     ]
 }

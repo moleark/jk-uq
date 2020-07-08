@@ -1,7 +1,9 @@
 BUS orderBus from [百灵威系统工程部]/[order]
     ACCEPT orderHistory {
-        history orderHistory set seller = seller, salesman = salesman, customer = customer, buyerAccount = buyerAccount,
-        organization = organization, brand = brand, product = product, pack = pack,
+        book orderBook at(orderItemId) set orderId = orderId, seller = seller, salesman = salesman, salesRegion = salesRegion,
+        customer = customer, buyerAccount = buyerAccount, organization = organization, 
+        brand = brand, product = product, pack = pack,
         quantity = quantity, price = price, currency = currency, retail = retail, retailCurrency = retailCurrency,
-        有效销售额 = 有效销售额, 抵达日期 = 抵达日期, createDate = createDate, orderId = orderId, orderItemId = orderItemId;
+        bottomPrice = bottomPrice, bottomPriceCurrency = bottomPriceCurrency,
+        有效销售额 = 有效销售额, 税后销售收入 = 税后销售收入, 抵达日期 = 抵达日期, mark = mark, createDate = createDate;
     };
