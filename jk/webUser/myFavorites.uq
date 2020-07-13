@@ -1,0 +1,6 @@
+MAP myFavorites(
+    key webUser ID WebUser,
+    key product ID ProductX not null,
+    key pack OF product.PackX not null,
+    date datetime not null,
+);
