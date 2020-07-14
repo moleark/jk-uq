@@ -1,0 +1,106 @@
+BOOK BulkInquiryBook (
+    key inquiryItemId char(50),
+    inquiryId char(50) not null,
+
+    seller char(10), -- 销售主体
+    salesman ID Employee, -- 销售人员
+    salesRegion ID SalesRegion,
+    
+    customer ID Customer,
+    organization ID Organization,
+
+    -- 需求
+    iBrand ID Brand,
+    iBrandName char(50),
+    iProduct char(50),
+    iChemical ID Chemical,
+    iCAS char(20),
+    iOrigin char(50),
+    iDescription char(1000) null,
+    iDescriptionC char(1000) null,
+    iPurity char(80),
+
+    iPack char(50),
+    iRadiox dec(12, 2),
+    iRadioy dec(12, 2),
+    iUnit char(10), 
+
+    iQuantity int,
+    targetPrice dec(12, 2),
+    targetPriceCurrency ID Currency,
+    competePrice dec(12, 2),
+    competePriceCurrency ID Currency,
+    -- 要求报价时间
+    iIsValid char(5),
+    iCreateDate bigint,
+
+    -- 资源报价 
+    quotationItemID char(50),
+    qBrand ID Brand,
+    qBrandName char(50),
+    qProduct char(50),
+    qChemical ID Chemical,
+    qCAS char(20),
+    qOrigin char(50),
+    qDescription char(1000) null,
+    qDescriptionC char(1000) null,
+    qPurity char(80),
+
+    qPack char(50),
+    qRadiox dec(12, 2),
+    qRadioy dec(12, 2),
+    qUnit char(10), 
+
+    qQuantity int, 
+
+    -- 销售给客户报价
+    salesPrice dec(12, 2),
+    salesPriceCurrency ID Currency,
+    freight dec(12, 2),
+    packingCharge dec(12, 2),
+    minDeliveryTime int,
+    maxDeliveryTime int,
+    deliveryTimeUnit char(10),
+    deliveryTimeDescription char(50),
+    validUpTo bigint,
+
+    qCreateDate bigint,
+
+    -- 成交时间及订单id
+    orderItemId char(50),
+
+    -- 丢单时间及原因
+    lost int,
+    lostComments char(100)
+);
+
+/*
+    rsSupplier char(10),
+    rsSupplierName char(50),
+    rsBrand ID Brand,
+    rsProduct char(50), 
+    rsChemical ID Chemical,
+    rsCAS char(20),
+    rsOrigin char(50),
+    rsDescription char(1000) null,
+    rsDescriptionC char(1000) null,
+    rsPurity char(80),
+
+    rsPack  char(50),
+    rsRadiox dec(12, 2),
+    rsRadioy dec(12, 2),
+    rsUnit char(10), 
+
+    rsQuantity int,
+    rsQuotedPrice dec(12, 2),
+    rsQuotedCurrency ID Currency,
+    -- 包含各种费用？
+    rsCreator ID Employee,
+    rsQuotedDate bigint,
+
+    -- 财务报价
+    fiBottomPrice dec(12, 2),
+    fiSuggestPrice dec(12, 2),
+    fiCurrency ID Currency,
+    fiQuotedDate bigint,
+*/

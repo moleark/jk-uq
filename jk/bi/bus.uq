@@ -7,3 +7,24 @@ BUS orderBus from [百灵威系统工程部]/[order]
         bottomPrice = bottomPrice, bottomPriceCurrency = bottomPriceCurrency,
         有效销售额 = 有效销售额, 税后销售收入 = 税后销售收入, 抵达日期 = 抵达日期, mark = mark, createDate = createDate;
     };
+
+BUS bulkInquiryBus from [百灵威系统工程部]/[inquiry]
+    ACCEPT bulkInquiryBook{
+        book bulkInquiryBook at(inquiryItemId) set inquiryId = inquiryId, salesman = salesman
+        customer = customer, organization = organization, 
+        iBrand = iBrand, iBrandName = iBrandName, iProduct = iProduct, iChemical = iChemical, iCAS = iCAS, iOrigin = iOrigin,
+        iDescription = iDescription, iDescriptionC = iDescriptionC, iPurity = iPurity, 
+        iPack = iPack, iRadiox = iRadiox, iRadioy = iRadioy iUnit = iUnit, iQuantity = iQuantity, 
+        targetPrice = targetPrice, targetPriceCurrency = targetPriceCurrency, competePrice = competePrice, competePriceCurrency = competePriceCurrency,
+        iIsValid = iIsValid, iCreateDate = iCreateDate,
+
+        quotationItemID = quotationItemID,
+        qBrand = qBrand, qBrandName = qBrandName, qProduct = qProduct, qChemical = qChemical, qCAS = qCAS, qOrigin = qOrigin,
+        qDescription = qDescription, qDescriptionC = qDescriptionC, qPurity = qPurity, 
+        qPack = qPack, qRadiox = qRadiox, qRadioy = qRadioy qUnit = qUnit, qQuantity = qQuantity, 
+        salesPrice = salesPrice, salesPriceCurrency = salesPriceCurrency, freight = freight, packingCharge = packingCharge,
+        minDeliveryTime = minDeliveryTime, maxDeliveryTime = maxDeliveryTime, deliveryTimeUnit = deliveryTimeUnit, deliveryTimeDescription = deliveryTimeDescription,
+        validUpTo = validUpTo, qCreateDate = qCreateDate,
+
+        orderItemId = orderItemId, lost = lost, lostComments = lostComments;
+    };
