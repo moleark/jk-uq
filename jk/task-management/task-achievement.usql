@@ -151,12 +151,13 @@ returns ret (
         }
 
         --step.1.3.记账:如果是积分码 则只记录合同个数
-        if( coupontype = 'credits' ){
+
+        if exists( select 1 from WebUserEmployeeMap as a where a.webuser = $user ){
             --更新总销售额，A类绩效
             book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=0, totalOrderCount += 1;
             book Achievement at( now(), 0 ,$user ) set orderCount +=1,  saleVolume+=sumprice;
             --记录A类绩效历史
-            history AchievementHistory set sales=sales, webuser=webuser, amount=0, types=1, order=order, orderno=orderno, ordertype='credits', price=price, agentprices=agentprices;
+            history AchievementHistory set sales=sales, webuser=webuser, amount=0, types=1, order=order, orderno=orderno, ordertype = coupontype, price=price, agentprices=agentprices;
         } else {
             --更新总销售额，A类绩效
             book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement, totalOrderCount += 1;

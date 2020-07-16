@@ -8,8 +8,8 @@ returns ret(
     pointYear int
 ) {
     into ret SELECT (p.totalPoint + p.tempPoint * 2 - p.usedPoint - p.tempUsedPoint) as totalLeftPoint,
-            (p.point + p.tempPoint * 2 - p.usedPoint - p.tempUsedPoint) as effectiveLeftPoint,
-            p.usedPoint, p.pointYear
+                    (p.point + p.tempPoint * 2 - p.usedPoint - p.tempUsedPoint) as effectiveLeftPoint,
+                    p.usedPoint, p.pointYear
     FROM PointBook as p
     WHERE p.webUser = webuser and p.pointYear > YEAR(NOW()) - 3;
 };

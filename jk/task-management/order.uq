@@ -107,7 +107,7 @@ BUS pointShopbus ver 0.4 from [百灵威系统工程部]/pointShop
                     types = c.types
             from    Coupon as c
             where   c.id = coupon and c.types='credits';
-        }else if(not customer is null ){
+        } else if(not customer is null ){
             set     sales = a.sales, types = a.types 
             from    CustomerNowSalesBOOK as a 
             where   a.customer = customer and a.types='credits';

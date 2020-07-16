@@ -18,8 +18,7 @@ Action Signin(
 ACTION MatchingOrderPoint(
     _orderId     char(100),
     _webuser     ID [$user],
-    _customer    ID Customer,
-    _createDate  datetime
+    _customer    ID Customer
  )returns ret(
     result  bigint --返回结果
 ){
@@ -29,23 +28,25 @@ ACTION MatchingOrderPoint(
         amount      dec(12, 2),
         orderMaker  int,
         currency    int,
-        innerOrderId char(50);
+        createDate  datetime;
     set pointYear = YEAR(NOW()), point = 0, amount = 0;
 
-    foreach (var orderItemId char(50), myOrderMaker int, mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
-        select  p.orderItemId, p.orderMaker as myOrderMaker, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency
+    foreach (var orderItemId char(50), myOrderMaker int, mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int, myCreateDate datetime of
+        select  p.orderItemId, p.orderMaker as myOrderMaker, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency, p.createDate as  myCreateDate
         from    PointShopOrder as p
         where   p.orderId = _orderId and p.orderMaker = _customer and p.mark<>'C'
     ) {
         set point = point + mySubamount;
         set amount = amount + mySubamount;
-        set currency = myCurrency;      
+        set currency = myCurrency;  
+        set createDate = myCreateDate;    
     }
     
     var couponId int = 0;
     set     couponId = a.credits 
     from    WebUserCredits as a 
-    where   a.webuser = _webuser and a.createDate <= _createDate and a.expiredDate >= _createDate
+    where   a.webuser = _webuser and a.createDate <= createDate and a.expiredDate >= createDate
+    order by a.createDate
     limit 1;
     
     if(couponId <> 0 ){
