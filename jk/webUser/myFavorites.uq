@@ -4,3 +4,48 @@ MAP myFavorites(
     key pack OF product.PackX not null,
     date datetime not null,
 );
+
+QUERY getMyFavirates(webUser ID WebUser)
+PAGE (
+    seq bigint asc,
+    id ID ProductX,
+    no char(20),
+    brand ID Brand,
+    origin char(50),
+    description char(1000),
+    descriptionC char(1000),
+    imageUrl char(200),
+    chemical ID Chemical,
+    CAS char(20),
+    purity char(80),
+    molecularFomula char(200),
+    molecularWeight char(30),
+    discountinued tinyint
+) {
+    /-mysql
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_getMyFavirates`;
+    CREATE TEMPORARY TABLE `_$page_getMyFavirates` ( `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `product` BIGINT NOT NULL, `discountinued` TINYINT NOT NULL) ENGINE=MyISAM;
+
+    insert into `_$page_getMyFavirates`(`product`, `discountinued`)
+    select  f.product, isnull(pca.product) as discountinued
+    from    tv_myfavorites as f
+            left join `product$test`.`tv_productcache` as pca on pca.`$unit` = f.`$unit` and pca.product = f.product
+    where   f.$unit = `_$unit` and f.webUser = `_webUser` 
+    order by f.`date` desc
+    limit 1200;
+
+    INSERT  INTO `_$page` (`id`, `no`, `brand`, `origin`, `description`, `descriptionc`, `imageurl`, `chemical`, `cas`
+            , `purity`, `molecularfomula`, `molecularweight`, `discountinued`, `seq`)
+    SELECT  p.`id`, p.`no` AS `no`, p.`brand` AS `brand`, p.`origin` AS `origin`, p.`description` AS `description`
+            , p.`descriptionc` AS `descriptionc`, p.`imageurl` AS `imageurl`, pc.`chemical` AS `chemical`, pc.`cas` AS `cas`
+            , pc.`purity` AS `purity`, pc.`molecularfomula` AS `molecularfomula`, pc.`molecularweight` AS `molecularweight`
+            , pp.`discountinued`, pp.`id` as `seq`
+    from    `_$page_getMyFavirates` as pp
+            inner join `product$test`.`tv_productx` as p on p.`$unit` = `_$unit` and p.id = pp.product
+            left join `product$test`.`tv_brand` as b on p.`$unit` = b.`$unit` and p.brand = b.id
+            left join `product$test`.`tv_productchemical` as pc on p.`$unit` = pc.`$unit` and p.id = pc.product
+    where   1 = 1 and pp.id > `_$pagestart`
+    limit   `_$pagesize`;
+    -/
+};
