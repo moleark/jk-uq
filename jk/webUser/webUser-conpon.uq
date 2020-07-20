@@ -12,15 +12,15 @@ PAGE (
     DROP TEMPORARY TABLE IF EXISTS `_$page_getMyExpiredCoupon`;
     CREATE TEMPORARY TABLE `_$page_getMyExpiredCoupon` ( 
         `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
-        `couponid` BIGINT NOT NULL, 
+        `coupon` BIGINT NOT NULL, 
         `createdate` date,
         `expireddate` date) ENGINE=MyISAM;
 
-    insert into `_$page_getExpiredCoupon`(`couponid`, `createdate`, `expireddate`)
+    insert into `_$page_getExpiredCoupon`(`coupon`, `createdate`, `expireddate`)
     select  t.coupon, t.createdate, t.expireddate
     from    (
                 select coupon, createdate, expireddate from tv_webusercoupon
-                where   unit = `_$unit` and webUser = `_webUser` and expireddate < now()
+                where   $unit = `_$unit` and webUser = `_webUser` and expireddate < now()
                 union
                 select credits, createdate, expireddate from pointshop$test.tv_webusercredits
                 where   webUser = `_webUser` and expireddate < now()
@@ -29,11 +29,11 @@ PAGE (
     limit 1200;
 
     INSERT  INTO `_$page` (`id`, `code`, `types`, `createdate`, `expireddate`, `seq`)
-    SELECT  p.`couponid` as `id`, c.`code` as `code`, p.`types` AS `types`, p.`createdate` AS `createdate`, p.`expireddate` AS `expireddate`
-            , pp.`id` as `seq`
-    from    `_$page_getMyExpiredCoupon` as pp
-            inner join `salestask$test`.tv_coupon as c on pp.couponid = c.id
-    where   1 = 1 and pp.id > `_$pagestart`
+    SELECT  p.`coupon` as `id`, c.`code` as `code`, c.`types` AS `types`, p.`createdate` AS `createdate`, p.`expireddate` AS `expireddate`
+            , p.`id` as `seq`
+    from    `_$page_getMyExpiredCoupon` as p
+            inner join `salestask$test`.tv_coupon as c on p.coupon = c.id
+    where   1 = 1 and p.id > `_$pagestart`
     limit   `_$pagesize`;
     -/
 };
@@ -54,11 +54,11 @@ PAGE (
         `coupon` BIGINT NOT NULL, 
         `useddate` date) ENGINE=MyISAM;
 
-    insert into `_$page_getUsedCoupon`(`coupon`, `useddate`)
+    insert into `_$page_getMyUsedCoupon`(`coupon`, `useddate`)
     select  t.coupon, t.useddate
     from    (
                 select coupon, useddate from tv_webusercouponused
-                where   unit = `_$unit` and webUser = `_webUser`
+                where   webUser = `_webUser`
                 union
                 select credits, useddate from pointshop$test.tv_webusercreditsused
                 where   webUser = `_webUser`
@@ -67,11 +67,11 @@ PAGE (
     limit 1200;
 
     INSERT  INTO `_$page` (`id`, `code`, `types`, `useddate`, `seq`)
-    SELECT  p.`coupon` as `id`, c.`code` as `code`, p.`types` AS `types`, p.`useddate` AS `useddate`
-            , pp.`id` as `seq`
-    from    `_$page_getUsedCoupon` as pp
-            inner join `salestask$test`.tv_coupon as c on pp.couponid = c.id
-    where   1 = 1 and pp.id > `_$pagestart`
+    SELECT  p.`coupon` as `id`, c.`code` as `code`, c.`types` AS `types`, p.`useddate` AS `useddate`
+            , p.`id` as `seq`
+    from    `_$page_getMyUsedCoupon` as p
+            inner join `salestask$test`.tv_coupon as c on p.coupon = c.id
+    where   1 = 1 and p.id > `_$pagestart`
     limit   `_$pagesize`;
     -/
 };
