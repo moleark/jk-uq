@@ -16,7 +16,7 @@ PAGE (
         `createdate` date,
         `expireddate` date) ENGINE=MyISAM;
 
-    insert into `_$page_getExpiredCoupon`(`coupon`, `createdate`, `expireddate`)
+    insert into `_$page_getMyExpiredCoupon`(`coupon`, `createdate`, `expireddate`)
     select  t.coupon, t.createdate, t.expireddate
     from    (
                 select coupon, createdate, expireddate from tv_webusercoupon
@@ -25,7 +25,7 @@ PAGE (
                 select credits, createdate, expireddate from pointshop$test.tv_webusercredits
                 where   webUser = `_webUser` and expireddate < now()
             ) as t
-    order by t.`expiredate` desc, t.coupon
+    order by t.`expireddate` desc, t.coupon
     limit 1200;
 
     INSERT  INTO `_$page` (`id`, `code`, `types`, `createdate`, `expireddate`, `seq`)
