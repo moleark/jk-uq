@@ -125,7 +125,7 @@ PAGE (
             , pc.`purity` AS `purity`, pc.`molecularfomula` AS `molecularfomula`, pc.`molecularweight` AS `molecularweight`
             , pp.`id` as `seq`
     from    `_$page_searchProductByCategory` as pp
-            inner join `tv_productx` as p on p.id = pp.product
+            inner join `tv_productx` as p on p.`$unit` = `_$unit` and p.id = pp.product
             left join `tv_brand` as b on p.`$unit` = b.`$unit` and p.brand = b.id
             left join `tv_productchemical` as pc on p.`$unit` = pc.`$unit` and p.id = pc.product
     where   1 = 1 and pp.id > `_$pagestart`
