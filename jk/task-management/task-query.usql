@@ -223,11 +223,12 @@ returns ret (
     sales ID [$user],
     order ID,        
     orderNo ID,
+    ordertype char(10),  --回款类型
     amount dec(12, 2) not null,
     currency ID
 ) {
     
-    into ret select a.date, a.sales, a.order, a.orderNo, a.amount, a.currency
+    into ret select a.date, a.sales, a.order, a.orderNo, a.ordertype, a.amount, a.currency
     from    BalanceHistory as a
     where   a.sales = $user 
     order by a.date desc;
