@@ -56,12 +56,7 @@ SHEET PointExchangeSheet ver 0.1 (
     shippingContact ID Contact,             --收货地址
 )
 Action submit {
-    bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
-        shippingContact = shippingContact, amount = amount;
     foreach exchangeItems {
-        bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
-            quantity = quantity, point = point, subAmount = subAmount;
-
         var leftAmount bigint;
         set leftAmount = subAmount;
 
@@ -80,7 +75,7 @@ Action submit {
                     set p = (mPoint - mUsedPoint - tempUsedPoint);
                 }
 
-                book PointBook at (customer, pointYear) set tempUsedPoint += p;
+                book PointBook at (webUser, pointYear) set tempUsedPoint += p;
                 history PointHistory
                     set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no;
 
@@ -91,7 +86,38 @@ Action submit {
             }
         }
     }
-    STATE TO END;
+
+    if (customer > 0) {
+        bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
+            shippingContact = shippingContact, amount = amount;
+        foreach exchangeItems {
+            bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
+                quantity = quantity, point = point, subAmount = subAmount;
+        }
+        STATE TO END;
+    } else {
+        STATE TO Matching;
+    }
+}
+STATE Matching {
+    ACTION Pass
+    BUS webUserBus.getCustomerByWebUser as q into tb {
+        set q.webUser = webUser;
+    } {
+        if(customer is null) {
+            var customerid int;
+            foreach tb {
+                set customerid = customer;
+            }
+
+            bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customerid,
+                shippingContact = shippingContact, amount = amount;
+            foreach exchangeItems {
+                bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
+                    quantity = quantity, point = point, subAmount = subAmount;
+            }
+        }
+    }
 };
 
 -- 平台订单表
