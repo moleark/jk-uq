@@ -1,15 +1,13 @@
- 
-
 Action Signin(
-    webuser ID [$user],    --客户编号
-    amount int not null     --积分
+    webuser ID [$user],     -- WebUser非Customer
+    amount int not null     -- 积分
 ){
 
     var pointYear int;
     set pointYear = year(now());
-    book PointBook at (webuser, pointYear) set tempPoint += amount;
+    book PointBook at (webuser, pointYear) set tempSignInPoint += amount;
     history PointHistory
-        set webUser = webuser,  pointYear = pointYear, source = 2, point = amount comments='签到';
+        set webUser = webuser, pointYear = pointYear, source = 2, point = amount, comments = '签到';
 };
 
 

@@ -16,8 +16,9 @@ BOOK PointBook (
     point int not null default 0,           -- 总有效积分
     usedPoint int default 0,                -- 消耗的积分
     totalPoint int not null default 0,      -- 总积分
-    tempPoint int not null default 0,       -- 在tonva系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
-    tempUsedPoint int not null default 0    -- 在tonva系统消耗的临死积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
+    tempPoint int not null default 0,       -- 在tonva订单系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
+    tempUsedPoint int not null default 0,    -- 在tonva系统消耗的临死积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
+    tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清理
 );
 
 --积分明细（备份，当审核通过时吧这个积分记录复制到 PointBook ）
@@ -61,19 +62,19 @@ Action submit {
         var leftAmount bigint;
         set leftAmount = subAmount;
 
-        foreach (var mPoint int, mUsedPoint int, tempUsedPoint int, pointYear int of
-            select  p.point as mPoint, p.usedPoint as mUsedPoint, p.tempUsedPoint, p.pointYear
+        foreach (var mPoint int, pointYear int of
+            select  (p.point + p.tempSignInPoint - p.usedPoint - p.tempUsedPoint) as mPoint, p.pointYear
             from    PointBook as p
             where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
-                    and (p.point - p.usedPoint - p.tempUsedPoint) > 0
+                    and (p.point + p.tempSignInPoint - p.usedPoint - p.tempUsedPoint) > 0
             order by p.pointYear
         ) {
             if (leftAmount > 0){
                 var p int;
-                if((mPoint - mUsedPoint - tempUsedPoint) >= leftAmount) {
+                if(mPoint >= leftAmount) {
                     set p = leftAmount;
                 }else{
-                    set p = (mPoint - mUsedPoint - tempUsedPoint);
+                    set p = mPoint;
                 }
 
                 book PointBook at (webUser, pointYear) set tempUsedPoint += p;
