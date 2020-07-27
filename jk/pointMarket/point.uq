@@ -6,6 +6,7 @@ MAP PointProduct (
     startDate date,                             --生效时间
     endDate date,                               --过期时间
     imageUrl char(500),                         --产品图片
+    index idx_date,
 );
 
 --积分明细表
