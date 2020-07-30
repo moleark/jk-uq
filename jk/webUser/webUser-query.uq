@@ -113,3 +113,16 @@ PAGE (
 };
 
 
+/** 搜索优惠券使用情况 */
+QUERY SearchCouponReceive( 
+    coupon int
+)
+returns ret (
+    webuser ID WebUser,
+    createDate date
+) {
+    into ret  select  a.webUser as webuser, a.createDate
+    from    WebUserCoupon as a
+    where   a.coupon = coupon;
+};
+ 

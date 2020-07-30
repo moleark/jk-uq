@@ -18,3 +18,18 @@ returns ret(
             and ppd.product = product and ppd.pack = pack
             and pr.salesRegion = salesRegion;
 };
+
+
+Query SearchPromotion( salesRegion ID SalesRegion, language ID Language )
+PAGE(
+    id bigint start 0,
+    product ID ProductX
+) {
+    PAGE select distinct  ppd.product as id, ppd.product
+    from    PromotionPackDiscount as ppd
+            join PromotionSalesRegion as pr on pr.promotion = ppd.promotion
+            left join PromotionLanguage as pl on pl.promotion = ppd.promotion and pl.language = language
+    order by  ppd.product desc
+    limit $pageSize;
+};
+ 

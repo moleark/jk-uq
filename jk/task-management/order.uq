@@ -42,7 +42,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
         --step.2.绑定关系或者更新关系
         if( couponID > 0  ){
                 --step.2.1.首先要记录优惠码的使用记录
-                BOOK CouponOrderMap at ( coupon, orderId, webuser ); --添加优惠码使用记录
+                BOOK CouponOrderMap at ( coupon, orderId, webuser ) set  createDate = NOW(); --添加优惠码使用记录
             if ( type in( 1, 3 ) and not customerid is null ){
                 --step.2.2.绑定当前轻代理，或者延期当前轻代理。
                 BOOK CustomerNowSalesBOOK at ( customerid ) set sales = sales, validity = dateadd(month, 3, NOW()), types=types, webuser=webuser; --添加当前轻代理
@@ -114,7 +114,7 @@ BUS pointShopbus ver 0.4 from [百灵威系统工程部]/pointShop
         }
         if( couponID > 0 ){
             --step.2.1.首先要记录积分码的使用记录
-            BOOK CouponOrderMap at ( coupon, 1, customer ); --添加积分码使用记录
+            BOOK CouponOrderMap at ( coupon, 1, customer ) set  createDate = NOW(); ; --添加积分码使用记录
             --step.2.2.绑定当前轻代理，或者延期当前轻代理。
             BOOK CustomerNowSalesBOOK at ( customer ) set sales = sales, validity = dateadd(month, 3, NOW()), types='credits',webUser=webUser; --添加当前轻代理
         }
