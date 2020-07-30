@@ -118,6 +118,7 @@ STATE Matching {
                 bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
                     quantity = quantity, point = point, subAmount = subAmount;
             }
+        STATE TO END;
         }
     }
 };
