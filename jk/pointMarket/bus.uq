@@ -16,8 +16,7 @@ BUS pointBus from [百灵威系统工程部]/pointShop
             book PointBook at (webUserid, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint,
             tempPoint = 0, tempUsedPoint = 0;
         }else
-        
-        book PointBookByCustomer at (customer, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint;
+            book PointBookByCustomer at (customer, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint;
     };
 
 BUS orderBus from [百灵威系统工程部]/order
