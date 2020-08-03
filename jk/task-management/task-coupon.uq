@@ -36,6 +36,7 @@ MAP CouponOrderMap (
     key coupon ID Coupon,
     key order ID,
     key webuser ID,
+    createDate date,
 );
 
 --优惠券订单
@@ -166,12 +167,14 @@ PAGE (
     discount dec(12, 2),
     preferential dec(12, 2),
     createTime datetime,
-    isValid smallint
+    isValid smallint,
+    couponCount int
 ) {
     var key2 char(102);
     set key2 = concat('%', key, '%');
 
-    PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid
+    PAGE select m.id, m.code, m.user, m.validitydate, m.discount, m.preferential, m.createTime, m.isValid,
+            ( select count( * ) from CouponOrderMap as a where a.coupon = m.id ) as couponCount
     from    Coupon as m
     where   m.user = $user and m.id > $pageStart and ( m.code like key2 or key is null )
             and m.types = types 
@@ -190,4 +193,19 @@ returns ret (
     from    BottomDiscount as m
             left join Brand as b on m.brand = b.id 
     order by case when m.brand in (1565,18 ,71) then 0 else 1 end, b.name;
+};
+
+
+/** 搜索优惠券使用情况 */
+QUERY SearchCouponUsed( 
+    coupon ID Coupon
+)
+returns ret (
+    order ID,
+    webuser ID [$user],
+    createDate date
+) {
+    into ret  select  a.order, a.webuser, a.createDate 
+    from    CouponOrderMap as a
+    where   a.coupon = coupon;
 };
