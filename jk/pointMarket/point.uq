@@ -1,3 +1,15 @@
+OPEN TUID Genre (
+    id,
+    main name char(50) not null,
+    search (name),
+);
+
+MAP PointProductGenre(
+    key genre ID Genre not null,
+    key product ID ProductX not null,
+    key pack OF product.PackX not null, 
+)
+
 --可兑换产品表
 MAP PointProduct (
     key product ID ProductX not null,           --产品编号
