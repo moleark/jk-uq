@@ -20,7 +20,7 @@ returns ret(
 };
 
 
-Query SearchPromotion( keyWord char(20), salesRegion ID SalesRegion, language ID Language )
+Query SearchPromotion( keyWord char(20), promotion ID Promotion, salesRegion ID SalesRegion)
 PAGE (
     seq bigint asc,
     id ID ProductX,
@@ -49,20 +49,20 @@ PAGE (
         select  p1.`$unit`, p1.`id` AS `id`, 1 as level
         from    `tv_promotionpackdiscount` as pc
                 inner join product.`tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
-        where   p1.`$unit` = `_$unit` and p1.origin = `_keyWord`
+        where   p1.`$unit` = `_$unit` and p1.origin = `_keyWord` and pc.promotion =`_promotion` 
         union
         select  p1.`$unit`, p1.`id` AS `id`, 2 as level
         from    `tv_promotionpackdiscount` as pc
                 inner join product.`tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
                 inner JOIN product.`tv_productchemical` AS pc1 ON p1.`id`=pc1.`product` and p1.`$unit` = pc1.`$unit`
-        where   pc1.`$unit` = `_$unit` and pc1.cas = `_keyWord`
+        where   pc1.`$unit` = `_$unit` and pc1.cas = `_keyWord` and pc.promotion =`_promotion` 
         union
         select  p4.`$unit`, p4.`id` AS `id`, 3 as level
         from    (
                 select  p1.`$unit`, p1.`id` AS `id`
                 from    `tv_promotionpackdiscount` as pc
                         inner join product.`tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
-                where   p1.`description` like CONCAT('%',`_keyWord`,'%')
+                where   p1.`description` like CONCAT('%',`_keyWord`,'%') and pc.promotion =`_promotion` 
                 limit 499
                 ) p4
         union
@@ -71,7 +71,7 @@ PAGE (
                 select  p1.`$unit`, p1.`id` AS `id`
                 from    `tv_promotionpackdiscount` as pc
                         inner join product.`tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
-                where    p1.`descriptionc` like  CONCAT('%',`_keyWord`,'%')
+                where    p1.`descriptionc` like  CONCAT('%',`_keyWord`,'%') and pc.promotion =`_promotion` 
                 limit 499
                 ) p5
         ) AS p
