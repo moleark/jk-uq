@@ -12,7 +12,7 @@ BUS pointBus from [百灵威系统工程部]/pointShop
             set webUserid = webUser;
         }
         -- 同时将临时积分清空
-        if(webUserid){
+        if( not webUserid is null ){
             book PointBook at (webUserid, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint,
             tempPoint = 0, tempUsedPoint = 0;
         }else
