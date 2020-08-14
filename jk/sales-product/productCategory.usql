@@ -32,7 +32,7 @@ Map ProductProductCategoryCache (
 );
 
 
-Map ProductProductLeafCategoryCache (
+Map ProductCategoryLeafCache (
     key parent   ID ProductCategory,
     key category ID ProductCategory
 );
