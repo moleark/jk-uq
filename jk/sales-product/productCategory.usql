@@ -30,3 +30,9 @@ Map ProductProductCategoryCache (
     key order int,
     product ID ProductX,
 );
+
+
+Map ProductProductLeafCategoryCache (
+    key parent   ID ProductCategory,
+    key category ID ProductCategory
+);

@@ -123,7 +123,6 @@ MAP CustomerDepartment (
     key department ID Department
 );
 
- 
 
 TUID Domain (
     id,
@@ -155,4 +154,10 @@ MAP CustomerPost  (
     key post ID Post
 );
 
+
+MAP CustomerRelatedProducts(
+    key customer ID Customer,
+    key product ID  ProductX,
+    sort int 
+);
 
