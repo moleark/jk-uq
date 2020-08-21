@@ -115,7 +115,7 @@ Action submit {
 }
 STATE Matching {
     ACTION Pass
-    BUS webUserBus.getCustomerByWebUser as q into tb {
+    BUS webUserBus.getCuByWu as q into tb {
         set q.webUser = webUser;
     } {
         if(customer is null) {
@@ -135,69 +135,6 @@ STATE Matching {
     }
 };
 
--- 平台订单表
-PENDING PlatformOrderPending (
-    id,
-    customer ID Customer not null,          --客户编号
-    orderId char(100),                      --平台单号
-    amount dec(12,2),                       --合同总额
-    currency ID Currency,                   --币种
-    date,
-);
- 
-MAP PlatformOrder (
-    key orderItemId char(50),
-    orderId char(50),
-    customer ID BuyerAccount not null,
-    orderMaker ID Customer,
-    platformOrderId char(50),
-    description char(1000),
-    descriptionC char(1000),
-    radiox dec(12, 2),
-    radioy dec(12, 4),
-    unit char(10),
-    quantity int,
-    price dec(12, 2),
-    subAmount dec(12, 2),
-    amount dec(12, 2),
-    currency ID Currency,
-    mark char(10),
-    createDate datetime,
-    index idx_ordermaker,
-);
-
- 
-MAP PlatformOrderUsed (
-    key orderItemId char(50),
-    orderId char(50),
-    customer ID Customer not null,
-    platformOrderId char(50),
-    subAmount dec(12, 2),
-    amount dec(12, 2),
-    currency ID Currency,
-    coupon int,
-);
- 
-
-MAP PointShopOrder (
-    key orderItemId char(50),
-    orderId char(50),
-    customer ID BuyerAccount not null,
-    orderMaker ID Customer,
-    description char(1000),
-    descriptionC char(1000),
-    radiox dec(12, 2),
-    radioy dec(12, 4),
-    unit char(10),
-    quantity int,
-    price dec(12, 2),
-    subAmount dec(12, 2),
-    amount dec(12, 2),
-    currency ID Currency,
-    mark char(10),
-    createDate datetime,
-);
-
 MAP CustomerCoupon (
     key webUser ID WebUser,     -- WebUser编号，不是Customer
     coupon int,
@@ -211,11 +148,23 @@ MAP WebUserCredits (
     creditsCode int not null,
     createDate date,
     expiredDate date,
-);
+) ON ADD{
+    bus couponDrawedBus.creditsDrawedByWebUser set webUser = webUser, coupon = credits, createDate = createDate, expiredDate = expiredDate;
+};
 
 MAP WebUserCreditsUsed (
     key webUser ID WebUser,     -- WebUser编号，不是Customer
     key credits int not null,
     key saleOrder char(50),
     usedDate date,
+);
+
+/*
+ * 有关产品的浏览量/兑换量统计
+*/
+BOOK PointProductHotStat (
+    key product ID ProductX not null,           --产品编号
+    key pack OF product.PackX not null,         --包装编号
+    visits int not null default 0,
+    exchanges int not null default 0,
 );

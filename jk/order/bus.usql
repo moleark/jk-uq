@@ -1,2 +1,27 @@
 BUS orderBus from 百灵威系统工程部/order;
 BUS webUserBus from 百灵威系统工程部/WebUser;
+BUS couponBus from 百灵威系统工程部/coupon;
+
+BUS cmB from [百灵威系统工程部]/coupon
+    ACCEPT creditsInnerMatched
+    BUS webUserBus.getWebUserByCustomer as q into tb {
+        set q.customer = customer;
+    } {
+        var webUserId ID WebUser;
+        foreach tb {
+            set webUserId = webUser;
+        }
+        if ( not webUserId is null ) {
+            bus couponBus.creditsUsedByWebUser set orderId = orderId, webUser = webUserId, amount = amount, currency = currency
+                , point = point, coupon = coupon;
+            foreach orderItems {
+                bus couponBus.creditsUsedByWebUser into orderItems add orderItemId = orderItemId, point = point;
+            }
+        }
+        
+        bus couponBus.creditsUsedByCustomer set orderId = orderId, customer = customer, amount = amount, currency = currency
+            , point = point, coupon = coupon;
+        foreach orderItems {
+            bus couponBus.creditsUsedByCustomer into orderItems add orderItemId = orderItemId, point = point;
+        }
+    };

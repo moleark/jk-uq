@@ -72,26 +72,46 @@ Action submit {
     foreach orderItems {
         bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
+    
+    if(point > 0){
+        bus couponBus.creditsUsedByWebUser set orderId = $sheet_no, webUser = webUser, amount = amount, currency = currency
+        , point = point, coupon = coupon;
+        foreach orderItems {
+            bus couponBus.creditsUsedByWebUser into orderItems add row = $row, point = quantity * price * 2;
+        }
+    }
 
     if (customer > 0) {
+        if(point > 0){
+            bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customer, amount = amount, currency = currency
+                , point = point, coupon = coupon;
+            foreach orderItems {
+                bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * 2;
+            }
+        }
         STATE TO END;
     } else {
-
         STATE TO Matching;
     }
 }
 STATE Matching {
     ACTION Pass
-    BUS webUserBus.getCustomerByWebUser as q into tb {
+    BUS webUserBus.getCuByWu as q into tb {
         set q.webUser = webUser;
     } {
         if (customer is null) {
-            /*
             var customerid int;
             foreach tb {
                 set customerid = customer;
             }
-            */
+            if(point > 0){
+                bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+                , point = point, coupon = coupon;
+                foreach orderItems {
+                    bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * 2;
+                }
+            }
+            
             var buyerAccount int;
             set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
             if (not buyerAccount is null) {

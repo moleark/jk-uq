@@ -71,3 +71,49 @@ returns ret (
         into ret select 0 as result;
     }
 };
+
+/*
+ * 获取最新上架的8个产品
+*/
+Query GetNewPointProducts() 
+returns ret(
+    product ID ProductX,           --产品编号
+    pack OF product.PackX,         --包装编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+) {
+    into ret SELECT p.product, p.pack, p.point, p.startDate, p.endDate, p.imageUrl 
+    FROM PointProduct as p
+    WHERE p.startDate < NOW() and p.endDate > NOW()
+    order by p.startDate desc, p.product
+    limit 8;
+};
+
+/*
+ * 获取Hot的8个产品
+*/
+Query GetHotPointProducts() 
+returns ret(
+    product ID ProductX,           --产品编号
+    pack OF product.PackX,         --包装编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+) {
+    into ret SELECT p.product, p.pack, p.point, p.startDate, p.endDate, p.imageUrl 
+    FROM  PointProduct as p
+          left join PointProductHotStat as hs on p.product = hs.product and p.pack = hs.pack
+    WHERE p.startDate < NOW() and p.endDate > NOW()
+    order by hs.visits desc, p.product
+    limit 8;
+};
+
+ACTION SetPointProductVisits (
+    product ID ProductX,           --产品编号
+    pack OF product.PackX,         --包装编号
+) {
+   book PointProductHotStat at (product, pack) set visits += 1; 
+};

@@ -1,0 +1,206 @@
+-- TODO: 要删除 
+-- 平台订单表
+PENDING PlatformOrderPending (
+    id,
+    customer ID Customer not null,          --客户编号
+    orderId char(100),                      --平台单号
+    amount dec(12,2),                       --合同总额
+    currency ID Currency,                   --币种
+    date,
+);
+ 
+-- TODO: 要删除 
+MAP PlatformOrder (
+    key orderItemId char(50),
+    orderId char(50),
+    customer ID BuyerAccount not null,
+    orderMaker ID Customer,
+    platformOrderId char(50),
+    description char(1000),
+    descriptionC char(1000),
+    radiox dec(12, 2),
+    radioy dec(12, 4),
+    unit char(10),
+    quantity int,
+    price dec(12, 2),
+    subAmount dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
+    mark char(10),
+    createDate datetime,
+    index idx_ordermaker,
+);
+
+-- TODO: 要删除 
+MAP PlatformOrderUsed (
+    key orderItemId char(50),
+    orderId char(50),
+    customer ID Customer not null,
+    platformOrderId char(50),
+    subAmount dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
+    coupon int,
+);
+ 
+
+-- TODO: 要删除
+MAP PointShopOrder (
+    key orderItemId char(50),
+    orderId char(50),
+    customer ID BuyerAccount not null,
+    orderMaker ID Customer,
+    description char(1000),
+    descriptionC char(1000),
+    radiox dec(12, 2),
+    radioy dec(12, 4),
+    unit char(10),
+    quantity int,
+    price dec(12, 2),
+    subAmount dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
+    mark char(10),
+    createDate datetime,
+);
+
+-- TODO: 积分在内部实现后，要删除——积分券匹配订单
+ACTION MatchingOrderPoint(
+    _orderId     char(100),
+    _webuser     ID [$user],
+    _customer    ID Customer
+ )returns ret(
+    result  bigint --返回结果
+){
+    var result      bigint,
+        point       int,
+        pointYear   int,
+        amount      dec(12, 2),
+        orderMaker  int,
+        currency    int,
+        createDate  datetime;
+    set pointYear = YEAR(NOW()), point = 0, amount = 0;
+
+    foreach (var orderItemId char(50), myOrderMaker int, mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int, myCreateDate datetime of
+        select  p.orderItemId, p.orderMaker as myOrderMaker, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency, p.createDate as  myCreateDate
+        from    PointShopOrder as p
+        where   p.orderId = _orderId and p.orderMaker = _customer and p.mark<>'C'
+    ) {
+        set point = point + mySubamount;
+        set amount = amount + mySubamount;
+        set currency = myCurrency;  
+        set createDate = myCreateDate;    
+    }
+    
+    var couponId int = 0;
+    set     couponId = a.credits 
+    from    WebUserCredits as a 
+    where   a.webuser = _webuser and a.createDate <= createDate and a.expiredDate >= createDate
+    order by a.createDate
+    limit 1;
+    
+    if(couponId <> 0 ){
+        delete from WebUserCredits where webUser = _webuser and credits = couponId;
+        book WebUserCreditsUsed at (_webuser, couponId, _orderId ) set  usedDate = now();
+        book PointBook at (_webuser, pointYear) set tempPoint += point;
+        bus pointShopBus.couponUsed
+            set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency, point = point, coupon = couponId;
+    }
+    
+    delete from PointShopOrder  where orderId = _orderId and  orderMaker = _customer;
+    bus pointShopBus.creditsOrderMatched
+        set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency
+        , point = point, coupon = couponId;
+
+    set result = 1;
+    into ret select result;
+};
+
+/*
+ * 20200809, ligsh, TODO: 删除，由creditsUsedByWebUser/creditsUsedByCustomer替代
+BUS orderBus from [百灵威系统工程部]/order
+    ACCEPT order
+    BUS webUserBus.getCuByWu as q into tb {
+        set q.webUser = webUser;
+    } {
+        var customerId int;
+        foreach tb {
+            set customerId = customer;
+        }
+      
+        if(point > 0) {
+            -- 有websuer
+            if(type = 1 or type = 2) {
+                var pointYear int;
+                set pointYear = YEAR(NOW());
+                delete from WebUserCredits where webUser = $user and coupon = coupon;
+                book WebUserCreditsUsed at (webUser, coupon, no ) set  usedDate = now();
+                book PointBook at ( webUser, pointYear) set tempPoint += point;
+            }
+            
+            if(type = 1 or type = 3){
+                bus pointShopBus.couponUsed
+                    set orderId = no, webUser = webUser, customer = customerId, amount = amount, currency = currency, point = point, coupon = coupon;
+            }
+        }
+    };
+*/
+
+/*
+-- TODO:要删除, TONVA不支持删除？
+BUS webUserCustomer from [百灵威系统工程部]/WebUser
+    ACCEPT WebUserCustomer
+    {
+        foreach (
+            var pointYear int, point int, usedPoint int ,totalPoint int
+            of select a.pointYear, a.point , a.usedPoint, a.totalPoint
+            from PointBookByCustomer as a where a.customer = customer
+        )
+        {
+            book PointBook at (webUser, pointYear ) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
+        }
+    };
+*/
+
+-- TODO: 积分在内部计算后，要删除 添加平台订单积分
+ACTION AddPlatformOrderPoint(
+    orderId  char(100),
+    couponId  char(100),
+    customer ID Customer
+)returns ret(
+    result  bigint --返回结果
+){
+    var result      bigint,
+        point int,
+        pointYear int,
+        amount  dec(12, 2),
+        orderMaker int,
+        currency int,
+        innerOrderId char(50);
+    set pointYear = YEAR(NOW()), point = 0, amount = 0, orderMaker = 0;
+
+    foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myOrderMaker int, myPlatformOrderId char(50),
+        mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
+        select  p.orderItemId as myOrderItemId, p.orderId as myOrderId, p.customer as myCustomer, p.orderMaker as myOrderMaker,
+                p.platformOrderId as myPlatformOrderId, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency
+        from    PlatformOrder as p
+        where   p.platformOrderId = orderId and p.orderMaker = customer and p.mark<>'C'
+    ) {
+        set point = point + mySubamount * 2;
+        set amount = amount + mySubamount;
+        set orderMaker = myOrderMaker;
+        set innerOrderId = myOrderId;
+        book PlatformOrderUsed at (myOrderItemId) set orderId = myOrderId, customer = myCustomer
+            platformOrderId = myPlatformOrderId,
+            subAmount = mySubamount, amount = myAmount, currency = myCurrency, coupon = couponId;
+    }
+
+    book PointBook at (customer, pointYear) set tempPoint += point;
+    bus pointShopBus.couponUsed
+        set orderId = innerOrderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
+
+    set result = 1;
+    into ret select result;
+};
+
+-- pointshop: Event要删除

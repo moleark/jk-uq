@@ -1,6 +1,10 @@
 BUS pointShopBus from [百灵威系统工程部]/pointShop;
 BUS webUserBus from [百灵威系统工程部]/webUser;
+bus couponDrawedBus from 百灵威系统工程部/coupon;
 
+/*
+ * 接收从内部系统导入的积分
+*/
 BUS pointBus from [百灵威系统工程部]/pointShop
     ACCEPT customerPoint 
     BUS webUserBus.getWebUserByCustomer as q into tb {
@@ -19,41 +23,39 @@ BUS pointBus from [百灵威系统工程部]/pointShop
             book PointBookByCustomer at (customer, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint;
     };
 
-BUS orderBus from [百灵威系统工程部]/order
-    ACCEPT order
-    BUS webUserBus.getCustomerByWebUser as q into tb {
-        set q.webUser = webUser;
-    } {
-        var customerId int;
-        foreach tb {
-            set customerId = customer;
-        }
-      
-        if(point > 0){
-            var pointYear int;
-            set pointYear = YEAR(NOW());
-            delete from WebUserCredits where webUser = $user and coupon = coupon;
-            book WebUserCreditsUsed at (webUser, coupon, no ) set  usedDate = now();
-            book PointBook at ( webUser, pointYear) set tempPoint += point;
-            
-            if(type = 1 or type = 3){
-                bus pointShopBus.couponUsed
-                    set orderId = no, webUser = webUser, customer = customerId, amount = amount, currency = currency, point = point, coupon = coupon;
-            }
-        }
+/*
+ * webUser使用了credits后，删除该webUser领用的credits
+*/
+bus couponBus from 百灵威系统工程部/coupon
+    ACCEPT creditsUsedByWebUser {
+        var pointYear int;
+        set pointYear = YEAR(NOW());
+        delete from WebUserCredits where webUser = $user and coupon = coupon;
+        book WebUserCreditsUsed at (webUser, coupon, orderId ) set  usedDate = now();
+        book PointBook at ( webUser, pointYear) set tempPoint += point;
     };
 
-
-BUS webUserCustomer from [百灵威系统工程部]/WebUser
-    ACCEPT WebUserCustomer
+BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
+    ACCEPT WebUserAuditPass
     {
+        -- 审核后Customer的积分导入到webuser
         foreach (
             var pointYear int, point int, usedPoint int ,totalPoint int
             of select a.pointYear, a.point , a.usedPoint, a.totalPoint
             from PointBookByCustomer as a where a.customer = customer
-        )
-        {
-            book PointBook at (webUser, pointYear ) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
+        ) {
+            book PointBook at (webUser, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
         }
-       
+
+        -- 把webuser领用的积分券导入内部
+        bus couponDrawedBus.creditsDrawedByCustomer set customer = customer;
+        foreach (
+            var credits int, createDate date, expiredDate date 
+            of select a.credits, a.createDate, a.expiredDate
+            from WebUserCredits as a 
+            where a.webUser = webUser and a.expiredDate > now()
+        ) {
+            bus couponDrawedBus.creditsDrawedByCustomer into coupons add coupon = credits, 
+                createDate = createDate, expiredDate = expiredDate;
+        }
     };

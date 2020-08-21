@@ -13,6 +13,7 @@ ACTION auditPendingUser(
     customerId bigint
 ) {
     book WebUserCustomer at (id) set customer = customerId;
+    bus webUserBus.WebUserAuditPass set webUser = id, customer = customerId;
     HISTORY WebUserAuditHistory set webUser = id, customer = customerId;
 
     delete from PendingAuditWebUser where webUser = id;
