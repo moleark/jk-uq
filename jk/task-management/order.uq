@@ -95,14 +95,14 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
     };
 
 
-BUS pointShopbus ver 0.4 from [百灵威系统工程部]/coupon
+BUS psb ver 0.4 from [百灵威系统工程部]/coupon
     ACCEPT creditsInnerMatched (
         orderId, customer, amount, currency, point, coupon 
     )
     arr orderItems (
         row, orderItemId, point
     )
-    BUS webUserBus.getWebUserByCustomer as q into tb {
+    BUS webUserBus.getWuByCu as q into tb {
         set q.customer = customer;
     }{
         var webUserid ID [$user];

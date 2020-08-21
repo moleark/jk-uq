@@ -7,7 +7,7 @@ bus couponDrawedBus from 百灵威系统工程部/coupon;
 */
 BUS pointBus from [百灵威系统工程部]/pointShop
     ACCEPT customerPoint 
-    BUS webUserBus.getWebUserByCustomer as q into tb {
+    BUS webUserBus.getWuByCu as q into tb {
         set q.customer = customer;
     } {
         -- 根据customer获取webuser

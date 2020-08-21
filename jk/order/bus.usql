@@ -4,7 +4,7 @@ BUS couponBus from 百灵威系统工程部/coupon;
 
 BUS cmB from [百灵威系统工程部]/coupon
     ACCEPT creditsInnerMatched
-    BUS webUserBus.getWebUserByCustomer as q into tb {
+    BUS webUserBus.getWuByCu as q into tb {
         set q.customer = customer;
     } {
         var webUserId ID WebUser;
