@@ -11,7 +11,13 @@ ACTION AddMyCustomerPost(
         customer ID MyCustomer,
         post ID POST
 ){
-    book Achievement at( now(), 0 ,$user ) set sendPostCount += 1;
+
+    var _month int, _year int, businessdate  DATE;
+    set businessdate = case when DAY( NOW() ) > 20 then dateadd(month, 1,  NOW() ) else  NOW()  end;
+    set _month = month(businessdate);
+    set _year = year(businessdate);
+
+    book Achievement at( DATE(now()), 0 ,$user ) set sendPostCount += 1, month= _month, year= _year;
     history MyCustomerPostHistory set sales = $user, customer=customer, post = post;
 };
 

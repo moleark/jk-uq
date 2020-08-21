@@ -176,8 +176,12 @@ ACTION CompletionTask(
         tuid Field into fieldId unique(fieldName);
         book TaskFieldBook at(taskId, fieldId) set value=1, note = value;
     }
-
-    book Achievement at(now(),0,$user)set endTaskCount+=1; 
+ 
+    var _month int, _year int, businessdate  DATE;
+    set businessdate = case when DAY( NOW() ) > 20 then dateadd(month, 1,  NOW() ) else  NOW()  end;
+    set _month = month(businessdate);
+    set _year = year(businessdate);
+    book Achievement at(now(),0,$user)set endTaskCount+=1 , month = _month, year = _year ; 
 };
 
 /** 完结任务--客户资料*/

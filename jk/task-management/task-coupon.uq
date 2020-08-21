@@ -149,9 +149,12 @@ ACTION AddCouponSendHistory(
     var coupon ID Coupon;
     set coupon = a.id from Coupon as a where a.code = code;
     if(coupon){
-        var alldate char(20);
-        set alldate =CONCAT( year( now() ), '-' , month( now() ), '-', day( now() ) );
-        book Achievement at( alldate, 0 ,$user ) set sendCreditsCount += 1;
+        var _month int, _year int, businessdate  DATE;
+        set businessdate = case when DAY( NOW() ) > 20 then dateadd(month, 1,  NOW() ) else  NOW()  end;
+        set _month = month(businessdate);
+        set _year = year(businessdate);
+
+        book Achievement at( DATE( NOW() ), 0 ,$user ) set sendCreditsCount += 1, month= _month, year = _year;
         history CouponSendHistory set coupon = coupon, webUser = $user;   
     }
 };
