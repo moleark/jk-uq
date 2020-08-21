@@ -27,6 +27,7 @@ BUS webUserBusGetWuByCu from [百灵威系统工程部]/WebUser
         var webUser ID [$user];
         set webUser = w.webUser from WebUserCustomer as w where w.customer = customer;
         into BUS select webUser;
+    };
  
 
 BUS orderBus from [百灵威系统工程部]/order
