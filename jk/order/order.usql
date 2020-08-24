@@ -50,7 +50,10 @@ Verify {
         }
     }
 }
-Action submit {
+Action submit
+BUS webUserBus.getCuByWu as q into tb {
+    set q.webUser = webUser;
+} {
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
     foreach orderItems {
@@ -81,9 +84,13 @@ Action submit {
         }
     }
 
-    if (customer > 0) {
+    var customerid int;
+    foreach tb {
+        set customerid = customer;
+    }
+    if (not customerid is null) {
         if(point > 0){
-            bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customer, amount = amount, currency = currency
+            bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
             foreach orderItems {
                 bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * 2;
