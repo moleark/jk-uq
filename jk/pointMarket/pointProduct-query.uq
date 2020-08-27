@@ -16,11 +16,11 @@ returns ret(
 QUERY getPointProductGenre(pointProduct ID PointProductLib)
 returns ret(
     pointProduct ID PointProductLib,
-    genre ID Genre
+    genre ID Genre,
 ) {
-    into ret select pointProduct, genre
-    FROM    PointProductGenre
-    where   genre = genre and pointProduct = pointProduct;
+    into ret select t.pointProduct, t.genre
+    FROM    PointProductGenre as t
+    where   t.genre = t.genre and t.pointProduct = pointProduct;
 };
 
 /*
