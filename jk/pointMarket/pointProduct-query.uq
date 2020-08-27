@@ -13,6 +13,16 @@ returns ret(
     order by a.point;
 };
 
+QUERY getPointProductGenre(pointProduct ID PointProductLib)
+returns ret(
+    pointProduct ID PointProductLib,
+    genre ID Genre
+) {
+    into ret select pointProduct, genre
+    FROM    PointProductGenre
+    where   genre = genre and pointProduct = pointProduct;
+};
+
 /*
  * 获取最新上架的8个产品
 */
