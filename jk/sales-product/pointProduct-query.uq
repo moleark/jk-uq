@@ -9,11 +9,12 @@ PAGE (
     imageUrl char(200),
     radiox dec(12, 2),
     radioy dec(12, 4),
+    unit char(10),
     retail dec(12, 2),
 ) {
     /-mysql
-    INSERT  INTO `_$page` (`id`, `product`, `origin`, `description`, `descriptionc`, `imageurl`, `radiox`, `radioy`, `retail`, `seq`)
-    SELECT  pk.`id`, p.id as product, p.origin, p.`description`, p.`descriptionc`, p.`imageurl`, pk.radiox, pk.radioy, pk.retail
+    INSERT  INTO `_$page` (`id`, `product`, `origin`, `description`, `descriptionc`, `imageurl`, `radiox`, `radioy`, `unit`, `retail`, `seq`)
+    SELECT  pk.`id`, p.id as product, p.origin, p.`description`, p.`descriptionc`, p.`imageurl`, pk.radiox, pk.radioy, pk.unit, pk.retail
             , pk.`id` as `seq`
     from    tv_productx_packx as pk
             inner join tv_productx as p on p.id = pk.owner

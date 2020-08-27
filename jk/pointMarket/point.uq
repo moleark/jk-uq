@@ -1,6 +1,7 @@
 OPEN TUID Genre (
     id,
     main name char(50) not null,
+    main imageUrl char(500),
     search (name),
 );
 
