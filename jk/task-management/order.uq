@@ -97,18 +97,11 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
 
 BUS psb ver 0.4 from [百灵威系统工程部]/coupon
     ACCEPT creditsInnerMatched (
-        orderId, customer, amount, currency, point, coupon 
+        orderId, customer, webUser, amount, currency, point, coupon 
     )
     arr orderItems (
         row, orderItemId, point
-    )
-    BUS webUserBus.getWuByCu as q into tb {
-        set q.customer = customer;
-    }{
-        var webUserid ID [$user];
-        foreach tb {
-            set webUserid = webUser;
-        }
+    ){
        --step.1.获取优惠码所属销售和类型， 没有优惠码获取客户当前轻代理和关联类型
        var couponID ID Coupon, order char(50), sales ID [$user], types char(20);
         if( coupon > 0 ){
@@ -124,20 +117,21 @@ BUS psb ver 0.4 from [百灵威系统工程部]/coupon
         }
         if( couponID > 0 ){
             --step.2.1.首先要记录积分码的使用记录
-            BOOK CouponOrderMap at ( coupon, 1, customer ) set  createDate = NOW(); ; --添加积分码使用记录
+            BOOK CouponOrderMap at ( coupon, 1, webUser ) set  createDate = NOW(); ; --添加积分码使用记录
             --step.2.2.绑定当前轻代理，或者延期当前轻代理。
-            BOOK CustomerNowSalesBOOK at ( customer ) set sales = sales, validity = dateadd(month, 3, NOW()), types='credits',webUser=webUserid; --添加当前轻代理
+            BOOK CustomerNowSalesBOOK at ( customer ) set sales = sales, validity = dateadd(month, 3, NOW()), types='credits',webUser=webUser; --添加当前轻代理
         }
         
         if( sales > 0 ){
-            var pid ID;
-            PENDING CustomerOrderPending + ( sales:sales, webuser:webUserid, order:1, orderNo:orderId, price:amount, agentprices:amount, types:'credits' ) to pid;
+            if NOT EXISTS( SELECT 1 FROM CouponOrderMap as a WHERE a.coupon = coupon and a.webuser = webUser) {  
+                var pid ID;
+                PENDING CustomerOrderPending + ( sales:sales, webuser:webUser, order:1, orderNo:orderId, price:amount, agentprices:amount, types:'credits' ) to pid;
+            }
         }
     
     };
 
-
-
+ 
 BUS salestaskbus ver 0.4 from [百灵威系统工程部]/salestask
     ACCEPT assistAchievements (
        sales, year, month, amount

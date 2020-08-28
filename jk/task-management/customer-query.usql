@@ -276,3 +276,5 @@ returns ret (
     from    CustomerMyCustomerMap
     where   mycustomer=mycustomer;
 };
+
+ 
