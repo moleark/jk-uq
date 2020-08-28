@@ -3,16 +3,9 @@ BUS webUserBus from 百灵威系统工程部/WebUser;
 BUS couponBus from 百灵威系统工程部/coupon;
 
 BUS cmB from [百灵威系统工程部]/coupon
-    ACCEPT creditsInnerMatched
-    BUS webUserBus.getWuByCu as q into tb {
-        set q.customer = customer;
-    } {
-        var webUserId ID WebUser;
-        foreach tb {
-            set webUserId = webUser;
-        }
-        if ( not webUserId is null ) {
-            bus couponBus.creditsUsedByWebUser set orderId = orderId, webUser = webUserId, amount = amount, currency = currency
+    ACCEPT creditsInnerMatched {
+        if ( not webUser is null ) {
+            bus couponBus.creditsUsedByWebUser set orderId = orderId, webUser = webUser, amount = amount, currency = currency
                 , point = point, coupon = coupon;
             foreach orderItems {
                 bus couponBus.creditsUsedByWebUser into orderItems add orderItemId = orderItemId, point = point;

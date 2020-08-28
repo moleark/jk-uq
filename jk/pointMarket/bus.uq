@@ -30,9 +30,11 @@ bus couponBus from 百灵威系统工程部/coupon
     ACCEPT creditsUsedByWebUser {
         var pointYear int;
         set pointYear = YEAR(NOW());
-        delete from WebUserCredits where webUser = $user and coupon = coupon;
+        delete from WebUserCredits where webUser = webUser and coupon = coupon;
         book WebUserCreditsUsed at (webUser, coupon, orderId ) set  usedDate = now();
-        book PointBook at ( webUser, pointYear) set tempPoint += point;
+        book PointBook at (webUser, pointYear) set tempPoint += point;
+        history PointHistory
+            set webUser = webuser, pointYear = pointYear, source = 3, point = point, comments = orderid;
     };
 
 BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
@@ -48,7 +50,7 @@ BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
         }
 
         -- 把webuser领用的积分券导入内部
-        bus couponDrawedBus.creditsDrawedByCustomer set customer = customer;
+        bus couponDrawedBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
         foreach (
             var credits int, createDate date, expiredDate date 
             of select a.credits, a.createDate, a.expiredDate

@@ -12,3 +12,57 @@ returns ret(
     where   a.point >= ifnull(startPoint, a.point) and a.point <= ifnull(endPoint, a.point) and a.startDate <= now() and a.endDate >= now()
     order by a.point;
 };
+
+QUERY getPointProductGenre(pointProduct ID PointProductLib)
+returns ret(
+    pointProduct ID PointProductLib,
+    genre ID Genre,
+) {
+    into ret select t.pointProduct, t.genre
+    FROM    PointProductGenre as t
+    where   t.genre = t.genre and t.pointProduct = pointProduct;
+};
+
+/*
+ * 获取最新上架的8个产品
+*/
+Query GetNewPointProducts() 
+returns ret(
+    id ID ProductX,           --产品编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+) {
+    into ret SELECT p.id, p.point, p.startDate, p.endDate, p.imageUrl 
+    FROM PointProductLib as p
+    WHERE p.startDate < NOW() and p.endDate > NOW()
+    order by p.startDate desc, p.id
+    limit 8;
+};
+
+/*
+ * 获取Hot的8个产品
+*/
+Query GetHotPointProducts() 
+returns ret(
+    id ID PointProductLib,           --产品编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+) {
+    into ret SELECT p.id, p.point, p.startDate, p.endDate, p.imageUrl 
+    FROM  PointProductLib as p
+          left join PointProductHotStat as hs on p.id = hs.pointProduct
+    WHERE p.startDate < NOW() and p.endDate > NOW()
+    order by hs.visits desc, p.id
+    limit 8;
+};
+
+ACTION SetPointProductVisits (
+    pointProduct ID PointProductLib,
+) {
+   book PointProductHotStat at (pointProduct) set visits += 1; 
+   history PointProductVisitHistory set pointProduct = pointProduct, webUser = $user;
+};

@@ -1,13 +1,34 @@
 OPEN TUID Genre (
     id,
     main name char(50) not null,
+    main imageUrl char(500),
     search (name),
 );
 
 MAP PointProductGenre(
     key genre ID Genre not null,
-    key product ID ProductX not null,
-    key pack OF product.PackX not null, 
+    key pointProduct ID PointProductLib not null,
+);
+
+-- 可兑换产品库
+TUID PointProductLib (
+    id,
+    main description char(1000),
+    main descriptionC char(1000),
+    main grade char(1000), 
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+    isValid tinyint not null default 1,
+    search (description, descriptionC),
+);
+
+-- 积分兑换产品和 其来源的映射关系（1.来自营销产品库；2.来自第三方等）
+MAP PointProductSource (
+    key pointProduct ID PointProductLib,
+    key sourceId char(50),
+    type char(8) not null,  -- selfsales, jd.com
 );
 
 --可兑换产品表
@@ -163,8 +184,13 @@ MAP WebUserCreditsUsed (
  * 有关产品的浏览量/兑换量统计
 */
 BOOK PointProductHotStat (
-    key product ID ProductX not null,           --产品编号
-    key pack OF product.PackX not null,         --包装编号
+    key pointProduct ID PointProductLib not null,
     visits int not null default 0,
     exchanges int not null default 0,
+);
+
+HISTORY PointProductVisitHistory (
+    date,
+    pointProduct ID PointProductLib not null,
+    webUser ID [$user],
 );
