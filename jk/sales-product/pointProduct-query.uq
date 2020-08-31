@@ -14,7 +14,7 @@ PAGE (
 ) {
     /-mysql
     INSERT  INTO `_$page` (`id`, `product`, `origin`, `description`, `descriptionc`, `imageurl`, `radiox`, `radioy`, `unit`, `retail`, `seq`)
-    SELECT  pk.`id`, p.id as product, p.origin, p.`description`, p.`descriptionc`, p.`imageurl`, pk.radiox, pk.radioy, pk.unit, pk.retail
+    SELECT  pk.`id`, p.id as product, p.origin, p.`description`, p.`descriptionc`, p.`imageurl`, pk.radiox, pk.radioy, pk.unit, pr.retail
             , pk.`id` as `seq`
     from    tv_productx_packx as pk
             inner join tv_productx as p on p.id = pk.owner
