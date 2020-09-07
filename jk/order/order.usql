@@ -100,6 +100,9 @@ BUS webUserBus.getCuByWu as q into tb {
                 bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
             }
         }
+    }
+
+    if (customer > 0){
         STATE TO END;
     } else {
         STATE TO Matching;
@@ -111,23 +114,6 @@ STATE Matching {
         set q.webUser = webUser;
     } {
         if (customer is null) {
-            var customerid int;
-            foreach tb {
-                set customerid = customer;
-            }
-
-            var pointMultiple int;
-            set pointMultiple = 2;
-            if (now() > '2020-09-01' and now() < '2020-10-01') 
-                set pointMultiple = 4
-            if(point > 0){
-                bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
-                , point = point, coupon = coupon;
-                foreach orderItems {
-                    bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
-                }
-            }
-            
             var buyerAccount int;
             set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
             if (not buyerAccount is null) {
@@ -139,6 +125,23 @@ STATE Matching {
                     bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
                 STATE TO END;
+            }
+
+            var customerid int;
+            foreach tb {
+                set customerid = customer;
+            }
+
+            if(point > 0){
+                var pointMultiple int;
+                set pointMultiple = 2;
+                if (now() > '2020-09-01' and now() < '2020-10-01') 
+                    set pointMultiple = 4;
+                bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+                , point = point, coupon = coupon;
+                foreach orderItems {
+                    bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
+                }
             }
         }
     }
