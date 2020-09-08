@@ -92,7 +92,7 @@ BUS webUserBus.getCuByWu as q into tb {
     foreach tb {
         set customerid = customer;
     }
-    if (not customerid is null) {
+    if (customerid > 0) {
         if(point > 0){
             bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
@@ -116,7 +116,7 @@ STATE Matching {
         if (customer is null) {
             var buyerAccount int;
             set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
-            if (not buyerAccount is null) {
+            if (buyerAccount > 0) {
                 bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
@@ -132,7 +132,7 @@ STATE Matching {
                 set customerid = customer;
             }
 
-            if(point > 0){
+            if(customerid > 0 and point > 0){
                 var pointMultiple int;
                 set pointMultiple = 2;
                 if (now() > '2020-09-01' and now() < '2020-10-01') 
