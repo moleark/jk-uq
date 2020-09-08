@@ -57,9 +57,10 @@ PAGE (
 };
 
 /** 搜索我的客户*/
-QUERY SearchMyCustomerByPosts(key char(100), post ID POST)
+QUERY SearchMyCustomerByCategory(key char(100), category int )
 PAGE (
-    id bigint start 0,
+    seq bigint asc,
+    id ID MyCustomer,
     unit ID MyCustomerUnit,
     no char(30),
     name char(50),
@@ -74,43 +75,27 @@ PAGE (
 ) {
     var key2 char(102), startdate DATE ;
     set key2 = concat('%', key, '%');
-    set startdate = DATE( dateadd(week, -1, NOW() ) );
-
-    /**
-    PAGE select c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, 
-                c.mobile, c.gender, c.birthDay, c.email, c.wechat,
-                (select count(1) from  MyCustomerPostHistory as mp where mp.customer = c.id and mp.post = post) as sharingTimes,
-                (select count(1) from  MyCustomerPostHistory as mp where mp.customer = c.id and mp.date >= startdate ) as sharingCount
-    from    MyCustomer as c
-            join MyCustomerUnit as u on c.unit =u.id
-            left join CustomerDomain as cr on cr.customer = c.id
-    where   c.id > $pageStart and c.user = $user and (cr.domain = domain or ifnull(domain,0) = 0)
-            and c.isValid=1 and (c.name like key2 or u.name like key2 )
-    limit $pageSize;
-    **/
-    
+     
     /-mysql
 
     DROP  TEMPORARY  TABLE IF EXISTS `back_customer`;
     CREATE TEMPORARY  TABLE `back_customer` (`customer` INT NULL,`$id` INT NOT NULL AUTO_INCREMENT,PRIMARY KEY(`$id`)) ENGINE=MyISAM;
 
-    insert into back_customer( customer ) 
+    INSERT  INTO  back_customer( customer ) 
     SELECT	distinct cp.customer
     FROM 	product.`tv_productcategoryleafcache` AS a
             INNER JOIN product.tv_productproductcategorycache as pp ON a.leaf = pp.category
             INNER join customer.tv_customerrelatedproducts as cp on cp.product = pp.product
     WHERE 	pp.`$unit` = 24 AND pp.salesregion = 1
-            AND (	
-                a.parent in ( SELECT productcategory FROM webbuilder.tv_postproductcatalog where post = `_post`) or 
-                a.leaf   in ( SELECT productcategory FROM webbuilder.tv_postproductcatalog where post = `_post`)
-            );
+            AND ( a.parent = _category or a.leaf = _category );
 
-    INSERT  INTO `_$page` select  c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, 
-            c.mobile, c.gender, c.birthDay, c.email, c.wechat,
+    INSERT  INTO `_$page` (`id`, `unit`,`no`,`name`,`firstName`,`lastName`,`telephone`,`mobile`,`gender`,`birthDay`,`email`,wechat, `seq`)
+    select  c.id, c.unit, c.no, c.name, c.firstName, c.lastName, c.telephone, c.mobile, c.gender, c.birthDay, c.email, c.wechat, c.id as seq
     from    back_customer as a 
-            salestask.tv_mycustomer as c on a.customer = c.no
+            inner join salestask.tv_mycustomer as c on a.customer = c.no
             inner join salestask.tv_mycustomerunit as b on c.unit = b.id
-    where   c.id > `_$pagestart`
+    where   c.user = `_$user` and  c.id > `_$pagestart`
     LIMIT   `_$pagesize`;
+
     -/
 };

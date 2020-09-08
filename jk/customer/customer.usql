@@ -136,7 +136,7 @@ MAP CustomerDomain (
     key customer ID Customer,
     key domain ID Domain
 );
- 
+  
 TUID Post (
     id,
     main name char(200),
@@ -160,4 +160,21 @@ MAP CustomerRelatedProducts(
     key product ID  ProductX,
     sort int 
 );
+ 
+TUID Research (
+    id,
+    main name char(200),
+    no char(30),
+    createTime datetime 
+);
 
+MAP CustomerResearch (
+    key customer ID Customer,
+    key research ID Research,
+    createTime datetime
+);
+
+MAP ResearchDomain (
+    key domain ID Domain,
+    key research ID Research 
+);

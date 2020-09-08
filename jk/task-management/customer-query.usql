@@ -139,7 +139,7 @@ returns ret (
 
 /**判断客户是否被绑定**/
 QUERY MyCustomerIsOccupy(
-    customer ID Customer
+    _customer ID Customer
 )
 returns ret (
     code smallint
@@ -180,7 +180,7 @@ returns ret (
  
     --step.4.返回验证结果
     var nowsales ID [$user];
-    set nowsales = sales from CustomerNowSalesBOOK where customer = customer limit 1;
+    set nowsales = sales from CustomerNowSalesBOOK where customer = _customer limit 1;
     if (nowsales) {
         if(nowsales = $user){
             into ret select 1 as code;
@@ -266,7 +266,9 @@ returns ret (
 
 
 /** 作废方法 **/
-QUERY searchCustomerMyCustomerMap(mycustomer ID MyCustomer)
+QUERY searchCustomerMyCustomerMap(
+    _mycustomer ID MyCustomer
+)
 returns ret (
     mycustomer ID MyCustomer,
     customer ID Customer,
@@ -274,7 +276,7 @@ returns ret (
 ) {
     into ret select mycustomer, customer, webuser
     from    CustomerMyCustomerMap
-    where   mycustomer=mycustomer;
+    where   mycustomer = _mycustomer;
 };
 
  

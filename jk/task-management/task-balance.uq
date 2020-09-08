@@ -23,6 +23,16 @@ History BalanceHistory (
     currency ID
 );
 
+/**取款历史记录**/
+History WithdrawalsHistory (
+    date,
+    sales ID [$user],    --销售
+    order ID,            --回款单、取款单、退款单
+    orderNo char(20),          --订单号
+    amount dec(12, 2) not null, --增加收益额
+    currency ID
+);
+
 --获取老系统回款数据
 BUS orderpaymentBus ver 0.4 from [百灵威系统工程部]/SalesTask
     ACCEPT orderpayment (
