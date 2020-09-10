@@ -62,13 +62,19 @@ BUS webUserBus.getCuByWu as q into tb {
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee,
                 salesRegion = salesRegion;
     }
+    
+    var customerid int;
+    foreach tb {
+        set customerid = customer;
+    }
 
     var bustype int;
     set bustype = 2;
     if(customer > 0) {
         set bustype = 1;
     }
-    bus orderBus.order set type = bustype, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
+    bus orderBus.order set type = bustype, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
+        customer = customerid, buyerAccount = customer,
         shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
@@ -88,10 +94,6 @@ BUS webUserBus.getCuByWu as q into tb {
         }
     }
 
-    var customerid int;
-    foreach tb {
-        set customerid = customer;
-    }
     if (customerid > 0) {
         if(point > 0){
             bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
@@ -116,8 +118,15 @@ STATE Matching {
         if (customer is null) {
             var buyerAccount int;
             set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
+
+            var customerid int;
+            foreach tb {
+                set customerid = customer;
+            }
+            
             if (buyerAccount > 0) {
-                bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = buyerAccount,
+                bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
+                    customer = customerid, buyerAccount = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
                     freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
@@ -125,11 +134,6 @@ STATE Matching {
                     bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
                 STATE TO END;
-            }
-
-            var customerid int;
-            foreach tb {
-                set customerid = customer;
             }
 
             if(customerid > 0 and point > 0){
