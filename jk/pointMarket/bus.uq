@@ -61,3 +61,19 @@ BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
                 createDate = createDate, expiredDate = expiredDate;
         }
     };
+
+BUS pointProductBus from [百灵威系统工程部]/pointShop
+    ACCEPT pointProductBus {
+        var pointProductLibId int;
+        set pointProductLibId = pointProduct from PointProductSource where sourceId = pack and type = 'self';
+        if (pointProductLibId is null) {
+            TUID pointProductLib into pointProductLibId set description = description, descriptionC = descriptionC,
+                grade = grade, point = point, startDate = from_unixtime(startDate), endDate = from_unixtime(endDate), imageUrl = imageUrl,
+                isValid = isValid; 
+            BOOK PointProductSource at(pointProductLibId, pack) set type = 'self';
+        } else {
+            TUID pointProductLib id(pointProductLibId) set description = description, descriptionC = descriptionC,
+                grade = grade, point = point, startDate = from_unixtime(startDate), endDate = from_unixtime(endDate), imageUrl = imageUrl,
+                isValid = isValid; 
+        }
+    };
