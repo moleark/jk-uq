@@ -1,15 +1,11 @@
 QUERY getPointProduct(startPoint int, endPoint int)
 returns ret(
-    product ID ProductX,           --产品编号
-    pack OF product.PackX,         --包装编号
-    point int,                     --所需积分
-    startDate date,                --生效时间
-    endDate date,                  --过期时间
-    imageUrl char(500)             --产品图片
+    product ID PointProductLib,           --产品编号
 ) {
-    into ret SELECT	a.product, a.pack, a.point, a.startDate, a.endDate, a.imageUrl
-	FROM    PointProduct AS a
-    where   a.point >= ifnull(startPoint, a.point) and a.point <= ifnull(endPoint, a.point) and a.startDate <= now() and a.endDate >= now()
+    into ret SELECT	a.id as product
+	FROM    PointProductLib AS a
+    where   a.point >= ifnull(startPoint, a.point) and a.point <= ifnull(endPoint, a.point) 
+            and a.startDate <= now() and ifnull(a.endDate, '2050-01-01') >= now()
     order by a.point;
 };
 
@@ -28,7 +24,7 @@ returns ret(
 */
 Query GetNewPointProducts() 
 returns ret(
-    id ID ProductX,           --产品编号
+    id ID PointProductLib,           --产品编号
     point int,                                  --所需积分
     startDate date,                             --生效时间
     endDate date,                               --过期时间

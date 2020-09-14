@@ -16,10 +16,10 @@ TUID PointProductLib (
     main description char(1000),
     main descriptionC char(1000),
     main grade char(1000), 
-    point int,                                  --所需积分
+    main point int,                                  --所需积分
     startDate date,                             --生效时间
     endDate date,                               --过期时间
-    imageUrl char(500),                         --产品图片
+    main imageUrl char(500),                         --产品图片
     isValid tinyint not null default 1,
     search (description, descriptionC),
 );
@@ -81,8 +81,7 @@ SHEET PointExchangeSheet ver 0.1 (
     customer ID Customer,                   --客户编号
     webUser ID WebUser,                     --用户编号
     ARR exchangeItems (
-        product ID ProductX not null,       --产品编号
-        pack OF product.PackX not null,     --包装编号
+        product ID PointProductLib not null,       --产品编号
         point int,                          --单个积分值
         quantity int not null,              --数量
         subAmount int not null,             --小计
@@ -112,7 +111,7 @@ Action submit {
 
                 book PointBook at (webUser, pointYear) set tempUsedPoint += p;
                 history PointHistory
-                    set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no;
+                    set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
 
                 set leftAmount = leftAmount - p;
                 if(leftAmount <= 0){
@@ -125,8 +124,10 @@ Action submit {
     if (customer > 0) {
         bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
             shippingContact = shippingContact, amount = amount;
+        var source char(8), sourceId int;
         foreach exchangeItems {
-            bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
+            set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
+            bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
                 quantity = quantity, point = point, subAmount = subAmount;
         }
         STATE TO END;
@@ -147,8 +148,10 @@ STATE Matching {
 
             bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customerid,
                 shippingContact = shippingContact, amount = amount;
+            var source char(8), sourceId int;
             foreach exchangeItems {
-                bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
+                set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
+                bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
                     quantity = quantity, point = point, subAmount = subAmount;
             }
         STATE TO END;
