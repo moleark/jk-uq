@@ -72,7 +72,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
             --记录客户订单
             var pid ID;
             if( type in ( 1, 2 ) ){
-                 if exists( select 1 from WebUserEmployeeMap as a where a.webuser = sales ){
+                 if not exists( select 1 from WebUserEmployeeMap as a where a.webuser = sales ){
                     PENDING CustomerOrderPending + ( sales:sales, webuser:webuser, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice, types:types ) to pid;
                  }
             } 
@@ -120,7 +120,7 @@ BUS psb ver 0.4 from [百灵威系统工程部]/coupon
         }
         
         if( sales > 0 ){
-            if exists( select 1 from WebUserEmployeeMap as a where a.webuser = sales ){
+            if not exists( select 1 from WebUserEmployeeMap as a where a.webuser = sales ){
                 var pid ID;
                 PENDING CustomerOrderPending + ( sales:sales, webuser:webUser, order:1, orderNo:orderId, price:amount, agentprices:amount, types:'credits' ) to pid;
             }
