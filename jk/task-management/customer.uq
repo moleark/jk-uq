@@ -81,6 +81,16 @@ BOOK CustomerNowSalesBOOK (
     validity datetime
 );
 
+--当前轻代理
+History CustomerNowSalesHistory (
+    date,
+    customer ID Customer,
+    webuser ID [$user],
+    sales ID [$user],
+    types char(10),
+    validity datetime
+);
+
 
 --受保护客户，一次性使用
 MAP ProtectedCustomersMap (

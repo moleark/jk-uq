@@ -130,7 +130,7 @@ Action submit {
     --记录取款历史    
     var mycustomer ID MyCustomer, customer ID Customer;
     set mycustomer = a.mycustomer, customer = a.customer from CustomerMyCustomerMap as a where a.webuser=webUser;
-    history BalanceHistory set sales=webUser, order=$id, orderNo=$sheet_no, ordertype='withdrawal', amount=amount, currency=currency,paymentAmount=0;
+    history WithdrawalsHistory set sales=webUser, order=$id, orderNo=$sheet_no, amount=amount, currency=currency;
 
     --发送取款记录BUS
     bus agentBus.paymentrequest set withdrawal=$id, agency=webUser, amount=amount, currency=currency;
