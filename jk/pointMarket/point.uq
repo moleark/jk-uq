@@ -31,6 +31,11 @@ MAP PointProductSource (
     type char(8) not null,  -- selfsales, jd.com
 );
 
+MAP PointProductDetail (
+    key pointProduct ID PointProductLib,
+    content text,
+);
+
 --可兑换产品表
 MAP PointProduct (
     key product ID ProductX not null,           --产品编号
