@@ -62,3 +62,11 @@ ACTION SetPointProductVisits (
    book PointProductHotStat at (pointProduct) set visits += 1; 
    history PointProductVisitHistory set pointProduct = pointProduct, webUser = $user;
 };
+
+
+ACTION PointProductGenreDelete (
+    genre ID Genre,
+) {
+    delete t from PointProductGenre as t where t.genre = genre;
+    delete from Genre where id = genre;
+};
