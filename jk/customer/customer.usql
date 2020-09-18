@@ -124,7 +124,7 @@ MAP CustomerDepartment (
 );
 
 
-TUID Domain (
+OPEN TUID Domain (
     id,
     main name char(200),
     parent ID Domain,
