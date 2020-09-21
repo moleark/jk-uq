@@ -81,6 +81,11 @@ HISTORY PointHistory (
     row,                        --子表的第几行
 );
 
+BOOK PointDistributionBook (
+    key pointStart int not null,
+    numbers int not null, 
+);
+
 --兑换单表
 SHEET PointExchangeSheet ver 0.1 (
     customer ID Customer,                   --客户编号

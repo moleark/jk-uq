@@ -71,3 +71,39 @@ returns ret (
         into ret select 0 as result;
     }
 };
+
+-- 获取积分分布
+QUERY GetPointDistribution (
+    start int,
+    end int,
+    granularity int,
+) returns ret (
+    subStart int,
+    subEnd int,
+    numbers int,
+) {
+    var minGranularity int;
+    var startX int, endX int, granularityX int;
+    var subStartX int, subEndX int;
+    /-mysql
+    set `_mingranularity_1` = 100;
+    set `_startx_2` = `_start` div `_mingranularity_1` * `_mingranularity_1`, `_endx_3` = `_end` div `_mingranularity_1` * `_mingranularity_1`, 
+        `_granularityx_4` = `_granularity` div `_mingranularity_1` * `_mingranularity_1`;
+    if `_granularityx_4` <= 0 then
+        set `_granularityx_4` = `_mingranularity_1`;
+    end if;
+    if (`_endx_3` - `_startx_2`) div `_granularityx_4` > `_mingranularity_1` then
+        set `_granularityx_4` = (`_endx_3` - `_startx_2`) div `_mingranularity_1`;
+    end if;
+    
+    set `_substartx_5` = `_startx_2`, `_subendx_6` = `_startx_2` + `_granularityx_4`;
+    while `_subendx_6` <= `_endx_3` do
+        insert into `_ret`(`substart`, `subend`, `numbers`)
+        select  `_substartx_5`, `_subendx_6`, count(*)
+        from    tv_pointdistributionbook 
+        where   pointstart >= `_substartx_5` and pointstart < `_subendx_6`;
+
+        set `_substartx_5` = `_subendx_6`, `_subendx_6` = `_subendx_6` + `_granularityx_4`;
+    end while; 
+    -/
+};
