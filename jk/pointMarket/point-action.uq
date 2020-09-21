@@ -9,3 +9,17 @@ Action Signin(
     history PointHistory
         set webUser = webuser, pointYear = pointYear, source = 2, point = amount, comments = '签到';
 };
+
+ACTION AddUsedCoupon(
+    couponId  char(50)
+)returns ret(
+    result  bigint --返回结果
+){
+    var result      bigint;
+
+    book CustomerCoupon at ($user) set coupon = couponId, CreateDate = now(); 
+    -- set customer = customer, webUser = $user, coupon = couponId;
+
+    set result = 1;
+    into ret select result;
+};

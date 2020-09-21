@@ -1,3 +1,5 @@
+-- 整个文件可删除
+-- TODO： delete
 ACTION IsCanUseOrder(
     orderId char(100),
     customer ID Customer
@@ -22,6 +24,7 @@ ACTION IsCanUseOrder(
 };
 
 /*
+ * TODO: delete
  * 获取可兑换积分的订单号及其积分值
 */
 QUERY GetOrderDrawable(
@@ -42,6 +45,9 @@ returns ret(
     order   by sum(p.subAmount) desc limit 1;
 };
 
+/*
+ * TODO: delete，不再使用
+*/
 QUERY GetPlatFormOrder(platformOrderId char(50))
 returns ret(
     customer ID BuyerAccount not null,
@@ -65,6 +71,9 @@ returns ret(
     where  p.platformOrderId = platformOrderId;
 };
 
+/*
+ * TODO: delete，不再使用
+*/
 ACTION GetLastPlatFormOrder(
     customer ID Customer
 )returns ret(
@@ -91,18 +100,4 @@ ACTION GetLastPlatFormOrder(
     }
 
     into ret select result, platformOrderId;
-};
-
-ACTION AddUsedCoupon(
-    couponId  char(50)
-)returns ret(
-    result  bigint --返回结果
-){
-    var result      bigint;
-
-    book CustomerCoupon at ($user) set coupon = couponId, CreateDate = now(); 
-    -- set customer = customer, webUser = $user, coupon = couponId;
-
-    set result = 1;
-    into ret select result;
 };
