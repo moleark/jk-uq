@@ -72,6 +72,14 @@ returns ret (
     }
 };
 
+-- 获取当前最大的积分数，用于界面上的区间计算
+QUERY GetMaxPoints ()
+returns ret (
+    maxPoints int,
+) {
+    into ret select max(pointstart) + 100 as maxPoints from PointDistributionBook;
+};
+
 -- 获取积分分布
 QUERY GetPointDistribution (
     start int,

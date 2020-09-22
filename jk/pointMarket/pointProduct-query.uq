@@ -70,6 +70,7 @@ returns ret(
 */
 Query GetVisitPointProducts() 
 PAGE (
+    seq bigint asc,
     id ID PointProductLib,           --产品编号
     point int,                                  --所需积分
     startDate date,                             --生效时间
@@ -87,18 +88,16 @@ PAGE (
     from    `tv_pointproducthotstat` as hs
             inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
     where   p1.startDate < NOW() and p1.endDate > NOW()
-    order   by hs.visits desc, p1.`id`
+    order   by hs.visits desc, p1.`id`;
 
-    INSERT  INTO `_$page` (`id`,`point`,`startDate`,`endDate`,`imageUrl`,`visits`,`exchanges`)
-    SELECT  p1.`id`, p1.`point`,p1.`startDate`,p1.`endDate`,p1.`imageUrl`,hs.`visits`,hs.`exchanges`
+    INSERT  INTO `_$page` (`seq`, `id`, `point`, `startDate`, `endDate`, `imageUrl`, `visits`, `exchanges`)
+    SELECT  p2.id, p1.`id`, p1.`point`, p1.`startDate`, p1.`endDate`, p1.`imageUrl`, hs.`visits`, hs.`exchanges`
     from    `_$page_visitpointproduct` as p2
             inner join `tv_pointproducthotstat` as hs on p2.pointproduct=hs.pointproduct
             inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
     where   p2.id >`_$pagestart`
     limit   `_$pagesize`;
-
     -/
-
 };
 
 ACTION SetPointProductVisits (
