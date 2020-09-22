@@ -96,6 +96,7 @@ PAGE (
             inner join `tv_pointproducthotstat` as hs on p2.pointproduct=hs.pointproduct
             inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
     where   p2.id >`_$pagestart`
+    order by p2.id
     limit   `_$pagesize`;
     -/
 };
