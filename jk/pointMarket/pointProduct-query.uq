@@ -56,6 +56,51 @@ returns ret(
     limit 8;
 };
 
+QUERY GetPointProductBySource(sourceId int, type char)
+returns ret(
+    pointProduct ID PointProductLib,
+) {
+    into ret select t.pointProduct
+    FROM    PointProductSource as t
+    where   t.sourceId = sourceId and t.type = type;
+};
+
+/*
+ * 获取客户已浏览商品
+*/
+Query GetVisitPointProducts() 
+PAGE (
+    id ID PointProductLib,           --产品编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+    visits int,
+    exchanges int
+) {
+    /-mysql
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_visitpointproduct`;
+    CREATE TEMPORARY TABLE `_$page_visitpointproduct` (`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `pointproduct` BIGINT NOT NULL) ENGINE=MyISAM;
+    insert  into `_$page_visitpointproduct`( pointproduct )
+    select  p1.id
+    from    `tv_pointproducthotstat` as hs
+            inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
+    where   p1.startDate < NOW() and p1.endDate > NOW()
+    order   by hs.visits desc, p1.`id`
+
+    INSERT  INTO `_$page` (`id`,`point`,`startDate`,`endDate`,`imageUrl`,`visits`,`exchanges`)
+    SELECT  p1.`id`, p1.`point`,p1.`startDate`,p1.`endDate`,p1.`imageUrl`,hs.`visits`,hs.`exchanges`
+    from    `_$page_visitpointproduct` as p2
+            inner join `tv_pointproducthotstat` as hs on p2.pointproduct=hs.pointproduct
+            inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
+    where   p2.id >`_$pagestart`
+    limit   `_$pagesize`;
+
+    -/
+
+};
+
 ACTION SetPointProductVisits (
     pointProduct ID PointProductLib,
 ) {
