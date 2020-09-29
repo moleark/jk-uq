@@ -415,7 +415,8 @@ returns ret (
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
         where    a.manage = _manage and a.year = _year
-        group by a.year as yeara, a.month as montha;
+        group by a.year as yeara, a.month as montha
+        order by montha desc;
 
         into ret select yeara , 'all' as montha , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume

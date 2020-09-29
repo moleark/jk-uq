@@ -224,8 +224,8 @@ returns ret (
 ){
     into ret select  a.customer, a.webuser, b.order, b.orderNo, b.date
     from    CustomerMyCustomerMap as a
-            join AchievementHistory as b on a.webuser = b.webuser and b.types = 1
-    where   a.mycustomer = _mycustomer and b.ordertype = _ordertype
+            join AchievementHistory as b on a.webuser = b.webuser
+    where   a.mycustomer = _mycustomer
     order by b.date desc
     limit 5;
 };
