@@ -55,7 +55,7 @@ BOOK PointBook (
     usedPoint int default 0,                -- 消耗的积分
     totalPoint int not null default 0,      -- 总积分
     tempPoint int not null default 0,       -- 在tonva订单系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
-    tempUsedPoint int not null default 0,    -- 在tonva系统消耗的临死积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
+    tempUsedPoint int not null default 0,    -- 在tonva系统消耗的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
     tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清理
 );
 
