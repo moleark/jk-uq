@@ -1,0 +1,15 @@
+{
+    "customerSignIn": [
+        { "name": "customer", "type": "id" },
+        { "name": "webUser", "type": "number" },
+        { "name": "pointYear", "type": "number" },
+        { "name": "point", "type": "number" },
+        { "name": "comments", "type": "string" }
+    ],
+    "webUserSignIn": [
+        { "name": "webUser", "type": "id" },
+        { "name": "pointYear", "type": "number" },
+        { "name": "point", "type": "number" },
+        { "name": "comments", "type": "string" }
+    ]
+}

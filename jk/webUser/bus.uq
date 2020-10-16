@@ -47,3 +47,12 @@ BUS couponBus from [百灵威系统工程部]/coupon
                 createDate = createDate, expiredDate = expiredDate;
         }
     };
+
+BUS pointShop2Bus from [百灵威系统工程部]/pointShop2
+    ACCEPT webUserSignIn{
+        var customer ID Customer;
+        set customer = wc.customer from WebUserCustomer as wc where wc.webUser = webUser;
+        if ( not customer is null ) {
+            bus pointShop2Bus.customerSignIn set customer = customer, webUser = webUser, pointYear = pointYear, point = point, comments = comments;
+        }
+    };

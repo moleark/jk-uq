@@ -59,19 +59,6 @@ PAGE (
     limit $pageSize;
 };
 
-
-QUERY checkIsSignin()
-returns ret (
-    result int           
-){
-
-    if exists( select 1 from PointHistory as a where a.source = 2 and a.webUser = $user and DATE( a.date ) =  DATE( NOW() ) ){
-        into ret select 1 as result;
-    }else{
-        into ret select 0 as result;
-    }
-};
-
 -- 获取当前最大的积分数，用于界面上的区间计算
 QUERY GetMaxPoints ()
 returns ret (

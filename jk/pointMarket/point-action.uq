@@ -2,12 +2,24 @@ Action Signin(
     webuser ID [$user],     -- WebUser非Customer
     amount int not null     -- 积分
 ){
-
     var pointYear int;
     set pointYear = year(now());
     book PointBook at (webuser, pointYear) set tempSignInPoint += amount;
     history PointHistory
         set webUser = webuser, pointYear = pointYear, source = 2, point = amount, comments = '签到';
+    bus pointShop2Bus.webUserSignIn set webUser = webUser, pointYear = pointYear, point = amount, comments = '';
+};
+
+QUERY checkIsSignin()
+returns ret (
+    result int           
+){
+
+    if exists( select 1 from PointHistory as a where a.source = 2 and a.webUser = $user and DATE( a.date ) =  DATE( NOW() ) ){
+        into ret select 1 as result;
+    }else{
+        into ret select 0 as result;
+    }
 };
 
 ACTION AddUsedCoupon(
