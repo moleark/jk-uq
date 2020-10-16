@@ -4,7 +4,7 @@ Action Signin(
 ){
     var pointYear int;
     set pointYear = year(now());
-    book PointBook at (webuser, pointYear) set tempSignInPoint += amount;
+    book PointBook at (webuser, pointYear) set point += amount, totalPoint += amount;
     history PointHistory
         set webUser = webuser, pointYear = pointYear, source = 2, point = amount, comments = '签到';
     bus pointShop2Bus.webUserSignIn set webUser = webUser, pointYear = pointYear, point = amount, comments = '';

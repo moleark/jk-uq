@@ -56,7 +56,7 @@ BOOK PointBook (
     totalPoint int not null default 0,      -- 总积分
     tempPoint int not null default 0,       -- 在tonva订单系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
     tempUsedPoint int not null default 0,   -- 在tonva系统消耗的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零), 2020-10-16, ligsh, 不再使用此字段
-    tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清零
+    tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清零, 2020-10-16, ligsh, 不再使用此字段
 );
 
 --积分明细（备份，当审核通过时吧这个积分记录复制到 PointBook ）
@@ -105,10 +105,10 @@ Action submit {
         set leftAmount = subAmount;
 
         foreach (var mPoint int, pointYear int of
-            select  (p.point + p.tempSignInPoint - p.usedPoint) as mPoint, p.pointYear
+            select  (p.point - p.usedPoint) as mPoint, p.pointYear
             from    PointBook as p
             where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
-                    and (p.point + p.tempSignInPoint - p.usedPoint) > 0
+                    and (p.point - p.usedPoint) > 0
             order by p.pointYear
         ) {
             if (leftAmount > 0){
@@ -119,7 +119,7 @@ Action submit {
                     set p = mPoint;
                 }
 
-                book PointBook at (webUser, pointYear) set point -= p, totalPoint -= p;
+                book PointBook at (webUser, pointYear) set usedPoint += p;
                 history PointHistory
                     set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
 
