@@ -55,7 +55,7 @@ BOOK PointBook (
     usedPoint int default 0,                -- 消耗的积分
     totalPoint int not null default 0,      -- 总积分
     tempPoint int not null default 0,       -- 在tonva订单系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
-    tempUsedPoint int not null default 0,    -- 在tonva系统消耗的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
+    tempUsedPoint int not null default 0,   -- 在tonva系统消耗的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零), 2020-10-16, ligsh, 不再使用此字段
     tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清零
 );
 
@@ -105,10 +105,10 @@ Action submit {
         set leftAmount = subAmount;
 
         foreach (var mPoint int, pointYear int of
-            select  (p.point + p.tempSignInPoint - p.usedPoint - p.tempUsedPoint) as mPoint, p.pointYear
+            select  (p.point + p.tempSignInPoint - p.usedPoint) as mPoint, p.pointYear
             from    PointBook as p
             where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
-                    and (p.point + p.tempSignInPoint - p.usedPoint - p.tempUsedPoint) > 0
+                    and (p.point + p.tempSignInPoint - p.usedPoint) > 0
             order by p.pointYear
         ) {
             if (leftAmount > 0){
@@ -119,7 +119,7 @@ Action submit {
                     set p = mPoint;
                 }
 
-                book PointBook at (webUser, pointYear) set tempUsedPoint += p;
+                book PointBook at (webUser, pointYear) set point -= p, totalPoint -= p;
                 history PointHistory
                     set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
 
@@ -168,6 +168,22 @@ STATE Matching {
         }
     }
 };
+/*
+STATE Shipping {
+    ACTION Cancel {
+        foreach(var pointYear int, point int of 
+            select pointYear, point * -1 as point
+            from PointHistory
+            where webUser = webUser and source = 3 and comments = $sheet_no;
+        ){
+            book PointBook at (webUser, pointYear) set = p;
+            history PointHistory
+                set webUser = webUser, pointYear = pointYear, point = point, comments=$sheet_no, source = 4;
+        } 
+        STATE TO END;
+    }
+};
+*/
 
 MAP CustomerCoupon (
     key webUser ID WebUser,     -- WebUser编号，不是Customer
