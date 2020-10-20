@@ -140,7 +140,7 @@ Action submit {
             bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
                 quantity = quantity, point = point, subAmount = subAmount;
         }
-        STATE TO END;
+        STATE TO Shipping;
     } else {
         STATE TO Matching;
     }
@@ -164,26 +164,27 @@ STATE Matching {
                 bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
                     quantity = quantity, point = point, subAmount = subAmount;
             }
-        STATE TO END;
+        STATE TO Shipping;
         }
     }
-};
-/*
+}
 STATE Shipping {
     ACTION Cancel {
         foreach(var pointYear int, point int of 
-            select pointYear, point * -1 as point
-            from PointHistory
-            where webUser = webUser and source = 3 and comments = $sheet_no;
+            select p.pointYear, p.point
+            from PointHistory as p
+            where p.webUser = webUser and p.source = 3 and p.comments = $sheet_no
         ){
-            book PointBook at (webUser, pointYear) set = p;
+            book PointBook at (webUser, pointYear) set usedPoint -= point * -1;
             history PointHistory
-                set webUser = webUser, pointYear = pointYear, point = point, comments=$sheet_no, source = 4;
+                set webUser = webUser, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;
         } 
-        STATE TO END;
+        STATE TO CANCELED;
     }
+}
+STATE CANCELED {
+
 };
-*/
 
 MAP CustomerCoupon (
     key webUser ID WebUser,     -- WebUser编号，不是Customer

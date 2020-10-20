@@ -62,17 +62,15 @@ BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
                 createDate = createDate, expiredDate = expiredDate;
         }
 
-        /*
         -- 审核后webUser的签到积分导入到内部
         foreach(
             var pointYear2 int, signInPoint int
-            of  select h.pointYear as pointYear2, sum(h.point) as signInPoint from PointHistory as h 
-            where h.webUser = webUser and h.pointYear > year(now()) -3 and h.source = 2
-            group by pointYear2
+            of  select pointYear2, sum(h.point) as signInPoint from PointHistory as h 
+            where h.webUser = webUser and h.pointYear > year(now()) - 3 and h.source = 2
+            group by h.pointYear as pointYear2
         ) {
             bus pointShop2Bus.customerSignIn set customer = customer, webUser = webUser, pointYear = pointYear2, point = signInPoint, comments = '';
         }
-        */
     };
 
 BUS pointProductBus from [百灵威系统工程部]/pointShop
