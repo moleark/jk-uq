@@ -97,10 +97,11 @@ OPEN TUID BuyerAccount (
     unique(no),
 ) ON SAVE {
     /-mysql
+    -- 判断`_$user` > 0，是仅希望通过界面修改时执行（通过joint修改时不执行）
     if `_$user` > 0 then
         insert into `joint-uq-jk`.map_customer_buyeraccount(id, `no`)
         values (`_$id`, `_no`)
-        on duplicate key update `no` = values(`no`);
+        on duplicate key update `no` = values(`no`), id = values(id);
     end if;
     -/
 };
