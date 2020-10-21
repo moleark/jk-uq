@@ -102,7 +102,7 @@ SHEET PointExchangeSheet ver 0.1 (
 Action submit {
     foreach exchangeItems {
         var leftAmount bigint;
-        set leftAmount = subAmount;
+        set leftAmount = amount;
 
         foreach (var mPoint int, pointYear int of
             select  (p.point - p.usedPoint) as mPoint, p.pointYear
