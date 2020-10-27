@@ -26,9 +26,9 @@ returns ret(
 ) {
     into ret select t.pointProduct, t.genre
     FROM    PointProductGenre as t
-            inner join PointProductLib AS pl on pl.id = t.pointProduct
+            join PointProductLib AS pl on pl.id = t.pointProduct
     where   t.genre = genre and pl.startDate < NOW() and pl.endDate > NOW()
-    ORDER   by pl.point asc
+    ORDER   by pl.point asc;
 };
 
 /*
