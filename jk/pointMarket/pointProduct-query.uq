@@ -25,8 +25,8 @@ returns ret(
     genre ID Genre,
 ) {
     SELECT  t.pointProduct, t.genre
-    FROM    pointshop.tv_pointproductgenre as t
-        inner join pointshop.tv_pointproductlib AS pl on pl.id = t.pointProduct
+    FROM    PointProductGenre as t
+            inner join PointProductLib AS pl on pl.id = t.pointProduct
     where   t.genre = genre and pl.startDate < NOW() and pl.endDate > NOW()
     ORDER   by pl.point asc
 };
