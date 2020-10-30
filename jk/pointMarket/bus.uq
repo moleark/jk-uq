@@ -35,7 +35,7 @@ bus couponBus from 百灵威系统工程部/coupon
         book WebUserCreditsUsed at (webUser, coupon, orderId ) set  usedDate = now();
         book PointBook at (webUser, pointYear) set tempPoint += point;
         history PointHistory
-            set webUser = webuser, pointYear = pointYear, source = 3, point = point, comments = orderid;
+            set webUser = webuser, pointYear = pointYear, source = 1, point = point, comments = orderid;
     };
 
 BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser

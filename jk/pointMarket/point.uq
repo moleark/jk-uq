@@ -73,7 +73,7 @@ HISTORY PointHistory (
     date,                       --生成时间
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    source int,                 --积分来源
+    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消；
     comments char(1000) ,       --备注
     webUser ID [$user],         --客户
     sheet,                      --单据
