@@ -22,14 +22,28 @@ TUID PointProductLib (
     main imageUrl char(500),                         --产品图片
     isValid tinyint not null default 1,
     search (description, descriptionC),
-);
+) ON SAVE {
+    var source char(8), sourceId char(50);
+    set source = type, sourceId = sourceId from PointProductSource where pointProduct = id; 
+    if (not source is null) {
+        bus pointProductBus.pointProductBusOut set pack = id, source = source, sourceId = sourceId,
+            point = point, startDate = unix_timestamp(startDate), endDate = unix_timestamp(endDate), imageUrl = imageUrl;
+    }
+};
 
 -- 积分兑换产品和 其来源的映射关系（1.来自营销产品库；2.来自第三方等）
 MAP PointProductSource (
     key pointProduct ID PointProductLib,
     key sourceId char(50),
     type char(8) not null,  -- selfsales, jd.com
-);
+) ON SAVE {
+    var point int, startDate date, endDate date, imageUrl char(500);
+    set point = point, startDate = startDate, endDate = endDate, imageUrl = imageUrl
+    from    PointProductLib
+    where   id = pointProduct; 
+    bus pointProductBus.pointProductBusOut set pack = pointProduct, source = type, sourceId = sourceId,
+        point = point, startDate = unix_timestamp(startDate), endDate = unix_timestamp(endDate), imageUrl = imageUrl;
+};
 
 MAP PointProductDetail (
     key pointProduct ID PointProductLib,
