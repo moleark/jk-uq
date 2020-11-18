@@ -1,0 +1,95 @@
+
+ENUM EnumPayMethod (
+    order=1,            -- 按单结算
+    amount=2,           -- 按金额结算
+    product=3,          -- 按品种结算
+);
+
+BOOK CustomerAccount (
+    KEY customer ID Customer,
+    KEY currency ID Currency,
+    deposit DEC(16, 4),                 -- 预存款
+    receivable DEC(16, 4),              -- 应收
+    payMethod tinyint,
+);
+
+-- 未付款订单，为按单结算和按金额结算准备的表
+PENDING CustomerOrderReceivable (
+    id,
+    webUser ID WebUser,
+    customer ID Customer,
+    order ID,
+    date DATETIME,
+    amount DEC(16, 4),
+    currency ID Currency,
+);
+
+
+ENUM EnumDealAction (
+    prepay=1,           -- 预付
+    pay=2,              -- 付款
+    return=3,           -- 退货
+    refund=4            -- 退款
+);
+
+HISTORY CustomerDealHistory (
+    Date,
+    customer ID Customer,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    amount DEC(16, 4),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+);
+
+HISTORY CustomerDealOrderHistory (
+    Date,
+    customer ID Customer,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    sheet,                           -- 操作对应的单据
+    type,
+    row,                       -- 单据对应的行号
+    quantity DEC(16, 4),                -- 数量
+    amount DEC(16, 4),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+                                        -- 比如，如果是退货，这里可以是product id和pack id，中间用空格分开的字符串
+                                        -- 比如，如果是付款，详细信息应该在sheet上有，所以不需要额外的信息
+);
+
+
+-- 账单以CustomerAccount为准，WebUserAccount仅当webUser尚未关联CustomerID时使用
+BOOK WebUserAccount (
+    KEY webUser ID WebUser,
+    KEY currency ID Currency,
+    deposit DEC(16, 4),                 -- 预存款
+    receivable DEC(16, 4),              -- 应收
+    payMethod tinyint,
+);
+
+HISTORY WebUserDealHistory (
+    Date,
+    webUser ID WebUser,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    amount DEC(16, 4),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+);
+
+HISTORY WebUserDealOrderHistory (
+    Date,
+    webUser ID WebUser,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    sheet,                           -- 操作对应的单据
+    type,
+    row,                       -- 单据对应的行号
+    quantity DEC(16, 4),                -- 数量
+    amount DEC(16, 4),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+                                        -- 比如，如果是退货，这里可以是product id和pack id，中间用空格分开的字符串
+                                        -- 比如，如果是付款，详细信息应该在sheet上有，所以不需要额外的信息
+);
