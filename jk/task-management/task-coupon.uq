@@ -3,8 +3,8 @@ OPEN TUID Coupon (
     id,
     code char(12),
     types  char(20),
-    user ID [$user],
-    customer ID Customer,
+    user ID [$user],    -- 生成人
+    customer ID Customer,  -- 不再使用
     validitydate date,
     discount dec(12, 2),     --折扣
     preferential dec(12, 2), --优惠额度
@@ -39,7 +39,7 @@ MAP CouponOrderMap (
     createDate date,
 );
 
---优惠券订单
+-- Coupon发送记录
 History CouponSendHistory (
     date,
     coupon ID Coupon,
@@ -47,7 +47,7 @@ History CouponSendHistory (
 );
 
 
-/** 添加优惠码*/
+/** 添加优惠码 */
 ACTION CreateCoupon(
     webUser int,
     validitydate date,
@@ -67,7 +67,7 @@ ACTION CreateCoupon(
     into ret select couponId as coupon, code;
 };
 
-/** 验证优惠码是否可用*/
+/** 验证优惠码是否可用 */
 ACTION IsCanUseCoupon (
     code char(20),
     webUser ID [$user]

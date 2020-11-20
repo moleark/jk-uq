@@ -1,4 +1,4 @@
-
+-- 给MyCustomer发送post的历史记录
 History MyCustomerPostHistory(
     date,
     sales ID [$user],

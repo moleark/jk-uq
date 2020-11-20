@@ -66,7 +66,8 @@ MAP CustomerMyCustomerMap (
     webuser ID [$user],
 );
 
---开放客服
+-- 开放客服
+-- 没有使用
 MAP OpenCustomersMap (
     key customer ID Customer,
     createTime datetime,
@@ -78,10 +79,10 @@ BOOK CustomerNowSalesBOOK (
     sales ID [$user],
     webuser ID [$user],
     types char(10),
-    validity datetime
+    validity datetime   -- 绑定的结束时间，每次客户下单都会延期3个月
 );
 
---当前轻代理
+-- 客户和销售/轻代理的历史绑定关系
 History CustomerNowSalesHistory (
     date,
     customer ID Customer,
@@ -92,7 +93,7 @@ History CustomerNowSalesHistory (
 );
 
 
---受保护客户，一次性使用
+-- 受保护客户，一次性使用（即内部绑定客户，不允许外部绑定）
 MAP ProtectedCustomersMap (
     key customer ID Customer,
     key sales ID [$user],
@@ -113,7 +114,7 @@ MAP CustomerDepartment (
     key department ID Department
 );
 
-
+-- 研究领域字典表
 TUID Research (
     id,
     main name char(200),
@@ -125,17 +126,20 @@ MAP ResearchRelation (
     key child ID Research,
     key parent ID Research
 );
-  
+
+-- 客户的研究领域，不再使用，被CustomerDomain替换了
 MAP CustomerResearch (
     key customer ID MyCustomer,
     key research ID Research
 );
- 
+
+-- 客户的研究领域
 MAP CustomerDomain (
     key customer ID MyCustomer,
     key domain ID Domain
 );
- 
+
+-- 职位字典表  
 TUID OfficePost (
     id,
     main name char(200),
@@ -148,13 +152,13 @@ MAP OfficePostRelation (
     key parent ID OfficePost
 );
 
+-- 客户的职位
 MAP CustomerOfficePost (
     key customer ID MyCustomer,
     key officpost ID OfficePost
 );
  
- 
---导客户用临时使用
+-- 导客户临时使用
 MAP  Importcustomerdata (
     key customer ID Customer,
     key organization ID Organization,

@@ -1,3 +1,4 @@
+-- 客户下单后记录，
 PENDING CustomerOrderPending ver 0.6 (
     id,
     sales ID [$user],    --销售
@@ -41,14 +42,14 @@ BOOK SalesAchievementBook(
     waitWithdrawal dec(12, 2) not null default 0 , --等待提现的金额 
 );
 
---销售团队统计表
+-- 销售团队统计表, 没有使用
 BOOK SalesTeamBook(
     key user ID [$user],
     teamCount bigint not null default 0 , --团队数量
     innerTeamCount bigint not null default 0 , --内部团队数量    
 );
 
-
+-- 销售日报的数据源
 BOOK Achievement (
     key date  date,
     key manage ID [$user],
@@ -62,7 +63,7 @@ BOOK Achievement (
     saleVolume dec(12, 2) not null default 0   --销量
 );
 
-
+-- 单独记录销售的业绩，没有使用
 BOOK AssistAchievements(
   key year  int,
   key month int,
@@ -71,7 +72,7 @@ BOOK AssistAchievements(
 );
 
  
---销售客户统计表
+-- 销售客户统计表(在“我的”界面显示)
 BOOK SalesCustomerBook(
     key user ID [$user],
     customerCount dec(12, 2) not null default 0 , --客户数量
@@ -88,14 +89,14 @@ History AchievementHistory (
     ordertype char(10), --作废
     price dec(12, 2) not null,
     agentprices dec(12, 2) not null,
-    types smallint,
+    types smallint,     -- 1:自己的收益;2:一级团队收益;3:二级团队收益;
     amount dec(12, 2) not null,
 );
 
-/**业绩历史记录**/
+/** 订单回款状态 **/
 BOOK OrderStateBook (
     key order ID,
-    state smallint,
+    state smallint,  -- 0:未回款或未全部回款；1:已全部回款
     amount dec(12, 2) not null,
     payAmount dec(12, 2) not null
 );

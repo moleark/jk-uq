@@ -24,6 +24,7 @@ History BalanceHistory (
 );
 
 /**取款历史记录**/
+-- 已不再使用 
 History WithdrawalsHistory (
     date,
     sales ID [$user],    --销售
@@ -112,7 +113,7 @@ BUS paymentBus ver 0.4 from [百灵威系统工程部]/easyBuziPayment
 
 
 
-/**取款单**/
+/**取款申请单**/
 SHEET Withdrawal ver 0.6 (
     webUser ID [$user],
     amount dec(12, 2),
