@@ -1,0 +1,20 @@
+BUS fiReceivableBus from 百灵威系统工程部/FiReceivable;
+BUS orderBus from 百灵威系统工程部/order
+    ACCEPT order {
+        if (type = 1) {
+            book BuyerAccountBook at (customer, currency, 1) set receivable += amount; 
+        }
+        if (type = 2) {
+            book WebUserAccountBook at (webUser, currency, 1) set receivable += amount; 
+        }
+    };
+
+/*
+{
+    "orderPayment": [
+        { "name": "order", "type": "id" },
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "id" },
+    ]
+}
+*/

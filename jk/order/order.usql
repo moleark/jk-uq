@@ -56,6 +56,11 @@ BUS webUserBus.getCuByWu as q into tb {
 } {
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
+
+    var pid ID;
+    set pid = id from OrderReceivable as t where t.webUser = webUser and t.order = id;
+    pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: id, amount: amount, currency: currency, date: now()) to pid;
+
     foreach orderItems {
         history OrderHistory
             set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
@@ -219,4 +224,15 @@ BOOK OrderState (
 MAP OrderBuyerAccount (
     key order ID $Sheet,
     key buyerAccount ID BuyerAccount,
+);
+
+-- 未付款订单，为按单结算和按金额结算准备的表
+PENDING OrderReceivable (
+    id,
+    buyerAccount ID BuyerAccount,
+    webUser ID WebUser,
+    order ID,
+    date DATETIME,
+    amount DEC(12, 2),
+    currency ID Currency,
 );

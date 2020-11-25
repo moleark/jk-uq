@@ -18,3 +18,11 @@ BUS cmB from [百灵威系统工程部]/coupon
             bus couponBus.creditsUsedByCustomer into orderItems add orderItemId = orderItemId, point = point;
         }
     };
+
+bus fiReceivable from 百灵威系统工程部/FiReceivable
+    ACCEPT orderPayed {
+        -- 检查order是否还在pending中，若在，则删除pending，同时读取order信息
+        -- 形成款项与订单的匹配历史，发送bus通知财务应收系统
+        delete p from OrderReceivable as p where p.order = order;
+        
+    }
