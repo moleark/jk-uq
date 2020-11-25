@@ -58,8 +58,7 @@ BUS webUserBus.getCuByWu as q into tb {
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
 
     var pid ID;
-    set pid = id from OrderReceivable as t where t.webUser = webUser and t.order = id;
-    pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: id, amount: amount, currency: currency, date: now()) to pid;
+    pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: $id, amount: amount, currency: currency, date: now()) to pid;
 
     foreach orderItems {
         history OrderHistory
