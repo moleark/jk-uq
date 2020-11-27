@@ -1,131 +1,44 @@
 {
     "point": [
-        {
-            "name": "member",
-            "type": "id"
-        },
-        {
-            "name": "years",
-            "type": "number"
-        },
-        {
-            "name": "point",
-            "type": "number"
-        },
-        {
-            "name": "pointUsed",
-            "type": "number"
-        }
+        { "name": "member", "type": "id" },
+        { "name": "years", "type": "number" },
+        { "name": "point", "type": "number" },
+        { "name": "pointUsed", "type": "number" }
     ],
     "order": [
-        {
-            "name": "id",
-            "type": "id"
-        },
-        {
-            "name": "no",
-            "type": "string"
-        },
-        {
-            "name": "webUser",
-            "type": "id"
-        },
-        {
-            "name": "organization",
-            "type": "id"
-        },
-        {
-            "name": "customer",
-            "type": "id"
-        },
+        { "name": "id", "type": "id" },
+        { "name": "no", "type": "string" },
+        { "name": "webUser", "type": "id" },
+        { "name": "organization", "type": "id" },
+        { "name": "customer", "type": "id" },
         {
             "name": "orderItems",
             "type": "array",
             "fields": "orderItem"
         },
-        {
-            "name": "shippingContact",
-            "type": "id"
-        },
-        {
-            "name": "invoiceContact",
-            "type": "id"
-        },
-        {
-            "name": "invoiceType",
-            "type": "id"
-        },
-        {
-            "name": "invoiceInfo",
-            "type": "id"
-        },
-        {
-            "name": "freightFee",
-            "type": "number"
-        },
-        {
-            "name": "freightFeeRemitted",
-            "type": "number"
-        },
-        {
-            "name": "amount",
-            "type": "number"
-        },
-        {
-            "name": "currency",
-            "type": "id"
-        },
-        {
-            "name": "coupon",
-            "type": "id"
-        },
-        {
-            "name": "couponOffsetAmount",
-            "type": "number"
-        },
-        {
-            "name": "couponRemitted",
-            "type": "number"
-        }
+        { "name": "shippingContact", "type": "id" },
+        { "name": "invoiceContact", "type": "id" },
+        { "name": "invoiceType", "type": "id" },
+        { "name": "invoiceInfo", "type": "id" },
+        { "name": "freightFee", "type": "number" },
+        { "name": "freightFeeRemitted", "type": "number" },
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "id" },
+        { "name": "coupon", "type": "id" },
+        { "name": "couponOffsetAmount", "type": "number" },
+        { "name": "couponRemitted", "type": "number" }
     ],
     "orderItem": [
-        {
-            "name": "product",
-            "type": "id"
-        },
-        {
-            "name": "pack",
-            "type": "id"
-        },
-        {
-            "name": "quantity",
-            "type": "number"
-        },
-        {
-            "name": "price",
-            "type": "number"
-        },
-        {
-            "name": "subAmount",
-            "type": "number"
-        }
+        { "name": "product", "type": "id" },
+        { "name": "pack", "type": "id" },
+        { "name": "quantity", "type": "number" },
+        { "name": "price", "type": "number" },
+        { "name": "subAmount", "type": "number" }
     ],
     "productInventory": [
-        {
-            "name": "warehouse",
-            "type": "id"
-        },
-        {
-            "name": "product",
-            "type": "id"
-        },
-        {
-            "name": "pack",
-            "type": "id"
-        },
-        {
-            "name": "quantity",
-            "type": "number"
-        }
+        { "name": "warehouse", "type": "id" },
+        { "name": "product", "type": "id" },
+        { "name": "pack", "type": "id" },
+        { "name": "quantity", "type": "number" }
     ]
 }

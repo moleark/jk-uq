@@ -1,5 +1,5 @@
 
---好友昵称
+-- 团队成员信息备注
 BOOK PeerAssignedBook(
     key user ID [$user],
     key peer ID [$user],
@@ -17,7 +17,7 @@ MAP WebUserAccountMap (
     bankaccountnumber char(20)
 );
 
---平台用户和内部员工关系
+-- 平台用户和内部员工关系
 MAP WebUserEmployeeMap (
     key webuser ID [$user],
     key employee ID employee,

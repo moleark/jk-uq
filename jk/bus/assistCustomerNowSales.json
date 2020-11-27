@@ -1,0 +1,64 @@
+{
+    "assistCustomerNowSales": [
+        {
+            "name": "sales",
+            "type": "id"
+        },
+        {
+            "name": "customer",
+            "type": "id"
+        },
+        {
+            "name": "webuser",
+            "type": "id"
+        },
+        {
+            "name": "createdate",
+            "type": "string"
+        }
+    ],
+    "assistAchievement": [
+        {
+            "name": "sales",
+            "type": "id"
+        },
+        {
+            "name": "salesAmount",
+            "type": "number"
+        },
+        {
+            "name": "amount",
+            "type": "number"
+        },
+        {
+            "name": "receivableAmount",
+            "type": "number"
+        },
+        {
+            "name": "withdrawalAmount",
+            "type": "number"
+        }
+    ],
+    "assistAchievementDetail": [
+        {
+            "name": "sales",
+            "type": "id"
+        },
+        {
+            "name": "webuser",
+            "type": "id"
+        },
+        {
+            "name": "orderNo",
+            "type": "string"
+        },
+        {
+            "name": "salesAmount",
+            "type": "number"
+        },
+        {
+            "name": "amount",
+            "type": "number"
+        }
+    ]
+}

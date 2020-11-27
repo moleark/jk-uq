@@ -33,7 +33,8 @@ TUID JkTaskType (
     unique(name)
 );
 
---任务类型
+-- 内部系统的任务，年初将内部系统任务导入到Task表，讲此表作为导入的中间表使用，从bus接收的数据写入此表，
+-- 手动讲此表数据写入task，现在已经不再使用了。 
 TUID JkTask (
     id,
     main description char(100),
@@ -76,19 +77,28 @@ TUID TaskStatus (
     unique(name),
 );
 
---项目
+-- 项目，不再使用（当初设计任务完成后，由销售讲项目号填入此表）
 TUID Project (
     id,
     main name char(200),
 );
 
---业务类型关系
+-- 订单，不再使用（当初设计任务完成后，由销售将订单号填入此表）
+MAP TaskOrder  (
+    key task ID Task,
+    key ordertype char(50),
+    key orderid char(50)
+);
+
+-- 业务类型关系
+-- 不再使用
 MAP TaskBiz (
     key type ID TaskType,
     key biz ID BizType,
 );
 
 --业务类型关系
+-- 不再使用
 MAP TaskBizJKTaskType (
     key type ID TaskType,
     key biz ID BizType,
@@ -96,6 +106,7 @@ MAP TaskBizJKTaskType (
 );
 
 --业务类型和完结内容关系
+-- 不再使用
 MAP BizField (
     key task ID Task,
     key field ID Field
@@ -110,6 +121,7 @@ BOOK TaskBook (
 );
 
 --任务完结记录
+-- 不再使用
 BOOK TaskFieldBook (
     key task ID Task,
     key field ID Field,
@@ -118,6 +130,7 @@ BOOK TaskFieldBook (
 );
 
 --任务完结产品
+-- 不再使用
 BOOK TaskProductBook (
     key task ID Task,
     key product ID ProductX,
@@ -125,6 +138,7 @@ BOOK TaskProductBook (
 );
 
 --任务完结产品包装
+-- 不再使用
 BOOK TaskProductPackBook (
     key task ID Task,
     key product ID ProductX,
@@ -133,6 +147,7 @@ BOOK TaskProductPackBook (
 );
 
 --任务完结项目
+-- 不再使用
 BOOK TaskProjectBook (
     key task ID Task,
     key project ID Project,
@@ -170,8 +185,12 @@ ACTION CompletionTask(
         tuid Field into fieldId unique(fieldName);
         book TaskFieldBook at(taskId, fieldId) set value=1, note = value;
     }
-
-    book Achievement at(now(),0,$user)set endTaskCount+=1; 
+ 
+    var _month int, _year int, businessdate  DATE;
+    set businessdate = case when DAY( NOW() ) > 20 then dateadd(month, 1,  NOW() ) else  NOW()  end;
+    set _month = month(businessdate);
+    set _year = year(businessdate);
+    book Achievement at(now(),0,$user)set endTaskCount+=1 , month = _month, year = _year ; 
 };
 
 /** 完结任务--客户资料*/
@@ -272,16 +291,16 @@ RETURNS ret (
     customer ID Customer,
     description char(100)
 ) {
-    var id bigint, description char(100), customer ID Customer, type ID TaskType,
+    var id bigint, description char(100), _customer ID Customer, type ID TaskType,
             biz ID BizType, employee ID employee, priorty int, deadline date;
 
-    set     id=a.id, description=a.description, customer=a.customer, type=a.type,
+    set     id=a.id, description=a.description, _customer=a.customer, type=a.type,
             biz=a.biz, employee=a.employee, priorty=a.priorty, deadline=a.deadline
     from    JkTask as a
     where   a.id=task;
 
     var mycustomerid ID;
-    set mycustomerid=mycustomer from CustomerMyCustomerMap where Customer=customer;
+    set mycustomerid=mycustomer from CustomerMyCustomerMap where Customer=_customer;
 
     if ( mycustomerid is null ){
         --判断是否有单位，没有单位新建单位
@@ -295,7 +314,7 @@ RETURNS ret (
         var name char(50), firstName char(50), lastName char(50), xyz char(5), gender char(5), salutation char(10), birthDay date;
         set     name=a.name, firstName=a.firstName, lastName=a.lastName, xyz=a.xyz, gender=a.gender, salutation=a.salutation, birthDay=a.birthDay
         from    Customer as a
-        where   a.id = customer;
+        where   a.id = _customer;
 
         if(name is null){
             set name = customername;
@@ -305,7 +324,7 @@ RETURNS ret (
             name=name, firstName=firstName, lastName=lastName, gender=gender, user=$user, unit=mycustomerUnitid,
             salutation=salutation, birthDay=birthDay, isValid=1, createTime=now();
 
-         BOOK CustomerMyCustomerMap at ( $user, mycustomerid ) set customer=customer ;
+         BOOK CustomerMyCustomerMap at ( $user, mycustomerid ) set customer=_customer ;
     }
 
     var taskId ID;
@@ -314,7 +333,7 @@ RETURNS ret (
         priorty=priorty, deadline=deadline, createTime=$date;
 
     BOOK TaskBook at (taskId) set status=1, principal=$user;
-    into ret select taskId as id, customer,description;
+    into ret select taskId as id, _customer as customer ,description;
 
     TUID JkTask into id id (id) set isValid = 0;
 };

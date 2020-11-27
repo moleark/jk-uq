@@ -1,9 +1,9 @@
 ACCESS accOrder(Order);
 
 SHEET Order ver 0.6 (
-    webUser ID WebUser,
+    webUser ID WebUser,         -- 当前的webuser
     organization ID Organization,
-    customer ID BuyerAccount,
+    customer ID BuyerAccount,   -- webUser相关的buyerAccount
 
     ARR orderItems (
         product ID ProductX not null,
@@ -50,14 +50,26 @@ Verify {
         }
     }
 }
-Action submit {
+Action submit
+BUS webUserBus.getCuByWu as q into tb {
+    set q.webUser = webUser;
+} {
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
+
+    var pid ID;
+    pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: $id, amount: amount, currency: currency, date: now()) to pid;
+
     foreach orderItems {
         history OrderHistory
             set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee,
                 salesRegion = salesRegion;
+    }
+    
+    var customerid int;
+    foreach tb {
+        set customerid = customer;
     }
 
     var bustype int;
@@ -65,7 +77,8 @@ Action submit {
     if(customer > 0) {
         set bustype = 1;
     }
-    bus orderBus.order set type = bustype, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = customer,
+    bus orderBus.order set type = bustype, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
+        customer = customerid, buyerAccount = customer,
         shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
@@ -73,29 +86,51 @@ Action submit {
         bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
 
-    if (customer > 0) {
+    var pointMultiple int;
+    set pointMultiple = 2;
+    if (now() > '2020-09-01' and now() < '2020-10-01') 
+        set pointMultiple = 4
+    if(point > 0){
+        bus couponBus.creditsUsedByWebUser set orderId = $sheet_no, webUser = webUser, amount = amount, currency = currency
+        , point = point, coupon = coupon;
+        foreach orderItems {
+            bus couponBus.creditsUsedByWebUser into orderItems add row = $row, point = quantity * price * pointMultiple;
+        }
+    }
+
+    if (customerid > 0) {
+        if(point > 0){
+            bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+                , point = point, coupon = coupon;
+            foreach orderItems {
+                bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
+            }
+        }
+    }
+
+    if (customer > 0){
         STATE TO END;
     } else {
-
         STATE TO Matching;
     }
 }
 STATE Matching {
     ACTION Pass
-    BUS webUserBus.getCustomerByWebUser as q into tb {
+    BUS webUserBus.getCuByWu as q into tb {
         set q.webUser = webUser;
     } {
         if (customer is null) {
-            /*
+            var buyerAccount int;
+            set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
+
             var customerid int;
             foreach tb {
                 set customerid = customer;
             }
-            */
-            var buyerAccount int;
-            set buyerAccount = buyerAccount from OrderBuyerAccount where order = $id;
-            if (not buyerAccount is null) {
-                bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, customer = buyerAccount,
+            
+            if (buyerAccount > 0) {
+                bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
+                    customer = customerid, buyerAccount = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
                     freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
@@ -103,6 +138,18 @@ STATE Matching {
                     bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
                 STATE TO END;
+            }
+
+            if(customerid > 0 and point > 0){
+                var pointMultiple int;
+                set pointMultiple = 2;
+                if (now() > '2020-09-01' and now() < '2020-10-01') 
+                    set pointMultiple = 4;
+                bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+                , point = point, coupon = coupon;
+                foreach orderItems {
+                    bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
+                }
             }
         }
     }
@@ -176,4 +223,15 @@ BOOK OrderState (
 MAP OrderBuyerAccount (
     key order ID $Sheet,
     key buyerAccount ID BuyerAccount,
+);
+
+-- 未付款订单，为按单结算和按金额结算准备的表
+PENDING OrderReceivable (
+    id,
+    buyerAccount ID BuyerAccount,
+    webUser ID WebUser,
+    order ID,
+    date DATETIME,
+    amount DEC(12, 2),
+    currency ID Currency,
 );

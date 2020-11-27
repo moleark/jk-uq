@@ -31,7 +31,7 @@ OPEN MAP WebUserContact(
     wechatId char(50),
     addressString char(400),
     address ID Address,
-) ON SAVE {
+) ON ADD {
     if ($user > 0){
         if not exists(select 1 from WebUserBuyeraccount where webUser = $user)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
@@ -48,7 +48,7 @@ OPEN MAP WebUserContact(
 OPEN MAP WebUserContacts (
     key webUser ID WebUser,
     key contact ID Contact,
-) ON SAVE {
+) ON ADD {
     if($user > 0) {
         if not exists(select 1 from WebUserBuyeraccount where webUser = $user)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
@@ -66,7 +66,7 @@ OPEN MAP WebUserSetting ver 0.1(
     invoiceContact ID Contact,
     invoiceType ID InvoiceType,
     invoiceInfo ID InvoiceInfo,
-) ON SAVE {
+) ON ADD {
     if($user > 0){
         bus webUserBus.WebUserInvoice set webUser = webUser, invoiceType = invoiceType, invoiceInfo = invoiceInfo;
     }
@@ -84,16 +84,18 @@ OPEN TUID WebUserSettingType (
     main description char(20),
 );
 
--- WebUser 和 Customer的关联关系
+/* WebUser 和 Customer的关联关系
+数据来源：1.客户审核中本人CID对应的customerid；2.现在官网ClientInfo中的CID对应的customerid
+*/
 OPEN MAP WebUserCustomer(
     key webUser ID WebUser,
     customer ID Customer,
-) ON SAVE {
-    if($user > 0) {
-        bus webUserBus.WebUserCustomer set webUser = webUser, customer = customer;
-    }
-};
+);
 
+/*
+WebUser 和 采购方账号 的关联关系
+数据来源：1.客户审核中的老师CID对应的customerid; 2.
+*/
 MAP WebUserBuyerAccount ver 0.02 (
     key webUser ID WebUser,
     key buyerAccount ID BuyerAccount,

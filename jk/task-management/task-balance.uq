@@ -23,6 +23,17 @@ History BalanceHistory (
     currency ID
 );
 
+/**取款历史记录**/
+-- 已不再使用 
+History WithdrawalsHistory (
+    date,
+    sales ID [$user],    --销售
+    order ID,            --回款单、取款单、退款单
+    orderNo char(20),          --订单号
+    amount dec(12, 2) not null, --增加收益额
+    currency ID
+);
+
 --获取老系统回款数据
 BUS orderpaymentBus ver 0.4 from [百灵威系统工程部]/SalesTask
     ACCEPT orderpayment (
@@ -91,7 +102,7 @@ BUS paymentBus ver 0.4 from [百灵威系统工程部]/easyBuziPayment
             book WithdrawalStateBook at(withdrawal) set state = 2, webuser= webUser, comments=comments, createTime = now();
             history WithdrawalStateHistory set withdrawal=withdrawal, state=2, comments=comments;
             --付款结束后 等待提现  和提现金额同时减少
-            book SalesAchievementBook at(webUser) set waitWithdrawal-=amount, totalaWithdrawal-=amount;
+            book SalesAchievementBook at(webUser) set waitWithdrawal-=amount, totalaWithdrawal+=amount;
         }else{
             book WithdrawalStateBook at(withdrawal) set state = 3, webuser= webUser, comments=comments, createTime = now();
             history WithdrawalStateHistory set withdrawal=withdrawal, state=3, comments=comments;
@@ -102,30 +113,34 @@ BUS paymentBus ver 0.4 from [百灵威系统工程部]/easyBuziPayment
 
 
 
-/**取款单**/
+/**取款申请单**/
 SHEET Withdrawal ver 0.6 (
     webUser ID [$user],
     amount dec(12, 2),
     currency ID
 )
 Action submit {
+ 
 
-    --更新取款单状态
-    book WithdrawalStateBook at($id) set state = 1, comments='提现', createTime = now(), amount=amount, webuser=webuser;
-    history WithdrawalStateHistory set withdrawal=$id, state=1, comments='提现';
+    --只有 有余额的情况下才允许提现
+    
+        --更新取款单状态
+        book WithdrawalStateBook at($id) set state = 1, comments='提现', createTime = now(), amount=amount, webuser=webuser;
+        history WithdrawalStateHistory set withdrawal=$id, state=1, comments='提现';
 
-    --更新取款总金额
-    book SalesAchievementBook at(webUser) set waitWithdrawal+=amount;
+        --更新取款总金额
+        book SalesAchievementBook at(webUser) set waitWithdrawal+=amount;
 
-    --记录取款历史    
-    var mycustomer ID MyCustomer, customer ID Customer;
-    set mycustomer = a.mycustomer, customer = a.customer from CustomerMyCustomerMap as a where a.webuser=webUser;
-    history BalanceHistory set sales=webUser, order=$id, orderNo=$sheet_no, ordertype='withdrawal', amount=amount, currency=currency,paymentAmount=0;
+        --记录取款历史    
+        var mycustomer ID MyCustomer, customer ID Customer;
+        set mycustomer = a.mycustomer, customer = a.customer from CustomerMyCustomerMap as a where a.webuser=webUser;
+        --history WithdrawalsHistory set sales=webUser, order=$id, orderNo=$sheet_no, amount=amount, currency=currency;
 
-    --发送取款记录BUS
-    bus agentBus.paymentrequest set withdrawal=$id, agency=webUser, amount=amount, currency=currency;
+        --发送取款记录BUS
+        bus agentBus.paymentrequest set withdrawal=$id, agency=webUser, amount=amount, currency=currency;
+    
 };
-
+ 
 
 --取款单状态字典表
 TUID WithdrawalState(

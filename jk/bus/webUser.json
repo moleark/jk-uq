@@ -1,112 +1,61 @@
 {
     "WebUser": [
-        {
-            "name": "id",
-            "type": "number"
-        },
-        {
-            "name": "no",
-            "type": "number"
-        },
-        {
-            "name": "name",
-            "type": "string"
-        },
-        {
-            "name": "firstName",
-            "type": "string"
-        },
-        {
-            "name": "lastName",
-            "type": "string"
-        },
-        {
-            "name": "gender",
-            "type": "string"
-        },
-        {
-            "name": "salutation",
-            "type": "string"
-        },
-        {
-            "name": "organizationName",
-            "type": "string"
-        },
-        {
-            "name": "departmentName",
-            "type": "string"
-        }
+        { "name": "id", "type": "number" },
+        { "name": "no", "type": "number" },
+        { "name": "name", "type": "string" },
+        { "name": "firstName", "type": "string" },
+        { "name": "lastName", "type": "string" },
+        { "name": "gender", "type": "string" },
+        { "name": "salutation", "type": "string" },
+        { "name": "organizationName", "type": "string" },
+        { "name": "departmentName", "type": "string" }
     ],
     "WebUserContact": [
-        {
-            "name": "webUser",
-            "type": "id"
-        },
-        {
-            "name": "telephone",
-            "type": "string"
-        },
-        {
-            "name": "mobile",
-            "type": "string"
-        },
-        {
-            "name": "email",
-            "type": "string"
-        },
-        {
-            "name": "fax",
-            "type": "string"
-        },
-        {
-            "name": "zipCode",
-            "type": "string"
-        },
-        {
-            "name": "wechatId",
-            "type": "string"
-        },
-        {
-            "name": "addressString",
-            "type": "string"
-        },
-        {
-            "name": "address",
-            "type": "id"
-        }
+        { "name": "webUser", "type": "id" },
+        { "name": "telephone", "type": "string" },
+        { "name": "mobile", "type": "string" },
+        { "name": "email", "type": "string" },
+        { "name": "fax", "type": "string" },
+        { "name": "zipCode", "type": "string" },
+        { "name": "wechatId", "type": "string" },
+        { "name": "addressString", "type": "string" },
+        { "name": "address", "type": "id" }
     ],
     "WebUserCustomer": [
-        {
-            "name": "webUser",
-            "type": "id"
-        },
-        {
-            "name": "customer",
-            "type": "id"
-        }
+        { "name": "webUser", "type": "id" },
+        { "name": "customer", "type": "id" }
+    ],
+    "WebUserAuditPass": [
+        { "name": "webUser", "type": "id" },
+        { "name": "customer", "type": "id" }
     ],
     "WebUserInvoice": [
-        {
-            "name": "webUser",
-            "type": "id"
-        },
-        {
-            "name": "invoiceType",
-            "type": "number"
-        },
-        {
-            "name": "invoiceInfo",
-            "type": "id"
-        }
+        { "name": "webUser", "type": "id" },
+        { "name": "invoiceType", "type": "number" },
+        { "name": "invoiceInfo", "type": "id" }
     ],
     "WebUserContacts": [
-        {
-            "name": "webUser",
-            "type": "id"
-        },
-        {
-            "name": "contact",
-            "type": "id"
-        }
-    ]
+        { "name": "webUser", "type": "id" },
+        { "name": "contact", "type": "id" }
+    ],
+    "CustomerContractor": [
+        { "name": "customer", "type": "id" },
+        { "name": "contractor", "type": "id" }
+    ],
+    "getCustomerByWebUser": {
+        "param": [{ "name": "webUser", "type": "id" }],
+        "returns": [{ "name": "customer", "type": "id" }]
+    },
+    "getCuByWu": {
+        "param": [{ "name": "webUser", "type": "id" }],
+        "returns": [{ "name": "customer", "type": "id" }]
+    },
+   "getWebUserByCustomer": {
+        "param": [{ "name": "customer", "type": "id" }],
+        "returns": [{ "name": "webUser", "type": "id" }]
+    },
+    "getWuByCu": {
+        "param": [{ "name": "customer", "type": "id" }],
+        "returns": [{ "name": "webUser", "type": "id" }]
+    }
 }

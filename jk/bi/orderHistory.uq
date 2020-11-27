@@ -1,0 +1,32 @@
+BOOK OrderBook (
+    key orderItemId char(50),
+    orderId char(50),
+
+    seller char(10), -- 销售主体
+    salesman ID Employee, -- 销售人员
+    salesRegion ID SalesRegion,
+    
+    customer ID Customer,
+    buyerAccount ID BuyerAccount,
+    organization ID Organization,
+
+    brand ID Brand,
+    product ID ProductX,
+    pack OF product.PackX,
+
+    quantity int,
+
+    price dec(12, 2),
+    currency ID Currency,
+    retail dec(12, 2),
+    retailCurrency ID Currency,
+    bottomPrice dec(12, 2),
+    bottomPriceCurrency ID Currency,
+
+    有效销售额 dec(12, 2),    -- 币种为RMB
+    税后销售收入 dec(12, 2),        -- 币种为RMB
+
+    抵达日期 bigint,
+    mark char(5),
+    createDate bigint,
+);

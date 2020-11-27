@@ -65,9 +65,11 @@ QUERY SearchDomain(
 )
 PAGE (
     id bigint desc,
-    name char(100)
+    name char(100),
+    counts int 
 ) {
-    PAGE select b.id, b.name
+    PAGE select b.id, b.name,
+            ( select count(*) from Domain as a where a.parent = b.id) as counts
     from    Domain as b
     where   b.id < $pageStart and b.parent = _parent
     order by b.id desc 

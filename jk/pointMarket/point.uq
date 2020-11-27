@@ -1,3 +1,55 @@
+OPEN TUID Genre (
+    id,
+    main name char(50) not null,
+    main imageUrl char(500),
+    search (name),
+);
+
+MAP PointProductGenre(
+    key genre ID Genre not null,
+    key pointProduct ID PointProductLib not null,
+);
+
+-- 可兑换产品库
+TUID PointProductLib (
+    id,
+    main description char(1000),
+    main descriptionC char(1000),
+    main grade char(1000), 
+    main point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    main imageUrl char(500),                         --产品图片
+    isValid tinyint not null default 1,
+    search (description, descriptionC),
+) ON SAVE {
+    var source char(8), sourceId char(50);
+    set source = type, sourceId = sourceId from PointProductSource where pointProduct = id; 
+    if (not source is null) {
+        bus pointProductBus.pointProductBusOut set pack = id, source = source, sourceId = sourceId,
+            point = point, startDate = unix_timestamp(startDate), endDate = unix_timestamp(endDate), imageUrl = imageUrl;
+    }
+};
+
+-- 积分兑换产品和 其来源的映射关系（1.来自营销产品库；2.来自第三方等）
+MAP PointProductSource (
+    key pointProduct ID PointProductLib,
+    key sourceId char(50),
+    type char(8) not null,  -- selfsales, jd.com
+) ON SAVE {
+    var point int, startDate date, endDate date, imageUrl char(500);
+    set point = point, startDate = startDate, endDate = endDate, imageUrl = imageUrl
+    from    PointProductLib
+    where   id = pointProduct; 
+    bus pointProductBus.pointProductBusOut set pack = pointProduct, source = type, sourceId = sourceId,
+        point = point, startDate = unix_timestamp(startDate), endDate = unix_timestamp(endDate), imageUrl = imageUrl;
+};
+
+MAP PointProductDetail (
+    key pointProduct ID PointProductLib,
+    content text,
+);
+
 --可兑换产品表
 MAP PointProduct (
     key product ID ProductX not null,           --产品编号
@@ -6,30 +58,46 @@ MAP PointProduct (
     startDate date,                             --生效时间
     endDate date,                               --过期时间
     imageUrl char(500),                         --产品图片
+    index idx_date,
 );
 
 --积分明细表
 BOOK PointBook (
-    key customer ID Customer,   -- 客户编号，不是webuser
-    key pointYear int not null,          -- 积分所在年度
+    key webUser ID [$user],                 -- 是webuser
+    key pointYear int not null,             -- 积分所在年度
     point int not null default 0,           -- 总有效积分
     usedPoint int default 0,                -- 消耗的积分
     totalPoint int not null default 0,      -- 总积分
-    tempPoint int not null default 0,       -- 在tonva系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
-    tempUsedPoint int not null default 0    -- 在tonva系统消耗的临死积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零)
+    tempPoint int not null default 0,       -- 在tonva订单系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
+    tempUsedPoint int not null default 0,   -- 在tonva系统消耗的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零), 2020-10-16, ligsh, 不再使用此字段
+    tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清零, 2020-10-16, ligsh, 不再使用此字段
+);
+
+--积分明细（备份，当审核通过时吧这个积分记录复制到 PointBook ）
+BOOK PointBookByCustomer (
+    key customer ID Customer,   -- 客户编号，不是webuser
+    key pointYear int not null,             -- 积分所在年度
+    point int not null default 0,           -- 总有效积分
+    usedPoint int default 0,                -- 消耗的积分
+    totalPoint int not null default 0      -- 总积分
 );
 
 --积分变化表
 HISTORY PointHistory (
     date,                       --生成时间
-    customer ID Customer,       --客户
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    comments char(1000) ,        --备注
-    user,                       --当前登录人
+    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消；
+    comments char(1000) ,       --备注
+    webUser ID [$user],         --客户
     sheet,                      --单据
     type,                       --不同的sheet类型
     row,                        --子表的第几行
+);
+
+BOOK PointDistributionBook (
+    key pointStart int not null,
+    numbers int not null, 
 );
 
 --兑换单表
@@ -37,8 +105,7 @@ SHEET PointExchangeSheet ver 0.1 (
     customer ID Customer,                   --客户编号
     webUser ID WebUser,                     --用户编号
     ARR exchangeItems (
-        product ID ProductX not null,       --产品编号
-        pack OF product.PackX not null,     --包装编号
+        product ID PointProductLib not null,       --产品编号
         point int,                          --单个积分值
         quantity int not null,              --数量
         subAmount int not null,             --小计
@@ -47,33 +114,28 @@ SHEET PointExchangeSheet ver 0.1 (
     shippingContact ID Contact,             --收货地址
 )
 Action submit {
-    bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
-        shippingContact = shippingContact, amount = amount;
     foreach exchangeItems {
-        bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, pack = pack,
-            quantity = quantity, point = point, subAmount = subAmount;
-
         var leftAmount bigint;
-        set leftAmount = subAmount;
+        set leftAmount = amount;
 
-        foreach (var mPoint int, mUsedPoint int, tempUsedPoint int, pointYear int of
-            select  p.point as mPoint, p.usedPoint as mUsedPoint, p.tempUsedPoint, p.pointYear
+        foreach (var mPoint int, pointYear int of
+            select  (p.point - p.usedPoint) as mPoint, p.pointYear
             from    PointBook as p
-            where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3
-                    and (p.point - p.usedPoint - p.tempUsedPoint) > 0
+            where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
+                    and (p.point - p.usedPoint) > 0
             order by p.pointYear
         ) {
             if (leftAmount > 0){
                 var p int;
-                if((mPoint - mUsedPoint - tempUsedPoint) >= leftAmount) {
+                if(mPoint >= leftAmount) {
                     set p = leftAmount;
                 }else{
-                    set p = (mPoint - mUsedPoint - tempUsedPoint);
+                    set p = mPoint;
                 }
 
-                book PointBook at (customer, pointYear) set tempUsedPoint += p;
+                book PointBook at (webUser, pointYear) set usedPoint += p;
                 history PointHistory
-                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no;
+                    set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
 
                 set leftAmount = leftAmount - p;
                 if(leftAmount <= 0){
@@ -82,50 +144,61 @@ Action submit {
             }
         }
     }
-    STATE TO END;
+
+    if (customer > 0) {
+        bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
+            shippingContact = shippingContact, amount = amount;
+        var source char(8), sourceId int;
+        foreach exchangeItems {
+            set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
+            bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
+                quantity = quantity, point = point, subAmount = subAmount;
+        }
+        STATE TO Shipping;
+    } else {
+        STATE TO Matching;
+    }
+}
+STATE Matching {
+    ACTION Pass
+    BUS webUserBus.getCuByWu as q into tb {
+        set q.webUser = webUser;
+    } {
+        if(customer is null) {
+            var customerid int;
+            foreach tb {
+                set customerid = customer;
+            }
+
+            bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customerid,
+                shippingContact = shippingContact, amount = amount;
+            var source char(8), sourceId int;
+            foreach exchangeItems {
+                set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
+                bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
+                    quantity = quantity, point = point, subAmount = subAmount;
+            }
+        STATE TO Shipping;
+        }
+    }
+}
+STATE Shipping {
+    ACTION Cancel {
+        foreach(var pointYear int, point int of 
+            select p.pointYear, p.point
+            from PointHistory as p
+            where p.webUser = webUser and p.source = 3 and p.comments = $sheet_no
+        ){
+            book PointBook at (webUser, pointYear) set usedPoint -= point * -1;
+            history PointHistory
+                set webUser = webUser, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;
+        } 
+        STATE TO CANCELED;
+    }
+}
+STATE CANCELED {
+
 };
-
--- 平台订单表
-PENDING PlatformOrderPending (
-    id,
-    customer ID Customer not null,          --客户编号
-    orderId char(100),                      --平台单号
-    amount dec(12,2),                       --合同总额
-    currency ID Currency,                   --币种
-    date,
-);
-
-MAP PlatformOrder (
-    key orderItemId char(50),
-    orderId char(50),
-    customer ID BuyerAccount not null,
-    orderMaker ID Customer,
-    platformOrderId char(50),
-    description char(1000),
-    descriptionC char(1000),
-    radiox dec(12, 2),
-    radioy dec(12, 4),
-    unit char(10),
-    quantity int,
-    price dec(12, 2),
-    subAmount dec(12, 2),
-    amount dec(12, 2),
-    currency ID Currency,
-    mark char(10),
-    createDate datetime,
-    index idx_ordermaker,
-);
-
-MAP PlatformOrderUsed (
-    key orderItemId char(50),
-    orderId char(50),
-    customer ID Customer not null,
-    platformOrderId char(50),
-    subAmount dec(12, 2),
-    amount dec(12, 2),
-    currency ID Currency,
-    coupon int,
-);
 
 MAP CustomerCoupon (
     key webUser ID WebUser,     -- WebUser编号，不是Customer
@@ -140,10 +213,47 @@ MAP WebUserCredits (
     creditsCode int not null,
     createDate date,
     expiredDate date,
-);
+) ON ADD{
+    bus couponDrawedBus.creditsDrawedByWebUser set webUser = webUser, coupon = credits, createDate = createDate, expiredDate = expiredDate;
+};
 
 MAP WebUserCreditsUsed (
     key webUser ID WebUser,     -- WebUser编号，不是Customer
     key credits int not null,
+    key saleOrder char(50),
     usedDate date,
 );
+
+/*
+ * 有关产品的浏览量/兑换量统计
+*/
+BOOK PointProductHotStat (
+    key pointProduct ID PointProductLib not null,
+    visits int not null default 0,
+    exchanges int not null default 0,
+);
+
+HISTORY PointProductVisitHistory (
+    date,
+    pointProduct ID PointProductLib not null,
+    webUser ID [$user],
+);
+
+/*
+-- 解决原始产品已下架或价格过期，但仍显示在积分商城的问题：pointshop中创建作业调度每日检查未下架产品所对应的原始产品是否有效，无效者设置isvalid=0，且记录历史
+select	*
+from	pointshop.tv_pointproductlib a
+		inner join pointshop.tv_pointproductsource b on a.id = b.pointproduct and b.`type` = 'self'
+		inner join product.tv_productx_packx c on b.sourceid = c.`id`
+		inner join product.tv_pricex d on c.owner = d.product and c.id = d.pack and d.$unit = 24 and d.salesregion = 1
+			and d.expiredate < now()
+where	a.enddate > now();
+
+select	*
+from	pointshop.tv_pointproductlib a
+		inner join pointshop.tv_pointproductsource b on a.id = b.pointproduct and b.`type` = 'self'
+		inner join product.tv_productx_packx c on b.sourceid = c.`id`
+		inner join product.tv_pricex d on c.owner = d.product and c.id = d.pack and d.$unit = 24 and d.salesregion = 1
+			and d.discountinued = 1
+where	a.enddate > now();
+*/

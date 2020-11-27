@@ -1,3 +1,5 @@
+-- 整个文件可删除
+-- TODO： delete
 ACTION IsCanUseOrder(
     orderId char(100),
     customer ID Customer
@@ -22,6 +24,7 @@ ACTION IsCanUseOrder(
 };
 
 /*
+ * TODO: delete
  * 获取可兑换积分的订单号及其积分值
 */
 QUERY GetOrderDrawable(
@@ -42,6 +45,9 @@ returns ret(
     order   by sum(p.subAmount) desc limit 1;
 };
 
+/*
+ * TODO: delete，不再使用
+*/
 QUERY GetPlatFormOrder(platformOrderId char(50))
 returns ret(
     customer ID BuyerAccount not null,
@@ -65,7 +71,9 @@ returns ret(
     where  p.platformOrderId = platformOrderId;
 };
 
-
+/*
+ * TODO: delete，不再使用
+*/
 ACTION GetLastPlatFormOrder(
     customer ID Customer
 )returns ret(
@@ -92,59 +100,4 @@ ACTION GetLastPlatFormOrder(
     }
 
     into ret select result, platformOrderId;
-};
-
--- 添加平台订单积分
-ACTION AddPlatformOrderPoint(
-    orderId  char(100),
-    couponId  char(100),
-    customer ID Customer
-)returns ret(
-    result  bigint --返回结果
-){
-    var result      bigint,
-        point int,
-        pointYear int,
-        amount  dec(12, 2),
-        orderMaker int,
-        currency int,
-        innerOrderId char(50);
-    set pointYear = YEAR(NOW()), point = 0, amount = 0, orderMaker = 0;
-
-    foreach (var myOrderItemId char(50), myOrderId char(50), myCustomer int, myOrderMaker int, myPlatformOrderId char(50),
-        mySubamount dec(12, 2), myAmount dec(12, 2), myCurrency int of
-        select  p.orderItemId as myOrderItemId, p.orderId as myOrderId, p.customer as myCustomer, p.orderMaker as myOrderMaker,
-                p.platformOrderId as myPlatformOrderId, p.subAmount as mySubamount, p.amount as myAmount, p.currency as myCurrency
-        from    PlatformOrder as p
-        where   p.platformOrderId = orderId and p.orderMaker = customer and p.mark<>'C'
-    ) {
-        set point = point + mySubamount * 2;
-        set amount = amount + mySubamount;
-        set orderMaker = myOrderMaker;
-        set innerOrderId = myOrderId;
-        book PlatformOrderUsed at (myOrderItemId) set orderId = myOrderId, customer = myCustomer
-            platformOrderId = myPlatformOrderId,
-            subAmount = mySubamount, amount = myAmount, currency = myCurrency, coupon = couponId;
-    }
-
-    book PointBook at (customer, pointYear) set tempPoint += point;
-    bus pointShopBus.couponUsed
-        set orderId = innerOrderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
-
-    set result = 1;
-    into ret select result;
-};
-
-
-ACTION AddUsedCoupon(
-    couponId  char(50)
-)returns ret(
-    result  bigint --返回结果
-){
-    var result      bigint;
-
-    book CustomerCoupon at ($user) set coupon = couponId, CreateDate = now();  -- set customer = customer, webUser = $user, coupon = couponId;
-
-    set result = 1;
-    into ret select result;
 };

@@ -68,12 +68,12 @@ ACTION CreateMyCustomerUnit(
 
 /**修改mycustomer 和customer的关系*/
 ACTION UpateCustomerMyCustomerMap(
-    mycustomer ID MyCustomer,
-    customer ID Customer,
-    webuser ID [$user]
+    _mycustomer ID MyCustomer,
+    _customer ID Customer,
+    _webuser ID [$user]
 ){
-     BOOK CustomerMyCustomerMap at ($user, mycustomer) set customer=customer,webuser=webuser;
+     BOOK CustomerMyCustomerMap at ($user, _mycustomer) set customer=_customer,webuser=_webuser;
 
-     delete from NewMyCustomerBook where sales=$user and customer = customer and webuser=webuser;
+     delete from NewMyCustomerBook where sales = $user and customer = _customer and webuser = _webuser;
 };
  

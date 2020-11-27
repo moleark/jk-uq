@@ -1,3 +1,4 @@
+-- 客户下单后记录，
 PENDING CustomerOrderPending ver 0.6 (
     id,
     sales ID [$user],    --销售
@@ -41,18 +42,20 @@ BOOK SalesAchievementBook(
     waitWithdrawal dec(12, 2) not null default 0 , --等待提现的金额 
 );
 
---销售团队统计表
+-- 销售团队统计表, 没有使用
 BOOK SalesTeamBook(
     key user ID [$user],
     teamCount bigint not null default 0 , --团队数量
     innerTeamCount bigint not null default 0 , --内部团队数量    
 );
 
-
+-- 销售日报的数据源
 BOOK Achievement (
     key date  date,
     key manage ID [$user],
     key user ID [$user],
+    year        int,    --业务年
+    month       int,    --业务月
     endTaskCount      int not null default 0 , --完结任务数量
     sendCreditsCount  int not null default 0 , --发积分码数量
     sendPostCount     int not null default 0 , --发积贴文数量
@@ -60,7 +63,7 @@ BOOK Achievement (
     saleVolume dec(12, 2) not null default 0   --销量
 );
 
-
+-- 单独记录销售的业绩，没有使用
 BOOK AssistAchievements(
   key year  int,
   key month int,
@@ -69,7 +72,7 @@ BOOK AssistAchievements(
 );
 
  
---销售客户统计表
+-- 销售客户统计表(在“我的”界面显示)
 BOOK SalesCustomerBook(
     key user ID [$user],
     customerCount dec(12, 2) not null default 0 , --客户数量
@@ -86,14 +89,14 @@ History AchievementHistory (
     ordertype char(10), --作废
     price dec(12, 2) not null,
     agentprices dec(12, 2) not null,
-    types smallint,
+    types smallint,     -- 1:自己的收益;2:一级团队收益;3:二级团队收益;
     amount dec(12, 2) not null,
 );
 
-/**业绩历史记录**/
+/** 订单回款状态 **/
 BOOK OrderStateBook (
     key order ID,
-    state smallint,
+    state smallint,  -- 0:未回款或未全部回款；1:已全部回款
     amount dec(12, 2) not null,
     payAmount dec(12, 2) not null
 );
@@ -151,12 +154,19 @@ returns ret (
         }
 
         --step.1.3.记账:如果是积分码 则只记录合同个数
-        if( coupontype = 'credits' ){
+
+        if exists( select 1 from WebUserEmployeeMap as a where a.webuser = $user ){
             --更新总销售额，A类绩效
             book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=0, totalOrderCount += 1;
-            book Achievement at( now(), 0 ,$user ) set orderCount +=1,  saleVolume+=sumprice;
+
+            var _month int, _year int, businessdate  DATE;
+            set businessdate = case when DAY( NOW() ) > 20 then dateadd(month, 1,  NOW() ) else  NOW()  end;
+            set _month = month(businessdate);
+            set _year = year(businessdate);
+
+            book Achievement at( DATE(now()), 0 ,$user ) set orderCount +=1,  saleVolume+=sumprice, month = _month, year = _year;
             --记录A类绩效历史
-            history AchievementHistory set sales=sales, webuser=webuser, amount=0, types=1, order=order, orderno=orderno, ordertype='credits', price=price, agentprices=agentprices;
+            history AchievementHistory set sales=sales, webuser=webuser, amount=0, types=1, order=order, orderno=orderno, ordertype = coupontype, price=price, agentprices=agentprices;
         } else {
             --更新总销售额，A类绩效
             book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement, totalOrderCount += 1;
@@ -390,28 +400,30 @@ returns ret (
     saleVolume dec(12, 2)
 ) {
     if(_type = 'day'){
-        VAR calcTick INT, weekTick INT;
-        SET calcTick = unix_timestamp();
-        SET weekTick = 1*24*3600;
+      
+        var startdate DATE;
+        set startdate = DATE( NOW() );
 
         into ret select max(year(a.date)) as yeara ,  'day' as montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
         where   a.manage = _manage
-                and a.date>=FROM_UNIXTIME(calcTick - weekTick);
+                and a.date>=startdate;
+                
     } else if(_type = 'month'){
-
+ 
         into ret select yeara , montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
-        where    a.manage = _manage and year(a.date) = _year
-        group by year(a.date) as yeara, month(a.date) as montha;
+        where    a.manage = _manage and a.year = _year
+        group by a.year as yeara, a.month as montha
+        order by montha desc;
 
         into ret select yeara , 'all' as montha , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from   Achievement as a
-        where  a.manage = _manage and year(a.date) = _year
-        group by year(a.date) as yeara;
+        where  a.manage = _manage and a.year = _year
+        group by  a.year as yeara;
     }
 };
 
@@ -450,15 +462,15 @@ PAGE (
         PAGE select 0 as id,  yeara , 'all' as montha,  user  , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from   Achievement as a
-        where  a.manage = _manage and year(a.date) = _year
+        where  a.manage = _manage and a.year = _year
         group by year(a.date) as yeara, a.user 
         order by  sum(a.saleVolume)  desc ;
     }else{
         PAGE select  0 as id,  yeara , montha, user , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
-        where    a.manage = _manage and year(a.date) = _year
-        group by year(a.date) as yeara, month(a.date) as montha, a.user 
+        where    a.manage = _manage and a.year = _year and a.month = _type
+        group by a.year as yeara, a.month as montha, a.user 
         order by sum(a.saleVolume) desc;
     }
 };

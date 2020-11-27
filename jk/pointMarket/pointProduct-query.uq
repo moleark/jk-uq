@@ -1,13 +1,129 @@
-QUERY getPointProduct()
+QUERY getPointProduct(startPoint int, endPoint int)
 returns ret(
-    product ID ProductX,           --产品编号
-    pack OF product.PackX,         --包装编号
-    point int,                     --所需积分
-    startDate date,                --生效时间
-    endDate date,                  --过期时间
-    imageUrl char(500)             --产品图片
+    product ID PointProductLib,           --产品编号
 ) {
-    into ret SELECT	a.product, a.pack, a.point, a.startDate, a.endDate, a.imageUrl
-	FROM    PointProduct AS a
+    into ret SELECT	a.id as product
+	FROM    PointProductLib AS a
+    where   a.point >= ifnull(startPoint, a.point) and a.point <= ifnull(endPoint, a.point) 
+            and a.startDate <= now() and ifnull(a.endDate, '2050-01-01') >= now()
     order by a.point;
+};
+
+QUERY getPointProductGenre(pointProduct ID PointProductLib)
+returns ret(
+    pointProduct ID PointProductLib,
+    genre ID Genre,
+) {
+    into ret select t.pointProduct, t.genre
+    FROM    PointProductGenre as t
+    where   t.genre = t.genre and t.pointProduct = pointProduct;
+};
+
+QUERY getPointProductByGenre(genre ID Genre)
+returns ret(
+    pointProduct ID PointProductLib,
+    genre ID Genre,
+) {
+    into ret select t.pointProduct, t.genre
+    FROM    PointProductGenre as t
+            join PointProductLib AS pl on pl.id = t.pointProduct
+    where   t.genre = genre and pl.startDate < NOW() and pl.endDate > NOW()
+    ORDER   by pl.point asc;
+};
+
+/*
+ * 获取最新上架的8个产品
+*/
+Query GetNewPointProducts() 
+returns ret(
+    id ID PointProductLib,           --产品编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+) {
+    into ret SELECT p.id, p.point, p.startDate, p.endDate, p.imageUrl 
+    FROM PointProductLib as p
+    WHERE p.startDate < NOW() and p.endDate > NOW()
+    order by p.startDate desc, p.id
+    limit 8;
+};
+
+/*
+ * 获取Hot的8个产品
+*/
+Query GetHotPointProducts() 
+returns ret(
+    id ID PointProductLib,           --产品编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+) {
+    into ret SELECT p.id, p.point, p.startDate, p.endDate, p.imageUrl 
+    FROM  PointProductLib as p
+          left join PointProductHotStat as hs on p.id = hs.pointProduct
+    WHERE p.startDate < NOW() and p.endDate > NOW()
+    order by hs.visits desc, p.id
+    limit 8;
+};
+
+QUERY GetPointProductBySource(sourceId int, type char)
+returns ret(
+    pointProduct ID PointProductLib,
+) {
+    into ret select t.pointProduct
+    FROM    PointProductSource as t
+    where   t.sourceId = sourceId and t.type = type;
+};
+
+/*
+ * 获取客户已浏览商品
+*/
+Query GetVisitPointProducts() 
+PAGE (
+    seq bigint asc,
+    id ID PointProductLib,           --产品编号
+    point int,                                  --所需积分
+    startDate date,                             --生效时间
+    endDate date,                               --过期时间
+    imageUrl char(500),                         --产品图片
+    visits int,
+    exchanges int
+) {
+    /-mysql
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_visitpointproduct`;
+    CREATE TEMPORARY TABLE `_$page_visitpointproduct` (`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `pointproduct` BIGINT NOT NULL) ENGINE=MyISAM;
+    insert  into `_$page_visitpointproduct`( pointproduct )
+    select  p1.id
+    from    `tv_pointproducthotstat` as hs
+            inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
+    where   p1.startDate < NOW() and p1.endDate > NOW()
+    order   by hs.visits desc, p1.`id`;
+
+    INSERT  INTO `_$page` (`seq`, `id`, `point`, `startDate`, `endDate`, `imageUrl`, `visits`, `exchanges`)
+    SELECT  p2.id, p1.`id`, p1.`point`, p1.`startDate`, p1.`endDate`, p1.`imageUrl`, hs.`visits`, hs.`exchanges`
+    from    `_$page_visitpointproduct` as p2
+            inner join `tv_pointproducthotstat` as hs on p2.pointproduct=hs.pointproduct
+            inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
+    where   p2.id >`_$pagestart`
+    order by p2.id
+    limit   `_$pagesize`;
+    -/
+};
+
+ACTION SetPointProductVisits (
+    pointProduct ID PointProductLib,
+) {
+   book PointProductHotStat at (pointProduct) set visits += 1; 
+   history PointProductVisitHistory set pointProduct = pointProduct, webUser = $user;
+};
+
+
+ACTION PointProductGenreDelete (
+    genre ID Genre,
+) {
+    delete t from PointProductGenre as t where t.genre = genre;
+    delete from Genre where id = genre;
 };

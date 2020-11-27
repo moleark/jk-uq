@@ -1,13 +1,104 @@
-QUERY getPoints(customer ID Customer)
+QUERY getPoints(
+    webuser ID [$user]
+)
 returns ret(
     totalLeftPoint int,
     effectiveLeftPoint int,
     usedPoint int,
     pointYear int
 ) {
-    into ret SELECT (p.totalPoint + p.tempPoint - p.usedPoint - p.tempUsedPoint) as totalLeftPoint,
-            (p.point + p.tempPoint - p.usedPoint - p.tempUsedPoint) as effectiveLeftPoint,
-            p.usedPoint, p.pointYear
+    into ret SELECT (p.totalPoint + p.tempPoint - p.usedPoint) as totalLeftPoint,
+                    (p.point - p.usedPoint) as effectiveLeftPoint,
+                    p.usedPoint, p.pointYear
     FROM PointBook as p
-    WHERE p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
+    WHERE p.webUser = webuser and p.pointYear > YEAR(NOW()) - 3;
+};
+
+
+QUERY GetPointHistory(
+     key char(100)
+)
+PAGE (
+    id bigint desc,
+    date DATETIME,
+    point int,
+    pointYear int,              
+    comments char(1000) ,        
+    webUser ID [$user],                       
+    type int,
+    source int                      
+){
+    var key2 char(102);
+    set key2 = concat('%', key, '%');
+
+    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.webUser, p.type, p.source
+    from    PointHistory as p
+    where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
+            and ( p.comments like key2 or key is null )
+    order by  unix_timestamp(p.date) desc
+    limit $pageSize;
+};
+
+
+QUERY GetPointSigninHistory()
+PAGE (
+    id bigint desc,
+    date DATETIME,
+    point int,
+    pointYear int,              
+    comments char(1000) ,        
+    webUser ID [$user],                       
+    type int,
+    source int
+){
+    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.webUser, p.type, p.source
+    from    PointHistory as p
+    where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
+            and p.source = 2
+    order by  unix_timestamp(p.date) desc
+    limit $pageSize;
+};
+
+-- 获取当前最大的积分数，用于界面上的区间计算
+QUERY GetMaxPoints ()
+returns ret (
+    maxPoints int,
+) {
+    into ret select max(pointstart) + 100 as maxPoints from PointDistributionBook;
+};
+
+-- 获取积分分布
+QUERY GetPointDistribution (
+    start int,
+    end int,
+    granularity int,
+) returns ret (
+    subStart int,
+    subEnd int,
+    numbers int,
+) {
+    var minGranularity int;
+    var startX int, endX int, granularityX int;
+    var subStartX int, subEndX int;
+    /-mysql
+    set `_mingranularity_1` = 100;
+    set `_startx_2` = `_start` div `_mingranularity_1` * `_mingranularity_1`, `_endx_3` = `_end` div `_mingranularity_1` * `_mingranularity_1`, 
+        `_granularityx_4` = `_granularity` div `_mingranularity_1` * `_mingranularity_1`;
+    if `_granularityx_4` <= 0 then
+        set `_granularityx_4` = `_mingranularity_1`;
+    end if;
+    if (`_endx_3` - `_startx_2`) div `_granularityx_4` > `_mingranularity_1` then
+        set `_granularityx_4` = (`_endx_3` - `_startx_2`) div `_mingranularity_1`;
+    end if;
+    
+    set `_substartx_5` = `_startx_2`, `_subendx_6` = `_startx_2` + `_granularityx_4`;
+    while `_subendx_6` <= `_endx_3` do
+        insert into `_ret`(`substart`, `subend`, `numbers`)
+        select  `_substartx_5`, `_subendx_6`, count(*)
+        from    tv_pointdistributionbook 
+        where   pointstart >= `_substartx_5` and pointstart < `_subendx_6`;
+
+        set `_substartx_5` = `_subendx_6`, `_subendx_6` = `_subendx_6` + `_granularityx_4`;
+    end while; 
+    -/
 };

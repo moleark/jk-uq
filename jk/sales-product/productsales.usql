@@ -1,0 +1,4 @@
+MAP ProductSalesRank (
+    key product ID ProductX,
+    rank int not null
+);

@@ -1,3 +1,13 @@
+QUERY GetProductByOrigin(origin char(50), salesRegion ID SalesRegion)
+returns ret(
+    id ID ProductX
+) {
+    into ret select p.id
+    from ProductX as p
+         join Brand as b on p.brand = b.id
+    where p.origin = origin and b.no in ('A01', 'A10'); 
+};
+
 QUERY GetFutureDeliveryTime(product ID ProductX, salesRegion ID SalesRegion)
 returns ret(
     minValue int,
@@ -33,55 +43,6 @@ PAGE (
     set key2 = concat(keyWord, '*');
 
     /-mysql
-
-    /*
-    INSERT INTO `_$page` (`id`,`no`,`brand`,`origin`,`description`,`descriptionc`,`imageurl`,`chemical`,`cas`,`purity`,`molecularfomula`,`molecularweight`)
-    SELECT p.`id` AS `id`,p.`no` AS `no`,p.`brand` AS `brand`,p.`origin` AS `origin`,p.`description` AS `description`,p.`descriptionc` AS `descriptionc`,p.`imageurl` AS `imageurl`,pc.`chemical` AS `chemical`,pc.`cas` AS `cas`,pc.`purity` AS `purity`,pc.`molecularfomula` AS `molecularfomula`,pc.`molecularweight` AS `molecularweight`
-    FROM (
-
-        select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
-                ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
-        from    `tv_productx` as p1
-        where   p1.`$unit` = `_$unit` and p1.origin = `_keyWord`
-        union
-        select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
-                ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
-        from    `tv_productx` as p1
-                LEFT JOIN `tv_productchemical` AS pc1 ON p1.`id`=pc1.`product` and p1.`$unit` = pc1.`$unit`
-        where   pc1.`$unit` = `_$unit` and pc1.cas = `_keyWord`
-        union
-        select  p4.`$unit`, p4.`id` AS `id`,p4.`no` AS `no`,p4.`brand` AS `brand`,p4.`origin` AS `origin`
-                ,p4.`description` AS `description`, p4.descriptionc, p4.imageurl
-        from    (
-                select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
-                        ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
-                from    `tv_productx` as p1
-                where   match (p1.`description`) against (`_key2_1` in boolean mode )
-                limit 499
-                ) p4
-        union
-        select  p5.`$unit`, p5.`id` AS `id`,p5.`no` AS `no`,p5.`brand` AS `brand`,p5.`origin` AS `origin`
-                ,p5.`description` AS `description`, p5.descriptionc, p5.imageurl
-        from    (
-                select  p1.`$unit`, p1.`id` AS `id`,p1.`no` AS `no`,p1.`brand` AS `brand`,p1.`origin` AS `origin`
-                        ,p1.`description` AS `description`, p1.descriptionc, p1.imageurl
-                from    `tv_productx` as p1
-                where   match (p1.`descriptionc`) against (`_keyWord`)
-                limit 499
-                ) p5
-    ) AS p
-
-        LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`
-        LEFT JOIN `tv_productchemical` AS pc ON p.`id`=pc.`product` AND pc.`$unit`=`_$unit`
-    WHERE 1=1 AND p.`$unit`=`_$unit` AND p.`id`>`_$pagestart`
-
-    AND exists((SELECT 1
-    FROM `tv_productx_packx` AS pk
-    JOIN `tv_pricex` AS pr ON pr.`pack`=pk.`id` AND pr.`product`=pk.`owner` AND pr.salesRegion = `_salesRegion` AND pr.`$unit`=`_$unit`
-    WHERE 1=1 AND pk.`owner`=p.`id` AND pr.`discountinued`=0 AND pr.`expiredate`>UTC_TIMESTAMP()))
-
-    LIMIT `_$pagesize`;
-    */
     DROP TEMPORARY TABLE IF EXISTS `_$page_product`;
     CREATE TEMPORARY TABLE `_$page_product` (`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `product` BIGINT NOT NULL) ENGINE=MyISAM;
     insert  into `_$page_product`( product )
@@ -104,6 +65,7 @@ PAGE (
                 from    `tv_productcache` as pc
                         inner join `tv_productx` as p1 on p1.`$unit` = pc.`$unit` and p1.id = pc.product
                 where   match (p1.`description`) against (`_key2_1` in boolean mode ) and pc.salesRegion = `_salesRegion`
+                        and length(`_keyWord`) = char_length(`_keyWord`) -- 限制非英文不查询英文字段
                 order by match (p1.`description`) against (`_key2_1` in boolean mode ) desc
                 limit 499
                 ) p4
@@ -131,8 +93,10 @@ PAGE (
             LEFT JOIN `tv_brand` AS b ON p.`brand`=b.`id` AND b.`$unit`=`_$unit`
             LEFT JOIN `tv_productchemical` AS pc ON p.`id`=pc.`product` AND pc.`$unit`=`_$unit`
     WHERE   1=1 AND p.`$unit`=`_$unit` and pp.id > `_$pagestart`
+    ORDER   BY pp.id
     LIMIT   `_$pagesize`;
     -/
+    -- history ProductSearchHistory set webUser = $user, salesRegion = salesRegion, keyWord = keyWord;
 };
 
 /*

@@ -1,0 +1,133 @@
+/*
+设计思路：
+下单时，在order中记录待付款的pending OrderReceivable，发送bus给FiReceivable系统客户的应收账款BuyerAccountBook；
+付款时，在FiReceivable中接收付款，一笔付款需包括收款方/付款方/金额，其他的扩展信息包括收款渠道/订单号/付款操作人
+等信息，记录在Journal中，对于带有订单号的收款，需要发送bus通知order系统，由order系统将款项与订单明细匹配，然后order中再
+发送bus通知回FiReceivable系统进行记账（减少应收金额BuyerAccountBook和记录明细BuyerAccountOrderHistory
+*/
+
+
+TUID Receiver (
+    id,
+    main name char(10) not null,
+    search(name), 
+);
+
+ENUM EnumPayMethod (
+    order=1,            -- 按单结算
+    amount=2,           -- 按金额结算
+    product=3,          -- 按品种结算
+);
+
+BOOK BuyerAccountBook (
+    KEY buyerAccount ID BuyerAccount,
+    KEY currency ID Currency,
+    KEY receiver ID Receiver,
+    deposit DEC(12, 2),                 -- 预存款
+    receivable DEC(12, 2),              -- 应收
+    payMethod tinyint,
+);
+
+HISTORY Journal (
+    date,
+    receiver ID Receiver,
+    payer char(50),
+    action tinyint,     -- 1.收款；2.退款
+    amount DEC(12, 2),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+);
+
+ENUM EnumDealAction (
+    prepay=1,           -- 预付
+    pay=2,              -- 付款
+    return=3,           -- 退货
+    refund=4            -- 退款
+);
+
+/*
+HISTORY BuyerAccountDealHistory (
+    Date,
+    buyerAccount ID BuyerAccount,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    amount DEC(12, 2),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+    webUser ID WebUser,
+);
+*/
+
+HISTORY BuyerAccountDealOrderHistory (
+    Date,
+    buyerAccount ID BuyerAccount,
+    webUser ID WebUser,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    sheet,                           -- 操作对应的单据
+    type,
+    row,                       -- 单据对应的行号
+    quantity DEC(12, 2),                -- 数量
+    amount DEC(12, 2),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+                                        -- 比如，如果是退货，这里可以是product id和pack id，中间用空格分开的字符串
+                                        -- 比如，如果是付款，详细信息应该在sheet上有，所以不需要额外的信息
+);
+
+
+-- 账单以CustomerAccount为准，WebUserAccount仅当webUser尚未关联CustomerID时使用
+BOOK WebUserAccountBook (
+    KEY webUser ID WebUser,
+    KEY currency ID Currency,
+    KEY receiver ID Receiver,
+    deposit DEC(12, 2),                 -- 预存款
+    receivable DEC(12, 2),              -- 应收
+    payMethod tinyint,
+);
+
+/*
+HISTORY WebUserDealHistory (
+    Date,
+    webUser ID WebUser,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    amount DEC(12, 2),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+);
+*/
+
+HISTORY WebUserDealOrderHistory (
+    Date,
+    webUser ID WebUser,
+    -- action ENUM EnumDealAction,
+    action tinyint,
+    sheet,                           -- 操作对应的单据
+    type,
+    row,                       -- 单据对应的行号
+    quantity DEC(12, 2),                -- 数量
+    amount DEC(12, 2),                  -- 金额
+    currency ID Currency,
+    ext TEXT,                       -- 根据action，定义的额外的数据。
+                                        -- 比如，如果是退货，这里可以是product id和pack id，中间用空格分开的字符串
+                                        -- 比如，如果是付款，详细信息应该在sheet上有，所以不需要额外的信息
+);
+
+
+/*
+ * 根据订单付款
+*/
+ACTION PayOrder(receiver ID, payer char, amount dec(12, 2), currency ID, order ID, channel: char) {
+
+    var ext TEXT;
+    set ext = '{"order":' + order +'}';
+    history Journal set 
+        receiver = receiver,
+        payer = payer,
+        action = 1,
+        amount = amount,
+        currency = currency,
+        ext = ext;
+    bus fiReceivableBus.orderPayed set order = order, amount = amount, currency = currency;
+};

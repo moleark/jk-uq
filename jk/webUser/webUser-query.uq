@@ -13,6 +13,7 @@ ACTION auditPendingUser(
     customerId bigint
 ) {
     book WebUserCustomer at (id) set customer = customerId;
+    bus webUserBus.WebUserAuditPass set webUser = id, customer = customerId;
     HISTORY WebUserAuditHistory set webUser = id, customer = customerId;
 
     delete from PendingAuditWebUser where webUser = id;
@@ -113,3 +114,16 @@ PAGE (
 };
 
 
+/** 搜索优惠券使用情况 */
+QUERY SearchCouponReceive( 
+    coupon int
+)
+returns ret (
+    webuser ID WebUser,
+    createDate date
+) {
+    into ret  select  a.webUser as webuser, a.createDate
+    from    WebUserCoupon as a
+    where   a.coupon = coupon;
+};
+ 

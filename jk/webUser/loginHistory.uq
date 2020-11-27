@@ -1,0 +1,14 @@
+HISTORY LoginHistory (
+    date,
+    webUser ID WebUser,
+    ip char(50),
+    app char(10),
+);
+
+ACTION recordLogin (
+    webUser ID WebUser,
+    ip char(50),
+    app char(10)
+) {
+    HISTORY LoginHistory set webUser = webUser, ip = ip, app = app;
+};
