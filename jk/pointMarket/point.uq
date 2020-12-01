@@ -239,6 +239,16 @@ HISTORY PointProductVisitHistory (
     webUser ID [$user],
 );
 
+-- 积分兑换产品变动历史记录表
+HISTORY PointProductLibHistory (
+    date,
+    pointProduct ID PointProductLib not null,
+    startDate date,
+    endDate date,
+    reason char(30),
+    createTime date,
+);
+
 /*
 -- 解决原始产品已下架或价格过期，但仍显示在积分商城的问题：pointshop中创建作业调度每日检查未下架产品所对应的原始产品是否有效，无效者设置isvalid=0，且记录历史
 select	*
