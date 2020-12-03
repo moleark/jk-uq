@@ -28,7 +28,7 @@ returns ret(
     into ret select t.pointProduct, t.genre
     FROM    PointProductGenre as t
             join PointProductLib AS pl on pl.id = t.pointProduct
-    where   t.genre = genre and pl.isvalid = 0 and pl.startDate < NOW() and pl.endDate > NOW()
+    where   t.genre = genre and pl.isvalid = 1 and pl.startDate < NOW() and pl.endDate > NOW()
     ORDER   by pl.point asc;
 };
 
