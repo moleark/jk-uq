@@ -17,6 +17,6 @@ OPEN TUID Chemical (
 OPEN TUID StorageCondition (
     id,
     no char(10) not null,
-    main name char(50) not null,
+    main name char(100) not null,
     stamp(create, update)
 );
