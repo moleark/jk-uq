@@ -1,0 +1,7 @@
+import JKchemical = 百灵威系统工程部/chemical;
+
+TUID StorageCondition from JKchemical (
+    id,
+    no char(10) not null,
+    main name char(50) not null
+);
