@@ -12,7 +12,11 @@ ACTION auditPendingUser(
     id bigint,
     customerId bigint
 ) {
-    book WebUserCustomer at (id) set customer = customerId;
+    var priority smallint;
+    set priority = 1;
+    if exists(select 1 from WebUserCustomer where customer = customerId)
+        set priority = 2;
+    book WebUserCustomer at (id) set customer = customerId, priority = priority;
     bus webUserBus.WebUserAuditPass set webUser = id, customer = customerId;
     HISTORY WebUserAuditHistory set webUser = id, customer = customerId;
 
