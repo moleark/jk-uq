@@ -12,6 +12,7 @@ OPEN TUID WebUser (
 ) ON SAVE {
     if ($user > 0) {
         if not exists(select 1 from WebUserBuyeraccount where webUser = id)
+        and not exists(select 1 from WebUserCustomer where webUser = id)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = id)
         and not exists(select 1 from PendingAuditWebUser where webUser = id){
             BOOK PendingAuditWebUser at(id);
@@ -34,6 +35,7 @@ OPEN MAP WebUserContact(
 ) ON ADD {
     if ($user > 0){
         if not exists(select 1 from WebUserBuyeraccount where webUser = $user)
+        and not exists(select 1 from WebUserCustomer where webUser = $user)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
         and not exists(select 1 from PendingAuditWebUser where webUser = $user){
             BOOK PendingAuditWebUser at($user);
@@ -51,6 +53,7 @@ OPEN MAP WebUserContacts (
 ) ON ADD {
     if($user > 0) {
         if not exists(select 1 from WebUserBuyeraccount where webUser = $user)
+        and not exists(select 1 from WebUserCustomer where webUser = $user)
         and not exists(select 1 from WebUserAuditRefuseHistory where WebUser = $user)
         and not exists(select 1 from PendingAuditWebUser where webUser = $user){
             BOOK PendingAuditWebUser at($user);
@@ -90,6 +93,8 @@ OPEN TUID WebUserSettingType (
 OPEN MAP WebUserCustomer(
     key webUser ID WebUser,
     customer ID Customer,
+    priority smallint not null default 1,      -- 因为存在一个customer注册了多个webUser的情况，priority用来判断优先使用哪个账号:1为最优先使用；>1者优先级一次靠后
+    index idx_unitcustomer,
 );
 
 /*
