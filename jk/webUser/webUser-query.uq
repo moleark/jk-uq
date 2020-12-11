@@ -130,4 +130,28 @@ returns ret (
     from    WebUserCoupon as a
     where   a.coupon = coupon;
 };
- 
+
+QUERY getWebUserByCustomer(customer int)
+returns ret (
+    id int,
+    name char(50),
+    firstName char(50),
+    lastName char(50),
+    organizationName char(100),
+    priority smallint 
+) {
+    into    ret select w.id, w.name, w.firstName, w.lastName, w.organizationName, wc.priority
+    from    WebUserCustomer as wc
+            join WebUser as w on w.id = wc.webUser
+    where   wc.customer = customer;
+};
+
+
+ACTION setCustomerMainWebUser(customer int, webUser int) {
+    foreach(var wu int, c int of
+        select webUser as wu, customer as c from WebUserCustomer as t where t.customer = customer
+    ) {
+        book WebUserCustomer at(wu) set customer = c, priority = 0; 
+    }
+    book WebUserCustomer at(webUser) set customer = customer, priority = 1; 
+};
