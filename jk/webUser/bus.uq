@@ -23,14 +23,14 @@ BUS webUserBusGetCuByWu from [百灵威系统工程部]/WebUser
 BUS webUserBusQuerys from [百灵威系统工程部]/WebUser
     QUERY getWebUserByCustomer {
         var webUser ID [$user];
-        set webUser = w.webUser from WebUserCustomer as w where w.customer = customer and w.priority = 1;
+        set webUser = w.webUser from WebUserCustomer as w where w.customer = customer and w.priority = 1 order by webuser limit 1;
         into BUS select webUser;
     };
 
 BUS webUserBusGetWuByCu from [百灵威系统工程部]/WebUser
     QUERY getWuByCu {
         var webUser ID [$user];
-        set webUser = w.webUser from WebUserCustomer as w where w.customer = customer and w.priority = 1;
+        set webUser = w.webUser from WebUserCustomer as w where w.customer = customer and w.priority = 1 order by webuser limit 1;
         into BUS select webUser;
     };
  
