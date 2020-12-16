@@ -7,6 +7,17 @@ returns ret(
     from    PendingAuditWebUser;
 };
 
+ACTION applyAuditUser(
+    webUser bigint
+){
+    if not exists(select 1 from WebUserBuyeraccount as w where w.webUser = webUser)
+    and not exists(select 1 from WebUserCustomer as w where w.webUser = webUser)
+    and not exists(select 1 from WebUserAuditRefuseHistory as w where w.WebUser = webUser)
+    and not exists(select 1 from PendingAuditWebUser as w where w.webUser = webUser){
+        BOOK PendingAuditWebUser at(webUser);
+    }
+};
+
 /**/
 ACTION auditPendingUser(
     id bigint,
