@@ -22,6 +22,6 @@ returns ret (
 ) {
     into ret select o.id, o.date
     from    OrderDraftAction as o
-    where   o.id = orderDraft
+    where   o.id = orderDraft and o.action = 1
     order by o.date;
 };
