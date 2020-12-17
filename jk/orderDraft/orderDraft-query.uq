@@ -9,3 +9,19 @@ PAGE (
     where   p.orderDraft > $pageStart and p.orderMaker = orderMaker
     limit $pageSize;
 };
+
+
+ACTION sendOutOrderDraft(orderDraft bigint) {
+    HISTORY OrderDraftAction set id = orderDraft, action = 1, operator = $user;
+};
+
+Query getSendOutHistory(orderDraft bigint)
+returns ret (
+    id bigint,
+    date datetime,
+) {
+    into ret select o.id, o.date
+    from    OrderDraftAction as o
+    where   o.id = orderDraft
+    order by o.date;
+};
