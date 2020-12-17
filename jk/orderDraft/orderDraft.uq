@@ -61,8 +61,9 @@ ACTION submit {
             set product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee;
     }
-    STATE TO Sending;
+    STATE TO BeingReviewed;
 }
+/*
 STATE Sending {
     Action SendOut {
         HISTORY OrderDraftAction set id = $id, action = 1, operator = $user;
@@ -78,6 +79,7 @@ STATE Sended {
         HISTORY OrderDraftAction set id = $id, action = 1, operator = $user;
     }
 }
+*/
 STATE BeingReviewed {
     Action Pass {
         HISTORY OrderDraftAction set id = $id, action = 3, operator = $user;
@@ -142,7 +144,7 @@ HISTORY OrderDraftItemHistory (
 
 HISTORY OrderDraftAction (
     date,
-    id bigint,
-    action smallint,
+    id ID $Sheet,
+    action smallint,    -- 1:发送给客户;2:;3:;4:;
     operator ID [$user]
 );
