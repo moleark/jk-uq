@@ -1,51 +1,47 @@
 {
     "shelfInOutBoundHistory": [
         {
-            "name": "StockArea",
+            "name": "warehouse",
             "type": "string"
         },
         {
-            "name": "KFKQDM",
+            "name": "warehouseRoom",
             "type": "string"
         },
         {
-            "name": "KFKQFJH",
+            "name": "shelf",
             "type": "string"
         },
         {
-            "name": "HJZDM",
+            "name": "shelfLayer",
             "type": "string"
         },
         {
-            "name": "HJZFCDM",
-            "type": "string"
-        },
-        {
-            "name": "HWH",
+            "name": "shelfBlock",
             "type": "number"
         },
         {
-            "name": "jkid",
+            "name": "product",
             "type": "string"
         },
         {
-            "name": "Jkcat",
+            "name": "pack",
             "type": "string"
         },
         {
-            "name": "LotNr",
+            "name": "lotNumber",
             "type": "string"
         },
         {
-            "name": "OIMark",
+            "name": "inOutType",
             "type": "number"
         },
         {
-            "name": "Qty",
+            "name": "quantity",
             "type": "number"
         },
         {
-            "name": "InputTime",
+            "name": "inBoundDate",
             "type": "string"
         }
     ]
