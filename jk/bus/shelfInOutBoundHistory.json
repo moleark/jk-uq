@@ -1,0 +1,52 @@
+{
+    "shelfInOutBoundHistory": [
+        {
+            "name": "StockArea",
+            "type": "string"
+        },
+        {
+            "name": "KFKQDM",
+            "type": "string"
+        },
+        {
+            "name": "KFKQFJH",
+            "type": "string"
+        },
+        {
+            "name": "HJZDM",
+            "type": "string"
+        },
+        {
+            "name": "HJZFCDM",
+            "type": "string"
+        },
+        {
+            "name": "HWH",
+            "type": "number"
+        },
+        {
+            "name": "jkid",
+            "type": "string"
+        },
+        {
+            "name": "Jkcat",
+            "type": "string"
+        },
+        {
+            "name": "LotNr",
+            "type": "string"
+        },
+        {
+            "name": "OIMark",
+            "type": "number"
+        },
+        {
+            "name": "Qty",
+            "type": "number"
+        },
+        {
+            "name": "InputTime",
+            "type": "string"
+        }
+    ]
+}
