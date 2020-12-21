@@ -2,31 +2,31 @@
     "shelfInOutBoundHistory": [
         {
             "name": "warehouse",
-            "type": "string"
+            "type": "number"
         },
         {
             "name": "warehouseRoom",
-            "type": "string"
+            "type": "number"
         },
         {
             "name": "shelf",
-            "type": "string"
+            "type": "number"
         },
         {
             "name": "shelfLayer",
-            "type": "string"
+            "type": "number"
         },
         {
             "name": "shelfBlock",
-            "type": "string"
+            "type": "number"
         },
         {
             "name": "product",
-            "type": "string"
+            "type": "number"
         },
         {
             "name": "pack",
-            "type": "string"
+            "type": "number"
         },
         {
             "name": "lotNumber",
