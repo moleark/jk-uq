@@ -1,31 +1,31 @@
 {
     "shelfInOutBoundHistory": [
         {
-            "name": "warehouseID",
+            "name": "warehouse",
             "type": "string"
         },
         {
-            "name": "warehouseRoomID",
+            "name": "warehouseRoom",
             "type": "string"
         },
         {
-            "name": "shelfID",
+            "name": "shelf",
             "type": "string"
         },
         {
-            "name": "shelfLayerID",
+            "name": "shelfLayer",
             "type": "string"
         },
         {
-            "name": "shelfBlockID",
+            "name": "shelfBlock",
             "type": "number"
         },
         {
-            "name": "productID",
+            "name": "product",
             "type": "string"
         },
         {
-            "name": "packID",
+            "name": "pack",
             "type": "string"
         },
         {
@@ -41,7 +41,7 @@
             "type": "number"
         },
         {
-            "name": "inBoundDate",
+            "name": "inOutBoundTime",
             "type": "string"
         }
     ]
