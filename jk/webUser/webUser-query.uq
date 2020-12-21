@@ -7,12 +7,27 @@ returns ret(
     from    PendingAuditWebUser;
 };
 
+ACTION applyAuditUser(
+    webUser bigint
+){
+    if not exists(select 1 from WebUserBuyeraccount as w where w.webUser = webUser)
+    and not exists(select 1 from WebUserCustomer as w where w.webUser = webUser)
+    and not exists(select 1 from WebUserAuditRefuseHistory as w where w.WebUser = webUser)
+    and not exists(select 1 from PendingAuditWebUser as w where w.webUser = webUser){
+        BOOK PendingAuditWebUser at(webUser);
+    }
+};
+
 /**/
 ACTION auditPendingUser(
     id bigint,
     customerId bigint
 ) {
-    book WebUserCustomer at (id) set customer = customerId;
+    var priority smallint;
+    set priority = 1;
+    if exists(select 1 from WebUserCustomer where customer = customerId)
+        set priority = 2;
+    book WebUserCustomer at (id) set customer = customerId, priority = priority;
     bus webUserBus.WebUserAuditPass set webUser = id, customer = customerId;
     HISTORY WebUserAuditHistory set webUser = id, customer = customerId;
 
@@ -126,4 +141,28 @@ returns ret (
     from    WebUserCoupon as a
     where   a.coupon = coupon;
 };
- 
+
+QUERY getWebUserByCustomer(customer int)
+returns ret (
+    id int,
+    name char(50),
+    firstName char(50),
+    lastName char(50),
+    organizationName char(100),
+    priority smallint 
+) {
+    into    ret select w.id, w.name, w.firstName, w.lastName, w.organizationName, wc.priority
+    from    WebUserCustomer as wc
+            join WebUser as w on w.id = wc.webUser
+    where   wc.customer = customer;
+};
+
+
+ACTION setCustomerMainWebUser(customer int, webUser int) {
+    foreach(var wu int, c int of
+        select webUser as wu, customer as c from WebUserCustomer as t where t.customer = customer
+    ) {
+        book WebUserCustomer at(wu) set customer = c, priority = 0; 
+    }
+    book WebUserCustomer at(webUser) set customer = customer, priority = 1; 
+};
