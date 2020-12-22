@@ -123,7 +123,7 @@ HISTORY WebUserAuditHistory(
     date,
     webUser ID WebUser,
     customer ID Customer,
-    user ID [$user],
+    user,
 );
 
 HISTORY WebUserAuditRefuseHistory(
@@ -131,7 +131,7 @@ HISTORY WebUserAuditRefuseHistory(
     webUser ID WebUser,
     reason ID AuditPendingUserRefuseReason,
     comments char(100),
-    user ID [$user],
+    user,
 );
 /* end WebUser审核相关的uq */
 
