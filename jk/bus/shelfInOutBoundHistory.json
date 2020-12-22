@@ -1,0 +1,48 @@
+{
+    "shelfInOutBoundHistory": [
+        {
+            "name": "warehouse",
+            "type": "number"
+        },
+        {
+            "name": "warehouseRoom",
+            "type": "number"
+        },
+        {
+            "name": "shelf",
+            "type": "number"
+        },
+        {
+            "name": "shelfLayer",
+            "type": "number"
+        },
+        {
+            "name": "shelfBlock",
+            "type": "number"
+        },
+        {
+            "name": "product",
+            "type": "number"
+        },
+        {
+            "name": "pack",
+            "type": "number"
+        },
+        {
+            "name": "lotNumber",
+            "type": "string"
+        },
+        {
+            "name": "inOutType",
+            "type": "number"
+        },
+        {
+            "name": "quantity",
+            "type": "number"
+        },
+        {
+            "name": "inOutBoundTime",
+            "type": "string"
+        }
+    ]
+}
