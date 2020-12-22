@@ -2,7 +2,7 @@
 --任务
 TUID Task (
     id,
-    main description char(100),
+    main description text,
     main customer ID MyCustomer,
     main type ID TaskType,
     main biz ID BizType,

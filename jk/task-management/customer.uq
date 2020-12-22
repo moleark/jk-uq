@@ -9,7 +9,7 @@ TUID MyCustomer (
     main lastName char(50),
     main address ID Address,
     main addressString char(400),
-    main telephone char(20),
+    main telephone char(50),
     main mobile char(100),
     main gender char(5),
     main birthDay date,
