@@ -29,7 +29,7 @@ PAGE (
                 c.teacher, c.potential, c.research, c.salutation, c.createTime, c.address, c.addressString, cb.validity
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
-            left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
+            left join CustomerMyCustomerMap as cyc on cyc.mycustomer = c.id
             left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
     where   c.id > $pageStart 
             and c.user = $user 
@@ -115,9 +115,9 @@ PAGE (
                 cb.validity, case when cb.sales is null then 1 else 0 end as isOccupy
     from    MyCustomer as c
             join MyCustomerUnit as u on c.unit =u.id
-            left join CustomerMyCustomerMap as cyc on cyc.mycustomer =c.id
+            left join CustomerMyCustomerMap as cyc on cyc.mycustomer = c.id
             left join CustomerNowSalesBOOK as cb on cb.customer = cyc.customer
-    where   c.id > $pageStart and c.unit = _unit  and c.isValid=1 and (c.name like key2 or u.name like key2 )
+    where   c.id > $pageStart and c.unit = _unit  and c.isValid = 1 and (c.name like key2 or u.name like key2 )
     limit $pageSize;
 };
 
@@ -160,10 +160,10 @@ returns ret (
         where   a.content = mobile and a.type = 'mobile';
 
         --获取MyCustomer 使用此手机号的CID（这个是否还需要验证，因为有漏洞我随便把一个我当前客户的手机号改成其他人的 其他人验证的时候就是已绑定）
-        into   customerlist select a.customer
+        into    customerlist select a.customer
         from    CustomerMyCustomerMap as a
                 join MyCustomer as b on a.mycustomer = b.id
-        where   b.mobile=mobile;
+        where   b.mobile = mobile;
         
         --step.3.判断这些CID是否已有当前轻代理（除去自己）
         set     counts = count(1)

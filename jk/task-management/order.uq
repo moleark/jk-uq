@@ -79,9 +79,9 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
 
             --创建新客户
             if( type in ( 1, 3 ) and not customerX is null ){
-                set mycustomer = a.mycustomer, sales=a.sales from CustomerMyCustomerMap as a where a.customer = customerX limit 1;
-                if( mycustomer is null ){
-                    BOOK NewMyCustomerBook at( sales, customerX ) set webuser = webuser, createTime = NOW(); --创建新客户
+                set mycustomer = a.mycustomer from CustomerMyCustomerMap as a where a.customer = customerX limit 1;
+                if(mycustomer is null){
+                    BOOK NewMyCustomerBook at(sales, customerX) set webuser = webuser, createTime = NOW(); --创建新客户
                 }
             }
         }
