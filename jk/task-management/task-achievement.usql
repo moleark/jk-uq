@@ -350,19 +350,19 @@ returns ret (
 ) {
 
     --step.1.获取团队信息
-    var teamCount bigint =0, innerteamCount bigint =0;
-    set innerteamCount =  innerteamCount , teamCount = teamCount 
+    var teamCount bigint = 0, innerteamCount bigint =0;
+    set innerteamCount = innerteamCount, teamCount = teamCount 
     from  SalesTeamBook where user = $user;
     
     --step.2.获取客户信息
-    var customerCount bigint =0, activeCustomerCount bigint=0;
+    var customerCount bigint = 0, activeCustomerCount bigint=0;
     set customerCount = customerCount 
     from SalesCustomerBook where user = $user; 
     --获取活跃客户
-    set activeCustomerCount= ifnull(count(1),0) 
+    set activeCustomerCount = ifnull(count(1),0) 
     from    CustomerNowSalesBOOK as cn 
             join CustomerMyCustomerMap as cm on cn.customer = cm.customer 
-    where   cn.sales=$user;
+    where   cn.sales = $user;
  
     --step.3.获取业绩
     var oneSaleVolume dec(12, 2)=0, twoSaleVolume dec(12, 2)=0, threeSaleVolume dec(12, 2)=0,
