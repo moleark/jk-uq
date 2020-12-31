@@ -126,5 +126,5 @@ ACTION PointProductGenreDelete (
     genre ID Genre,
 ) {
     delete t from PointProductGenre as t where t.genre = genre;
-    delete from Genre where id = genre;
+    delete g from Genre as g where g.id = genre;
 };

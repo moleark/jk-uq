@@ -74,7 +74,7 @@ ACTION ComputeBalance(){
                 --记录回款历史
                 history BalanceHistory set sales=sales, order=order, orderNo=orderNo, ordertype='refund',  paymentAmount=paymentAmount, amount=amount, currency=1;
             }
-            delete from OrderPaymentPending where id=nowid;
+            delete t from OrderPaymentPending as t where t.id = nowid;
         }
 
         --记录回款状态

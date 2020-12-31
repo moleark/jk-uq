@@ -31,7 +31,7 @@ ACTION auditPendingUser(
     bus webUserBus.WebUserAuditPass set webUser = id, customer = customerId;
     HISTORY WebUserAuditHistory set webUser = id, customer = customerId;
 
-    delete from PendingAuditWebUser where webUser = id;
+    delete t from PendingAuditWebUser as t where t.webUser = id;
 
     var name char(50),
     firstName char(50),
@@ -63,7 +63,7 @@ ACTION auditPendingUserRefuse(
 ) {
     HISTORY WebUserAuditRefuseHistory set webUser = id, reason = reason, comments = comments;
 
-    delete from PendingAuditWebUser where webUser = id;
+    delete t from PendingAuditWebUser as t where t.webUser = id;
 
     var name char(50),
     firstName char(50),
