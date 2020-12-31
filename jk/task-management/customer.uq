@@ -1,7 +1,7 @@
 --客户
 TUID MyCustomer (
     id,
-    user ID [$user],
+    user ID [$user],    -- 创建此MyCustomer的销售或轻代理
     main unit ID MyCustomerUnit,
     no bigint,
     main name char(50) not null,
@@ -9,7 +9,7 @@ TUID MyCustomer (
     main lastName char(50),
     main address ID Address,
     main addressString char(400),
-    main telephone char(20),
+    main telephone char(50),
     main mobile char(100),
     main gender char(5),
     main birthDay date,
@@ -60,7 +60,6 @@ BOOK NewMyCustomerBook (
 
 --我的客户和系统客户关联关系
 MAP CustomerMyCustomerMap (
-    key sales ID [$user],
     key mycustomer ID MyCustomer,
     customer ID Customer,
     webuser ID [$user],

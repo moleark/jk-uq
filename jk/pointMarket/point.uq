@@ -114,33 +114,31 @@ SHEET PointExchangeSheet ver 0.1 (
     shippingContact ID Contact,             --收货地址
 )
 Action submit {
-    foreach exchangeItems {
-        var leftAmount bigint;
-        set leftAmount = amount;
+    var leftAmount bigint;
+    set leftAmount = amount;
 
-        foreach (var mPoint int, pointYear int of
-            select  (p.point - p.usedPoint) as mPoint, p.pointYear
-            from    PointBook as p
-            where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
-                    and (p.point - p.usedPoint) > 0
-            order by p.pointYear
-        ) {
-            if (leftAmount > 0){
-                var p int;
-                if(mPoint >= leftAmount) {
-                    set p = leftAmount;
-                }else{
-                    set p = mPoint;
-                }
+    foreach (var mPoint int, pointYear int of
+        select  (p.point - p.usedPoint) as mPoint, p.pointYear
+        from    PointBook as p
+        where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
+                and (p.point - p.usedPoint) > 0
+        order by p.pointYear
+    ) {
+        if (leftAmount > 0){
+            var p int;
+            if(mPoint >= leftAmount) {
+                set p = leftAmount;
+            }else{
+                set p = mPoint;
+            }
 
-                book PointBook at (webUser, pointYear) set usedPoint += p;
-                history PointHistory
-                    set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
+            book PointBook at (webUser, pointYear) set usedPoint += p;
+            history PointHistory
+                set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
 
-                set leftAmount = leftAmount - p;
-                if(leftAmount <= 0){
-                    break;
-                }
+            set leftAmount = leftAmount - p;
+            if(leftAmount <= 0){
+                break;
             }
         }
     }
@@ -237,6 +235,16 @@ HISTORY PointProductVisitHistory (
     date,
     pointProduct ID PointProductLib not null,
     webUser ID [$user],
+);
+
+-- 积分兑换产品变动历史记录表
+HISTORY PointProductLibHistory (
+    date,
+    pointProduct ID PointProductLib not null,
+    startDate date,
+    endDate date,
+    reason char(30),
+    createTime date,
 );
 
 /*

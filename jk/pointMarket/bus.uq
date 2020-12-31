@@ -42,12 +42,16 @@ BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
     ACCEPT WebUserAuditPass
     {
         -- 审核后Customer的积分导入到webuser
-        foreach (
-            var pointYear int, point int, usedPoint int ,totalPoint int
-            of select a.pointYear, a.point , a.usedPoint, a.totalPoint
-            from PointBookByCustomer as a where a.customer = customer
-        ) {
-            book PointBook at (webUser, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
+        if(not exists(select 1 from PointBook as pb where pb.webUser = webUser)) {
+            foreach (
+                var pointYear int, point int, usedPoint int ,totalPoint int
+                of select a.pointYear, a.point , a.usedPoint, a.totalPoint
+                from PointBookByCustomer as a where a.customer = customer
+            ) {
+                book PointBook at (webUser, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
+            }
+        }else {
+            delete t from PointBookByCustomer as t where t.customer = customer;
         }
 
         -- 把webuser领用的积分券导入内部

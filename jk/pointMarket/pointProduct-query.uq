@@ -5,6 +5,7 @@ returns ret(
     into ret SELECT	a.id as product
 	FROM    PointProductLib AS a
     where   a.point >= ifnull(startPoint, a.point) and a.point <= ifnull(endPoint, a.point) 
+            and a.isvalid = 1
             and a.startDate <= now() and ifnull(a.endDate, '2050-01-01') >= now()
     order by a.point;
 };
@@ -27,7 +28,7 @@ returns ret(
     into ret select t.pointProduct, t.genre
     FROM    PointProductGenre as t
             join PointProductLib AS pl on pl.id = t.pointProduct
-    where   t.genre = genre and pl.startDate < NOW() and pl.endDate > NOW()
+    where   t.genre = genre and pl.isvalid = 1 and pl.startDate < NOW() and pl.endDate > NOW()
     ORDER   by pl.point asc;
 };
 
@@ -44,7 +45,7 @@ returns ret(
 ) {
     into ret SELECT p.id, p.point, p.startDate, p.endDate, p.imageUrl 
     FROM PointProductLib as p
-    WHERE p.startDate < NOW() and p.endDate > NOW()
+    WHERE p.isvalid = 1 and p.startDate < NOW() and p.endDate > NOW()
     order by p.startDate desc, p.id
     limit 8;
 };
@@ -63,7 +64,7 @@ returns ret(
     into ret SELECT p.id, p.point, p.startDate, p.endDate, p.imageUrl 
     FROM  PointProductLib as p
           left join PointProductHotStat as hs on p.id = hs.pointProduct
-    WHERE p.startDate < NOW() and p.endDate > NOW()
+    WHERE p.isvalid = 1 and p.startDate < NOW() and p.endDate > NOW()
     order by hs.visits desc, p.id
     limit 8;
 };
@@ -99,7 +100,7 @@ PAGE (
     select  p1.id
     from    `tv_pointproducthotstat` as hs
             inner join `tv_pointproductlib` as p1 on p1.`id` = hs.pointProduct
-    where   p1.startDate < NOW() and p1.endDate > NOW()
+    where   p1.isvalid = 1 and p1.startDate < NOW() and p1.endDate > NOW()
     order   by hs.visits desc, p1.`id`;
 
     INSERT  INTO `_$page` (`seq`, `id`, `point`, `startDate`, `endDate`, `imageUrl`, `visits`, `exchanges`)

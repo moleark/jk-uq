@@ -1,9 +1,11 @@
 
 Query GetRootCategories (salesRegion ID SalesRegion, language ID Language)
 returns ret(
-    productCategory ID ProductCategory
+    productCategory int,
+    name char(200),
+    total int,
 ){
-    into ret select pc.id as productCategory
+    into ret select pc.id as productCategory, pcl.name, ppi.total
     from    ProductCategory as pc
             join ProductCategory.ProductCategoryLanguage as pcl on pcl.owner = pc.id
                 and pcl.language = language

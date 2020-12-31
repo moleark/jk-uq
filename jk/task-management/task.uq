@@ -2,7 +2,7 @@
 --任务
 TUID Task (
     id,
-    main description char(100),
+    main description text,
     main customer ID MyCustomer,
     main type ID TaskType,
     main biz ID BizType,
@@ -297,10 +297,10 @@ RETURNS ret (
     set     id=a.id, description=a.description, _customer=a.customer, type=a.type,
             biz=a.biz, employee=a.employee, priorty=a.priorty, deadline=a.deadline
     from    JkTask as a
-    where   a.id=task;
+    where   a.id = task;
 
     var mycustomerid ID;
-    set mycustomerid=mycustomer from CustomerMyCustomerMap where Customer=_customer;
+    set mycustomerid = mycustomer from CustomerMyCustomerMap where Customer = _customer;
 
     if ( mycustomerid is null ){
         --判断是否有单位，没有单位新建单位
@@ -324,7 +324,7 @@ RETURNS ret (
             name=name, firstName=firstName, lastName=lastName, gender=gender, user=$user, unit=mycustomerUnitid,
             salutation=salutation, birthDay=birthDay, isValid=1, createTime=now();
 
-         BOOK CustomerMyCustomerMap at ( $user, mycustomerid ) set customer=_customer ;
+         BOOK CustomerMyCustomerMap at (mycustomerid) set customer = _customer ;
     }
 
     var taskId ID;

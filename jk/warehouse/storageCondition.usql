@@ -1,0 +1,13 @@
+-- 库房存储条件表
+TUID WarehouseStorageCondition(
+    id,
+    main name char(50) not null,
+    description char(200),
+    stamp(create, update)
+);
+
+-- 后勤存储条件跟标准存储条件关系表
+MAP WarehouseStorageConditionMap(
+    key warehouseStorageCondition ID WarehouseStorageCondition,
+    key storageCondition ID StorageCondition,
+);

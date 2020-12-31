@@ -12,3 +12,11 @@ OPEN TUID Chemical (
     unique (no),
     index cas(cas) unique,
 );
+
+-- 产品标准存储条件表
+OPEN TUID StorageCondition (
+    id,
+    no char(10) not null,
+    main name char(100) not null,
+    stamp(create, update)
+);
