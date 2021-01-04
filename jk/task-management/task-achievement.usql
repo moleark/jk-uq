@@ -388,9 +388,8 @@ returns ret (
  *
  */
 QUERY getPersonDailyAchieve (
-    type char(10),
     user ID [$user],
-    typeParam char(8),
+    date char(10),
 )returns ret(
     date date,
     user ID [$user],
@@ -400,22 +399,31 @@ QUERY getPersonDailyAchieve (
     orderCount        int, --订单数
     saleVolume dec(12, 2)
 ){
-    if(type = 'day') {
-        into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume
-        from    Achievement as a
-        where   a.date = typeParam and a.manage = 0 and a.user = user;
-    } 
-
-    if(type = 'month') {
-        var pYear int, pMonth int;
-        set pYear = substring(typeParam, 1, 4), pMonth = substring(typeParam, 5, 2);
-        into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume
-        from    Achievement as a
-        where   a.date = a.date and a.manage = 0 and a.user = user and a.year = pYear and a.month = pMonth;
-    }
+    into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume
+    from    Achievement as a
+    where   a.date = date and a.manage = 0 and a.user = user;
 };
 
 QUERY getPersonMonthlyAchieve (
+    user ID [$user],
+    year int,
+    month int,
+)returns ret(
+    date date,
+    user ID [$user],
+    endTaskCount      int, --完结任务数量
+    sendCreditsCount  int, --发积分码数量
+    sendPostCount     int, --发积贴文数量
+    orderCount        int, --订单数
+    saleVolume dec(12, 2)
+){
+    into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume
+    from    Achievement as a
+    where   a.date = a.date and a.manage = 0 and a.user = user and a.year = year and a.month = month;
+};
+
+
+QUERY getPersonYearlyAchieve (
     user ID [$user],
     year int,
 )returns ret(
