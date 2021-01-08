@@ -481,8 +481,8 @@ QUERY getTeamMonthlyAchieve(
     year int,
     month int
 )returns ret(
-    year int,
-    month int,
+    yeara int,
+    montha int,
     usera ID [$user],
     endTaskCount      int, --完结任务数量
     sendCreditsCount  int, --发积分码数量
@@ -490,12 +490,12 @@ QUERY getTeamMonthlyAchieve(
     orderCount        int, --订单数
     saleVolume dec(12, 2)   
 ){
-   into ret select year, month, usera, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+   into ret select yeara, montha, usera, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
         , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
    from    Achievement as a
    where   a.date = a.date and a.manage = team and a.year = year and a.month = month
-   group by a.user as usera
-   order by usera;
+   group by a.year as yeara, a.month as montha, a.user as usera
+   order by yeara, montha, usera;
 };
 
 /*
@@ -505,7 +505,7 @@ QUERY getTeamYearlyAchieve(
     team int,
     year int
 )returns ret(
-    year int,
+    yeara int,
     montha int,
     endTaskCount      int, --完结任务数量
     sendCreditsCount  int, --发积分码数量
@@ -513,12 +513,12 @@ QUERY getTeamYearlyAchieve(
     orderCount        int, --订单数
     saleVolume dec(12, 2)
 ){
-    into ret select year, montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+    into ret select yeara, montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
         , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
     from   Achievement as a
     where  a.date = a.date and a.manage = team and a.year = year
-    group by a.month as montha
-    order by montha;
+    group by a.year as yeara, a.month as montha
+    order by yeara, montha;
 };
 
 /** 搜索内部销售团队的Acheievement **/
