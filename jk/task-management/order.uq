@@ -15,39 +15,40 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
             into packs select pack as packid, salesRegionX as salesRegion;
         }
     }{
-        --注：type  1:表示做合同有customer的  2：表示做合同没有customer 3：表示审核有customer
-        --step.1.获取优惠码所属销售和类型， 没有优惠码获取客户当前轻代理和关联类型
+        -- 注：type  1:表示做合同有customer的  2：表示做合同没有customer 3：表示审核有customer
+        -- step1. 获取优惠码所属销售和类型，没有优惠码获取客户当前轻代理和关联类型
         var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer, types char(20);
-        if( coupon > 0 ){
-            set     sales=c.user, --轻代理
-                    couponID = c.id,
-                    types = c.types
+        if(coupon > 0){
+            set     sales = c.user, --轻代理
+                    couponID = c.id, types = c.types
             from    Coupon as c
             where   c.id = coupon;
-        }else if ( not customerX is null ){
+        }else if (not customerX is null){
             set     sales = a.sales, types = a.types 
             from    CustomerNowSalesBOOK as a 
             where   a.customer = customerX and a.sales <> 0;
         }
 
-        --step.2.绑定关系或者更新关系
-        if( couponID > 0  ){
-                --step.2.1.首先要记录优惠码的使用记录
-                BOOK CouponOrderMap at ( coupon, orderId, webuser ) set  createDate = NOW();
+        -- step.2.绑定关系或者更新关系
+        if(couponID > 0){
+            -- step.2.1.首先要记录优惠码的使用记录
+            BOOK CouponOrderMap at (coupon, orderId, webuser) set  createDate = NOW();
 
-            if ( type in( 1, 3 ) and not customerX is null ){
-                --step.2.2.绑定当前轻代理，或者延期当前轻代理。
-                BOOK CustomerNowSalesBOOK at ( customerX ) set sales = sales, validity=dateadd(month, 3, NOW()), types=types, webuser=webuser;
-                --step.2.3.记录历史
-                history CustomerNowSalesHistory set customer=customerX, webuser=webuser, sales=sales, validity=dateadd(month, 3, NOW()), types=types;
-                --step.2.4.发送BUS到内部系统
-                bus salesTaskBus.assistCustomerNowSales set sales=sales, customer=customerX, webuser=webuser, createdate=NOW();
+            if (type in(1, 3) and not customerX is null){
+                -- step.2.2.绑定当前轻代理，或者延期当前轻代理。
+                BOOK CustomerNowSalesBOOK at (customerX) 
+                    set sales = sales, validity = dateadd(month, 3, NOW()), types = types, webuser = webuser;
+                -- step.2.3.记录历史
+                history CustomerNowSalesHistory 
+                    set customer = customerX, webuser = webuser, sales = sales, validity = dateadd(month, 3, NOW()), types = types;
+                -- step.2.4.发送BUS到内部系统，同步记录客户/销售的绑定关系
+                bus salesTaskBus.assistCustomerNowSales set sales = sales, customer = customerX, webuser = webuser, createdate = NOW();
             }
         }
 
-        --step.3.记录销售记录(产品明细)
-        if( sales > 0 ){
-            --计算合同的总代理价
+        -- step.3.记录销售记录(产品明细)
+        if(sales > 0){
+            -- 计算合同的总代理价
             var sumAgentprice dec(12, 2);
             set sumAgentprice = 0;
             foreach orderItems {
@@ -61,7 +62,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
                         set agentprices = case when price < agentprices then price else agentprices end;
                     }
                 }
-                --如果没有获取代理价则代理价等于销售价格
+                -- 如果没有获取代理价则代理价等于销售价格
                 if(not agentprices is null){
                     set sumAgentprice = sumAgentprice + ( agentprices * quantity);
                 }else{
@@ -69,16 +70,16 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
                 }
             }
 
-            --记录客户订单
+            -- 记录客户订单
             var pid ID;
-            if( type in ( 1, 2 ) ){
-                 if not exists( select 1 from WebUserEmployeeMap as a where a.webuser = sales ){
-                    PENDING CustomerOrderPending + ( sales:sales, webuser:webuser, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice, types:types ) to pid;
-                 }
+            if(type in (1, 2)){
+                if not exists(select 1 from WebUserEmployeeMap as a where a.webuser = sales){
+                   PENDING CustomerOrderPending + ( sales:sales, webuser:webuser, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice, types:types ) to pid;
+                }
             } 
 
-            --创建新客户
-            if( type in ( 1, 3 ) and not customerX is null ){
+            -- 创建新客户(好像是在界面上会显示“新客户”，这个有什么作用?)
+            if(type in (1, 3) and not customerX is null){
                 set mycustomer = a.mycustomer from CustomerMyCustomerMap as a where a.customer = customerX limit 1;
                 if(mycustomer is null){
                     BOOK NewMyCustomerBook at(sales, customerX) set webuser = webuser, createTime = NOW(); --创建新客户

@@ -27,19 +27,19 @@ BOOK SalesAchievementBook(
 
     Level int not null default 1, --级别 ： 1：铜牌； 2:金牌；3:钻石；（级别 ：0：普通； 1：铜牌； 2:金牌；3:钻石；）
 
-    oneSaleVolume dec(12, 2) not null default 0 , --客户销量
-    twoSaleVolume dec(12, 2) not null default 0 , --直属团队销量
-    threeSaleVolume dec(12, 2) not null default 0 , --二级团队销量
+    oneSaleVolume dec(12, 2) not null default 0 , -- 客户销量
+    twoSaleVolume dec(12, 2) not null default 0 , -- 直属团队销量
+    threeSaleVolume dec(12, 2) not null default 0 , -- 二级团队销量
 
     oneAchievement dec(12, 2) not null default 0 , --客户销量提成
-    twoAchievement dec(12, 2) not null default 0 , --二级团队销量提成
-    threeAchievement dec(12, 2) not null default 0 , --二级团队销量提成
+    twoAchievement dec(12, 2) not null default 0 , -- 直属团队销量提成
+    threeAchievement dec(12, 2) not null default 0 , -- 二级团队销量提成
 
-    totalOrderCount int not null default 0 , --订单数量
-    totalAchievement dec(12, 2) not null default 0 , --累计提成
-    totalReceivableAmount dec(12, 2) not null default 0 , --累计到账金额
-    totalaWithdrawal dec(12, 2) not null default 0 , --累计提现金额
-    waitWithdrawal dec(12, 2) not null default 0 , --等待提现的金额 
+    totalOrderCount int not null default 0 , -- 订单数量
+    totalAchievement dec(12, 2) not null default 0 , -- 累计提成
+    totalReceivableAmount dec(12, 2) not null default 0 , -- 累计到账金额
+    totalaWithdrawal dec(12, 2) not null default 0 , -- 累计提现金额
+    waitWithdrawal dec(12, 2) not null default 0 , -- 等待提现的金额 
 );
 
 -- 销售团队统计表, 没有使用
@@ -102,7 +102,7 @@ BOOK OrderStateBook (
     payAmount dec(12, 2) not null
 );
 
-/**计算收益**/
+/**计算轻代理(销售人员收益不在此处计算)收益**/
 ACTION ComputeAchievement()
 returns ret (
     oneSaleVolume_1 dec(12, 2),
@@ -116,95 +116,101 @@ returns ret (
     oneRate dec(12, 2),
     result dec(12, 2)
 ) {
-    foreach ( var sales ID, webuser ID, order ID, orderno char(50), quantity int, price dec(12, 2), agentprices dec(12, 2), coupontype char(10) of
-            select  sales, webuser, order, orderno, 1 as quantity , price, agentprices, types as coupontype
-            from    CustomerOrderPending
-            where   sales = $user
+    foreach (var sales ID, webuser ID, order ID, orderno char(50), quantity int, price dec(12, 2), 
+        agentprices dec(12, 2), coupontype char(10) of
+        select  sales, webuser, order, orderno, 1 as quantity, price, agentprices, types as coupontype
+        from    CustomerOrderPending
+        where   sales = $user
     ) {
 
-        var sumprice  dec(12, 2);
+        var sumprice dec(12, 2);
         set sumprice = price * quantity;
 
-        --step.1.计算一级绩效
-        --step.1.1.获取基础变量
+        -- step.1.计算一级绩效
+        -- step.1.1.获取基础变量
         var oneSaleVolume dec(12, 2), oneMaxVolume dec(12, 2), oneRate dec(12, 2), oneSaleVolume_1 dec(12, 2), oneTeamCount smallint;
-        --获取总销量
-        set oneSaleVolume=oneSaleVolume from SalesAchievementBook where user=$user;
-        set oneSaleVolume = ifnull(oneSaleVolume,0);
-        --获取总销量（加上订单金额）
+        --获取历史总销量
+        set oneSaleVolume = oneSaleVolume from SalesAchievementBook where user = $user;
+        set oneSaleVolume = ifnull(oneSaleVolume, 0);
+
+        --获取总销量（加上本次订单金额）
         set oneSaleVolume_1 =  oneSaleVolume + sumprice;
         --获取提成比例和 改比例的最大销量
-        set oneRate = value, oneMaxVolume=MaxAmount, oneTeamCount = TeamCount from AchievementRuleBook where MinAmount <= oneSaleVolume and oneSaleVolume < MaxAmount and Type=1;
+        set oneRate = value, oneMaxVolume = MaxAmount, oneTeamCount = TeamCount from AchievementRuleBook 
+        where MinAmount <= oneSaleVolume and oneSaleVolume < MaxAmount and Type = 1;
 
-        --step.1.2.计算绩效
+        -- step.1.2.计算绩效
         var  oneAchievement dec(12, 2);
-        if( oneSaleVolume_1 <= oneMaxVolume ){
+        if(oneSaleVolume_1 <= oneMaxVolume){
             set oneAchievement = ((price - agentprices) * quantity * oneRate) / 1.13;
-            into ret select   oneSaleVolume_1, oneMaxVolume , price, agentprices, quantity, 0 as oneRate_1, 0 as oneExcess, 0 as oneNotExcess, oneRate , oneAchievement as result;
+            into ret select oneSaleVolume_1, oneMaxVolume, price, agentprices, quantity, 0 as oneRate_1, 0 as oneExcess, 
+                0 as oneNotExcess, oneRate, oneAchievement as result;
         }else{
             var oneRate_1 dec(12, 2) , --超出部分提成比例
                 oneExcess dec(12, 2) , --超出部分
                 oneNotExcess dec(12, 2);--未超出部分
-            set oneExcess =oneSaleVolume_1 - oneMaxVolume;
+            set oneExcess = oneSaleVolume_1 - oneMaxVolume;
             set oneNotExcess = sumprice - (oneSaleVolume_1 - oneMaxVolume);
 
-            set oneRate_1 = value from AchievementRuleBook where MinAmount < oneSaleVolume_1 and MaxAmount >= oneSaleVolume_1 and Type=1;
+            set oneRate_1 = value from AchievementRuleBook where MinAmount < oneSaleVolume_1 and MaxAmount >= oneSaleVolume_1 and Type = 1;
             set oneAchievement = ((((price - agentprices) * oneRate_1 * ( oneExcess / sumprice) ) + ((price - agentprices) * oneRate * ( oneNotExcess / sumprice) ) ) * quantity) /1.13 ;
 
-            into ret select   oneSaleVolume_1, oneMaxVolume , price, agentprices, quantity, oneRate_1, oneExcess, oneNotExcess, oneRate , oneAchievement as result;
+            into ret select oneSaleVolume_1, oneMaxVolume, price, agentprices, quantity, 
+                oneRate_1, oneExcess, oneNotExcess, oneRate, oneAchievement as result;
         }
 
-        --step.1.3.记账:如果是积分码 则只记录合同个数
-
-        if exists( select 1 from WebUserEmployeeMap as a where a.webuser = $user ){
+        -- step.1.3.记账:如果是积分码 则只记录合同个数
+        if exists(select 1 from WebUserEmployeeMap as a where a.webuser = $user){
             --更新总销售额，A类绩效
-            book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=0, totalOrderCount += 1;
+            book SalesAchievementBook at($user) set oneSaleVolume += sumprice, oneAchievement += 0, totalOrderCount += 1;
 
             var _month int, _year int, businessdate  DATE;
             set businessdate = case when DAY( NOW() ) > 20 then dateadd(month, 1,  NOW() ) else  NOW()  end;
             set _month = month(businessdate);
             set _year = year(businessdate);
 
-            book Achievement at( DATE(now()), 0 ,$user ) set orderCount +=1,  saleVolume+=sumprice, month = _month, year = _year;
+            book Achievement at(DATE(now()), 0, $user) set orderCount += 1, saleVolume += sumprice, month = _month, year = _year;
             --记录A类绩效历史
-            history AchievementHistory set sales=sales, webuser=webuser, amount=0, types=1, order=order, orderno=orderno, ordertype = coupontype, price=price, agentprices=agentprices;
+            history AchievementHistory set sales = sales, webuser = webuser, amount = 0, types = 1, order = order, 
+                orderno = orderno, ordertype = coupontype, price = price, agentprices = agentprices;
         } else {
             --更新总销售额，A类绩效
-            book SalesAchievementBook at($user) set oneSaleVolume+=sumprice, oneAchievement+=oneAchievement, totalOrderCount += 1;
+            book SalesAchievementBook at($user) set oneSaleVolume += sumprice, oneAchievement += oneAchievement, totalOrderCount += 1;
             --记录A类绩效历史
-            history AchievementHistory set sales=sales, webuser=webuser, amount=oneAchievement, types=1, order=order, orderno=orderno, ordertype='coupon', price=price, agentprices=agentprices;
+            history AchievementHistory set sales = sales, webuser = webuser, amount = oneAchievement, types = 1, order = order, 
+                orderno = orderno, ordertype = 'coupon', price = price, agentprices = agentprices;
             --添加订单状态
             BOOK OrderStateBook at( order ) set state = 0, amount = price,payAmount = 0;
 
-            --step.2.计算二级绩效
+            -- step.2 更新当前轻代理上线的二级绩效
             var twosale ID [$user], threesale ID [$user];
-            set twosale=parent from  Relation where children=$user;
-
-            if( not twosale is null ){
+            set twosale = parent from  Relation where children = $user;
+            if(not twosale is null){
 
                 --step.2.1.获取基础变量
-                var twoSaleVolume dec(12, 2) ,twoMaxVolume dec(12, 2), twoRate dec(12, 2), twoSaleVolume_1 dec(12, 2), twoTeamCount smallint;
+                var twoSaleVolume dec(12, 2), twoMaxVolume dec(12, 2), twoRate dec(12, 2), twoSaleVolume_1 dec(12, 2), twoTeamCount smallint;
                 --获取总销量
-                set twoSaleVolume=a.twoSaleVolume from SalesAchievementBook as a where a.user=twosale;
-                set twoSaleVolume = ifnull(twoSaleVolume,0);
-                --获取总销量（加上订单金额）
-                set twoSaleVolume_1 =  twoSaleVolume+sumprice;
-                --获取提成比例和 改比例的最大销量
-                set twoRate = value, twoMaxVolume=MaxAmount, twoTeamCount = TeamCount from AchievementRuleBook where MinAmount <= twoSaleVolume and twoSaleVolume < MaxAmount and Type=2;
+                set twoSaleVolume = a.twoSaleVolume from SalesAchievementBook as a where a.user = twosale;
+                set twoSaleVolume = ifnull(twoSaleVolume, 0);
+                -- 获取总销量（加上订单金额）
+                set twoSaleVolume_1 =  twoSaleVolume + sumprice;
+                -- 获取提成比例和该比例的最大销量
+                set twoRate = value, twoMaxVolume = MaxAmount, twoTeamCount = TeamCount from AchievementRuleBook 
+                where MinAmount <= twoSaleVolume and twoSaleVolume < MaxAmount and Type = 2;
 
                 --step.2.2.计算绩效
                 var  twoAchievement dec(12, 2);
-                if( twoSaleVolume_1 <= twoMaxVolume ){
-                    set twoAchievement =  ( oneAchievement * twoRate );
-                    into ret select  twoSaleVolume_1 as oneSaleVolume_1, twoMaxVolume as oneMaxVolume , price, agentprices, quantity, 0 as oneRate_1,  0 as oneExcess,  0 as oneNotExcess, twoRate as oneRate , twoAchievement as result;
+                if(twoSaleVolume_1 <= twoMaxVolume){
+                    set twoAchievement =  (oneAchievement * twoRate);
+                    into ret select  twoSaleVolume_1 as oneSaleVolume_1, twoMaxVolume as oneMaxVolume, price, agentprices, quantity, 0 as oneRate_1,  0 as oneExcess,  0 as oneNotExcess, twoRate as oneRate , twoAchievement as result;
                 }else{
                     var twoRate_1 dec(12, 2) , --超出部分提成比例
                         twoExcess dec(12, 2) , --超出部分
                         twoNotExcess dec(12, 2);--未超出部分
-                    set twoExcess =twoSaleVolume_1 - twoMaxVolume;
-                    set twoNotExcess = sumprice-(twoSaleVolume_1 - twoMaxVolume);
+                    set twoExcess = twoSaleVolume_1 - twoMaxVolume;
+                    set twoNotExcess = sumprice - (twoSaleVolume_1 - twoMaxVolume);
 
-                    set twoRate_1 = value from AchievementRuleBook where MinAmount < twoSaleVolume_1 and MaxAmount >= twoSaleVolume_1 and Type=2;
+                    set twoRate_1 = value from AchievementRuleBook where MinAmount < twoSaleVolume_1 and MaxAmount >= twoSaleVolume_1 and Type = 2;
                     set twoAchievement = ((oneAchievement * twoRate_1 * ( twoExcess / sumprice) ) + (oneAchievement * twoRate * ( twoNotExcess / sumprice) ) ) * quantity ;
 
                     into ret select  twoSaleVolume_1 as oneSaleVolume_1, twoMaxVolume as oneMaxVolume, price, agentprices, quantity, twoRate_1 as oneRate_1,  twoExcess as oneExcess,  twoNotExcess as oneNotExcess, twoRate as oneRate , twoAchievement as result;
@@ -227,20 +233,21 @@ returns ret (
                                 END
                         END
                 from    SalesAchievementBook
-                where   user=twosale;
+                where   user = twosale;
                 book SalesAchievementBook at(twosale) set level = twoLevel;
 
-                if( twoLevel >= 2 ){
+                if(twoLevel >= 2){
                     --step.2.3.记账
                     --更新总销售额
-                    book SalesAchievementBook at(twosale) set twoSaleVolume+=sumprice, twoAchievement+=twoAchievement;
+                    book SalesAchievementBook at(twosale) set twoSaleVolume += sumprice, twoAchievement += twoAchievement;
                     --更新B类历史
-                    history AchievementHistory set sales=twosale,  webuser=webuser, amount=twoAchievement, types=2, order=order, orderno=orderno, ordertype='coupon', price=price,agentprices=agentprices ;
+                    history AchievementHistory set sales=twosale,  webuser = webuser, amount = twoAchievement, types = 2, order = order,
+                        orderno = orderno, ordertype = 'coupon', price = price, agentprices = agentprices;
                 }
 
-                --step.3.计算三级绩效
-                set threesale=parent from  Relation where children=twosale;
-                if( not threesale is null ){
+                --step.3.计算当前轻代理的上线的上线的绩效
+                set threesale = parent from  Relation where children = twosale;
+                if(not threesale is null){
                     --step.3.1.获取基础变量
                     var threeSaleVolume dec(12, 2), threeMaxVolume dec(12, 2), threeRate dec(12, 2), threeSaleVolume_1 dec(12, 2), threeTeamCount smallint;
                     --获取总销量
@@ -288,13 +295,14 @@ returns ret (
                     where   user=twosale;
                     book SalesAchievementBook at(threesale) set level = threeLevel;
                     
-                    if( threeLevel >= 2 ){
+                    if(threeLevel >= 2){
                         --step.3.3.记账
                         --更新总销售额
-                        book SalesAchievementBook at(threesale) set threeSaleVolume+=sumprice, threeAchievement+=threeAchievement;
+                        book SalesAchievementBook at(threesale) set threeSaleVolume += sumprice, threeAchievement += threeAchievement;
                         --更新C类历史
                         history AchievementHistory
-                            set sales=threesale, webuser=webuser, amount=threeAchievement, types=3, order=order, orderno=orderno, ordertype='coupon', price=price,agentprices=agentprices;
+                            set sales = threesale, webuser = webuser, amount = threeAchievement, types = 3, order = order, 
+                                orderno = orderno, ordertype = 'coupon', price = price, agentprices = agentprices;
                     }
                 }
             }

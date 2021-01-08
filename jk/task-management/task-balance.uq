@@ -64,27 +64,28 @@ ACTION ComputeBalance(){
         ) {
             if(state = 1){
                 --累计回款
-                book SalesAchievementBook at(sales) set totalReceivableAmount+=amount;
+                book SalesAchievementBook at(sales) set totalReceivableAmount += amount;
                 --记录回款历史
-                history BalanceHistory set sales=sales, order=order, orderNo=orderNo, ordertype='payment', paymentAmount=paymentAmount, amount=amount, currency=1;
-             
+                history BalanceHistory set sales = sales, order = order, orderNo = orderNo, 
+                    ordertype = 'payment', paymentAmount = paymentAmount, amount = amount, currency = 1;
             }else{
                 --累计回款
-                book SalesAchievementBook at(sales) set totalReceivableAmount+=amount;
+                book SalesAchievementBook at(sales) set totalReceivableAmount += amount;
                 --记录回款历史
-                history BalanceHistory set sales=sales, order=order, orderNo=orderNo, ordertype='refund',  paymentAmount=paymentAmount, amount=amount, currency=1;
+                history BalanceHistory set sales = sales, order = order, orderNo = orderNo, 
+                    ordertype = 'refund', paymentAmount = paymentAmount, amount = amount, currency = 1;
             }
             delete t from OrderPaymentPending as t where t.id = nowid;
         }
 
         --记录回款状态
         var paystate int;
-        set paystate = case when (paymentAmount + a.payAmount)>=a.amount then 1 else 0 end
+        set paystate = case when (paymentAmount + a.payAmount) >= a.amount then 1 else 0 end
         from OrderStateBook as a
         where a.order = order
         limit 1;    
 
-        BOOK OrderStateBook at( order ) set payAmount+=paymentAmount, state = paystate; 
+        BOOK OrderStateBook at(order) set payAmount += paymentAmount, state = paystate; 
     }
 };
 
@@ -178,5 +179,5 @@ returns ret (
 ) {
     into ret select a.Withdrawal, a.state, a.comments, a.createTime
     from    WithdrawalStateBook as a
-    where   a.withdrawal=  withdrawal;
+    where   a.withdrawal = withdrawal;
 };
