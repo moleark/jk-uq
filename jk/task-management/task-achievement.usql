@@ -385,7 +385,7 @@ returns ret (
 
 
 /**
- *
+ *我的
  */
 QUERY getPersonDailyAchieve (
     user ID [$user],
@@ -422,7 +422,6 @@ QUERY getPersonMonthlyAchieve (
     where   a.date = a.date and a.manage = 0 and a.user = user and a.year = year and a.month = month;
 };
 
-
 QUERY getPersonYearlyAchieve (
     user ID [$user],
     year int,
@@ -445,6 +444,68 @@ QUERY getPersonYearlyAchieve (
 };
 
 
+/**团队**/
+
+QUERY getTeamDailyAchieve (
+    team int,
+    date char(10),
+)returns ret(
+    date date,
+    user ID [$user],
+    endTaskCount      int, --完结任务数量
+    sendCreditsCount  int, --发积分码数量
+    sendPostCount     int, --发积贴文数量
+    orderCount        int, --订单数
+    saleVolume dec(12, 2)
+){
+    into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume
+    from    Achievement as a
+    where   a.date = date and a.manage = team;
+};
+
+QUERY getTeamMonthlyAchieve(
+    team int,
+    month int,  
+    year int
+)returns ret(
+    date date,
+    yeara int,
+    montha int,
+    user ID [$user],
+    endTaskCount      int, --完结任务数量
+    sendCreditsCount  int, --发积分码数量
+    sendPostCount     int, --发积贴文数量
+    orderCount        int, --订单数
+    saleVolume dec(12, 2)   
+){
+   into ret select montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+        , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+   from    Achievement as a
+   where   a.date = a.date and a.manage = team and a.year = year
+   group by a.month as montha
+   order by montha;
+};
+
+QUERY getTeamYearlyAchieve(
+    team int,
+    year int
+)returns ret(
+    yeara int,
+    montha int,
+    usera ID [$user],
+    endTaskCount      int, --完结任务数量
+    sendCreditsCount  int, --发积分码数量
+    sendPostCount     int, --发积贴文数量
+    orderCount        int, --订单数
+    saleVolume dec(12, 2)
+){
+    into ret select a.user, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+        , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+    from   Achievement as a
+    where  a.date = a.date and a.manage = team and a.year = year and a.month = month
+    group by a.user
+};
+
 /** 搜索内部销售团队的Acheievement **/
 QUERY SearchTeamAchievement (
     _manage ID [$user],
@@ -461,17 +522,15 @@ returns ret (
     saleVolume dec(12, 2)
 ) {
     if(_type = 'day'){
-      
         var startdate DATE;
         set startdate = DATE(NOW());
 
-        into ret select max(year(a.date)) as yeara,  'day' as montha
+        into ret select max(year(a.date)) as yeara, 'day' as montha
                 , sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
         from    Achievement as a
         where   a.manage = _manage
                 and a.date >= startdate;
-                
     } else if(_type = 'month'){
         into ret select yeara, montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
                 ,sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
@@ -549,4 +608,3 @@ returns ret (
     from     TaskHistory
     where    principal = $user;
 };
- 
