@@ -96,26 +96,29 @@ BUS psb ver 0.4 from [百灵威系统工程部]/coupon
     arr orderItems (
         row, orderItemId, point
     ){
-       --step.1.获取优惠码所属销售和类型， 没有优惠码获取客户当前轻代理和关联类型
-       var couponID ID Coupon, order char(50), sales ID [$user], types char(20);
-        if( coupon > 0 ){
+        --step.1.获取优惠码所属销售和类型， 没有优惠码获取客户当前轻代理和关联类型
+        var couponID ID Coupon, order char(50), sales ID [$user], types char(20);
+        if(coupon > 0){
             set     sales=c.user, --轻代理
                     couponID = c.id,
                     types = c.types
             from    Coupon as c
-            where   c.id = coupon and c.types='credits';
-        } else if(not customer is null ){
+            where   c.id = coupon and c.types = 'credits';
+        } else if(not customer is null){
             set     sales = a.sales, types = a.types 
             from    CustomerNowSalesBOOK as a 
             where   a.customer = customer and a.types='credits';
         }
-        if( couponID > 0 ){
+
+        if(couponID > 0){
             --step.2.1.首先要记录积分码的使用记录
             BOOK CouponOrderMap at ( coupon, 1, webUser ) set  createDate = NOW(); ; --添加积分码使用记录
             --step.2.2.绑定当前轻代理，或者延期当前轻代理。
-            BOOK CustomerNowSalesBOOK at ( customer ) set sales = sales, validity = dateadd(month, 3, NOW()), types='credits',webUser=webUser; 
+            BOOK CustomerNowSalesBOOK at (customer) set sales = sales, validity = dateadd(month, 3, NOW()), 
+                types = 'credits', webUser = webUser; 
             --step.2.3.记录历史
-            history CustomerNowSalesHistory set customer = customer, webuser=webUser, sales = sales, validity = dateadd(month, 3, NOW()), types=types;
+            history CustomerNowSalesHistory set customer = customer, webuser = webUser, sales = sales, 
+                validity = dateadd(month, 3, NOW()), types = types;
             --step.2.4.发送BUS到内部系统
             bus salesTaskBus.assistCustomerNowSales set sales=sales, customer = customer, webuser= webUser, createdate = NOW();
         }

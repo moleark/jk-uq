@@ -49,7 +49,7 @@ BUS orderpaymentBus ver 0.4 from [百灵威系统工程部]/SalesTask
     };
 
 
---计算收益
+-- 根据回款计算“已到账”金额
 ACTION ComputeBalance(){
 
     foreach ( var nowid int, order ID, orderNo char(50), paymentAmount dec(12, 2), state int of
@@ -121,25 +121,21 @@ SHEET Withdrawal ver 0.6 (
     currency ID
 )
 Action submit {
- 
-
     --只有 有余额的情况下才允许提现
-    
-        --更新取款单状态
-        book WithdrawalStateBook at($id) set state = 1, comments='提现', createTime = now(), amount=amount, webuser=webuser;
-        history WithdrawalStateHistory set withdrawal=$id, state=1, comments='提现';
+    --更新取款单状态
+    book WithdrawalStateBook at($id) set state = 1, comments='提现', createTime = now(), amount=amount, webuser=webuser;
+    history WithdrawalStateHistory set withdrawal=$id, state=1, comments='提现';
 
-        --更新取款总金额
-        book SalesAchievementBook at(webUser) set waitWithdrawal+=amount;
+    --更新取款总金额
+    book SalesAchievementBook at(webUser) set waitWithdrawal += amount;
 
-        --记录取款历史    
-        var mycustomer ID MyCustomer, customer ID Customer;
-        set mycustomer = a.mycustomer, customer = a.customer from CustomerMyCustomerMap as a where a.webuser = webUser;
-        --history WithdrawalsHistory set sales=webUser, order=$id, orderNo=$sheet_no, amount = amount, currency = currency;
+    --记录取款历史    
+    var mycustomer ID MyCustomer, customer ID Customer;
+    set mycustomer = a.mycustomer, customer = a.customer from CustomerMyCustomerMap as a where a.webuser = webUser;
+    --history WithdrawalsHistory set sales=webUser, order=$id, orderNo=$sheet_no, amount = amount, currency = currency;
 
-        --发送取款记录BUS
-        bus agentBus.paymentrequest set withdrawal=$id, agency=webUser, amount=amount, currency=currency;
-    
+    --发送取款记录BUS
+    bus agentBus.paymentrequest set withdrawal=$id, agency=webUser, amount=amount, currency=currency;
 };
  
 

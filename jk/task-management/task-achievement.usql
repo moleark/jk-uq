@@ -36,10 +36,10 @@ BOOK SalesAchievementBook(
     threeAchievement dec(12, 2) not null default 0 , -- 二级团队销量提成
 
     totalOrderCount int not null default 0 , -- 订单数量
-    totalAchievement dec(12, 2) not null default 0 , -- 累计提成
-    totalReceivableAmount dec(12, 2) not null default 0 , -- 累计到账金额
-    totalaWithdrawal dec(12, 2) not null default 0 , -- 累计提现金额
-    waitWithdrawal dec(12, 2) not null default 0 , -- 等待提现的金额 
+    totalAchievement dec(12, 2) not null default 0 , -- 累计提成(应该等于oneAchievement + twoAchievement + threeAchievement)
+    totalReceivableAmount dec(12, 2) not null default 0 , -- 累计到账金额(即已回款部分对应的总提成金额)
+    totalaWithdrawal dec(12, 2) not null default 0 , -- 累计已提现金额
+    waitWithdrawal dec(12, 2) not null default 0 , -- 等待提现的金额(即已申请提现但尚未发放的金额) 
 );
 
 -- 销售团队统计表, 没有使用
@@ -519,6 +519,29 @@ QUERY getTeamYearlyAchieve(
     where  a.date = a.date and a.manage = team and a.year = year
     group by a.year as yeara, a.month as montha
     order by yeara, montha;
+};
+
+/*
+ * 团队某年每人工作量汇总
+*/
+QUERY getTeamMemberYearlyAchieve(
+    team int,
+    year int
+)returns ret(
+    yeara int,
+    usera int,
+    endTaskCount      int, --完结任务数量
+    sendCreditsCount  int, --发积分码数量
+    sendPostCount     int, --发积贴文数量
+    orderCount        int, --订单数
+    saleVolume dec(12, 2)
+){
+    into ret select yeara, usera, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
+        , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
+    from   Achievement as a
+    where  a.date = a.date and a.manage = team and a.year = year
+    group by a.year as yeara, a.user as usera
+    order by yeara, usera;
 };
 
 /** 搜索内部销售团队的Acheievement **/
