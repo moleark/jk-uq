@@ -1,0 +1,80 @@
+UQ 百灵威系统工程部/[achievement] version='1.00' author='ligsh'
+
+-- 销售每日提成/销量/有效销售额BOOK
+BOOK SalesmanAchievementBook (
+    key salesman ID Employee,
+    key date date,
+    commission dec(12, 2),
+    salesVolumn dec(12, 2),
+    effectiveSalesVolumn dec(12, 2),
+    currency ID Currency, 
+);
+
+-- 销售每年销量/有效销售额记录，用于获取当年累计有效销售额和计划额比较（是否完成计划）
+BOOK SalesmanYearlySalesVolumn (
+    key salesman ID Employee,
+    key year int,
+    salesVolumn dec(12, 2),
+    effectiveSalesVolumn dec(12, 2),
+    currency ID Currency, 
+);
+
+-- 销售选择的提成策略类型(A:标准计提；B：翻倍计提；C:翻倍再翻倍计提)
+MAP SalesmanCommissionType (
+    key salesman ID Employee,
+    key year int,
+    commissionType char(10) not null,
+);
+
+-- 销售人员的月度销量计划
+BOOK SalesVolumnPlan (
+    key salesman ID Employee,
+    key year int,
+    key month int,
+    salesVolumnPlan dec(12, 2),
+    currency ID Currency, 
+);
+
+-- 销售人员提成History
+HISTORY SalesmanAchievementHistory (
+    date,
+    orderId char(50),
+    orderItemId char(50),
+    salesman ID Employee,
+    commission dec(12, 2),
+    salesVolumn dec(12, 2),
+    commissionRate dec(12, 2),
+    currency ID Currency, 
+);
+
+-- 订单数据，非业务实体，纯粹用于程序实现（因为内部系统会对同一个订单明细重复发bus，Achievment系统用此表判断订单明细是否
+-- 发生影响绩效的变化，决定是否重新计算销售人员提成）
+MAP OrderBack (
+    key orderItemId char(50),
+    orderId char(50),
+    customer ID BuyerAccount not null,
+    orderMaker ID Customer,
+    salesman ID Employee,
+
+    packageId char(50),
+    quantity int,
+    price dec(12, 2),
+    subAmount dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
+
+    bottomLinePrice dec(12, 2),
+    bottomLinePriceCurrency ID Currency,
+    costPrice dec(12, 2),
+    costPriceCurrency ID Currency,
+
+    tradeType char(10),
+    exchangeRate dec(12, 4),
+    taxRate dec(12, 4),
+
+    promotionId char(50),
+
+    mark char(10),
+
+    createDate datetime,
+);
