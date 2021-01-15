@@ -31,9 +31,8 @@ PAGE (
 };
 
 
-QUERY getPointProductMoreBySource(pack char(50), salesRegion ID SalesRegion)
+QUERY getPointProductMoreBySource(pack bigint, salesRegion ID SalesRegion)
 returns ret (
-    seq bigint asc,
     id OF product.PackX,         --包装编号
     product ID ProductX,           --产品编号
     origin char(50),
@@ -45,18 +44,16 @@ returns ret (
     unit char(10),
     retail dec(12, 2),
 ) {
-    Into ret select pk.`id`, p.id as product, p.origin, p.`description`, p.`descriptionc`, p.`imageurl`, pk.radiox, pk.radioy
-        , pk.unit, pr.retail, pk.`id` as `seq`
-    from    product.PackX as pk
-            inner join ProductX as p on p.id = pk.owner
-            inner join PriceX pr on pr.$unit = p.$unit and pr.product = p.id and pr.pack = pk.id and pr.salesRegion = `_salesRegion`
-            and pr.discountinued = 0 and pr.expiredate > NOW()
-    where   pk.id = pack AND p.`$unit`=`_$unit` -- and p.brand in (18, 71, 75, 1560, 1565, 3187)
+    Into ret select pk.id, p.id as product, p.origin, p.description, p.descriptionC, p.imageUrl, pk.radiox, pk.radioy, pk.unit, pr.retail
+    from    ProductX.PackX as pk
+            join ProductX as p on p.id = pk.owner
+            join PriceX as pr on pr.product = p.id and pr.pack = pk.id and pr.salesRegion = salesRegion
+                and pr.discountinued = 0 and pr.expiredate > NOW()
+    where   pk.id = pack;  -- AND p.`$unit`=`_$unit` -- and p.brand in (18, 71, 75, 1560, 1565, 3187)
     /*
     /-mysql
-    INSERT  INTO `_$page` (`id`, `product`, `origin`, `description`, `descriptionc`, `imageurl`, `radiox`, `radioy`, `unit`, `retail`, `seq`)
+    INSERT  INTO `_$page` (`id`, `product`, `origin`, `description`, `descriptionc`, `imageurl`, `radiox`, `radioy`, `unit`, `retail`)
     SELECT  pk.`id`, p.id as product, p.origin, p.`description`, p.`descriptionc`, p.`imageurl`, pk.radiox, pk.radioy, pk.unit, pr.retail
-            , pk.`id` as `seq`
     from    tv_productx_packx as pk
             inner join tv_productx as p on p.id = pk.owner
             inner join tv_pricex pr on pr.$unit = p.$unit and pr.product = p.id and pr.pack = pk.id and pr.salesRegion = `_salesRegion`
