@@ -128,3 +128,36 @@ ACTION PointProductGenreDelete (
     delete t from PointProductGenre as t where t.genre = genre;
     delete g from Genre as g where g.id = genre;
 };
+
+
+/*
+ * 积分商城商品（分页）
+*/
+Query GetPointProductsByPage() 
+PAGE (
+    seq bigint asc,
+    id ID PointProductLib,
+    description char(1000),
+    descriptionC char(1000),
+    grade char(1000),
+    point int,
+    imageUrl char(500)
+) {
+    /-mysql
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_pointproducts`;
+    CREATE TEMPORARY TABLE `_$page_pointproducts` (`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `pointproduct` BIGINT NOT NULL) ENGINE=MyISAM;
+    insert  into `_$page_pointproducts`( pointproduct )
+    select  pl.id
+    from    `tv_pointproductlib` as pl
+    order   by pl.point, pl.`id`;
+
+    INSERT  INTO `_$page` (`seq`, `id`, `description`, `descriptionc`, `grade`, `point`, `imageUrl`)
+    SELECT  p2.id, pl.id, pl.description, pl.descriptionc, pl.grade, pl.point, pl.imageurl
+    from    `_$page_pointproducts` as p2
+            inner join `tv_pointproductlib` as pl on pl.`id` = p2.pointProduct
+    where   p2.id >`_$pagestart`
+    order   by p2.id
+    limit   `_$pagesize`;
+    -/
+};
