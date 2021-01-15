@@ -5,17 +5,17 @@ BOOK SalesmanAchievementBook (
     key salesman ID Employee,
     key date date,
     commission dec(12, 2),
-    salesVolumn dec(12, 2),
-    effectiveSalesVolumn dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
     currency ID Currency, 
 );
 
 -- 销售每年销量/有效销售额记录，用于获取当年累计有效销售额和计划额比较（是否完成计划）
-BOOK SalesmanYearlySalesVolumn (
+BOOK SalesmanYearlySalesVolume (
     key salesman ID Employee,
     key year int,
-    salesVolumn dec(12, 2),
-    effectiveSalesVolumn dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
     currency ID Currency, 
 );
 
@@ -27,11 +27,11 @@ MAP SalesmanCommissionType (
 );
 
 -- 销售人员的月度销量计划
-BOOK SalesVolumnPlan (
+BOOK SalesVolumePlan (
     key salesman ID Employee,
     key year int,
     key month int,
-    salesVolumnPlan dec(12, 2),
+    salesVolumePlan dec(12, 2),
     currency ID Currency, 
 );
 
@@ -42,7 +42,7 @@ HISTORY SalesmanAchievementHistory (
     orderItemId char(50),
     salesman ID Employee,
     commission dec(12, 2),
-    salesVolumn dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
     commissionRate dec(12, 2),
     currency ID Currency, 
 );
@@ -52,24 +52,23 @@ HISTORY SalesmanAchievementHistory (
 MAP OrderBack (
     key orderItemId char(50),
     orderId char(50),
-    customer ID BuyerAccount not null,
-    orderMaker ID Customer,
+
+    seller char(10),
+    salesRegion ID SalesRegion,
     salesman ID Employee,
 
-    packageId char(50),
+    pack bigint,
     quantity int,
     price dec(12, 2),
-    subAmount dec(12, 2),
     amount dec(12, 2),
     currency ID Currency,
 
-    bottomLinePrice dec(12, 2),
-    bottomLinePriceCurrency ID Currency,
+    bottomPrice dec(12, 2),
+    bottomPriceCurrency ID Currency,
     costPrice dec(12, 2),
     costPriceCurrency ID Currency,
 
     tradeType char(10),
-    exchangeRate dec(12, 4),
     taxRate dec(12, 4),
 
     promotionId char(50),

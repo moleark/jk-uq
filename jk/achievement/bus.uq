@@ -1,0 +1,49 @@
+BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
+    ACCEPT orderChanged {
+        var bSalesman int, bQuantity int, bPrice dec(12, 2), bCurrency int, 
+            bBottomPrice dec(12, 2), bBottomPriceCurrency int,
+            bCostPrice dec(12, 2), bCostPriceCurrency int,
+            bTaxRate dec(12, 4), bTradeType char(10), bPromotionId char(50),
+            bMark char(10);
+        set bSalesman = salesman, bQuantity = quantity, bPrice = price, bCurrency = currency,
+            bBottomPrice = bottomPrice, bBottomPriceCurrency = bottomPriceCurrency,
+            bCostPrice = costPrice, bCostPriceCurrency = costPriceCurrency,
+            bTaxRate = taxRate, bTradeType = tradeType, bPromotionId = promotionId,
+            bMark = mark
+        from    OrderBack as a
+        where   a.orderItemId = orderItemId; 
+
+        if(1 = 1) {
+            var effectiveSalesVolume dec(12, 2), commission dec(12, 2); 
+            var aboveBottom dec(12, 2), bi int;
+            set aboveBottom = price - bottomPrice;
+            if(aboveBottom > price * 0.08) {
+                set effectiveSalesVolume = aboveBottom;
+            }else {
+                set effectiveSalesVolume = price * 0.08;
+            }
+
+            var currentDate date, currentYear int;
+            set currentDate = date(now());
+            set currentYear = year(currentDate);
+            if(mark = 'C' and bMark <> 'C') {
+                set bi = -1;
+            }else{
+                set bi = 1;
+            }
+            book SalesmanYearlySalesVolume at (salesman, currentYear) set salesVolume += quantity * price * bi;
+            book SalesmanAchievementBook at (salesman, currentDate) set salesVolume += quantity * price * bi;
+
+            -- TODO: 
+            history SalesmanAchievementHistory set orderId = orderId, orderItemId = orderItemId, salesman = salesman,
+                commission = commission;
+        }
+         
+        book orderBack at(orderItemId) set orderId = orderId, seller = seller, salesman = salesman, salesRegion = salesRegion,
+            -- customer = customer, buyerAccount = buyerAccount, organization = organization, brand = brand, product = product, 
+            pack = pack, quantity = quantity, price = price, currency = currency
+            bottomPrice = bottomPrice, bottomPriceCurrency = bottomPriceCurrency, 
+            costPrice = costPrice, costPriceCurrency = costPriceCurrency,
+            tradeType = tradeType, taxRate = taxRate, promotionId = promotionId,
+            mark = mark, createDate = createDate;
+    };
