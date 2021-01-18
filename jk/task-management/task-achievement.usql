@@ -410,7 +410,9 @@ QUERY getPersonDailyAchieve (
     sendCreditsCount  int, --发积分码数量
     sendPostCount     int, --发积贴文数量
     orderCount        int, --订单数
-    saleVolume dec(12, 2)
+    saleVolume dec(12, 2),
+    couponsCreated int,
+    creditsCreated int,
 ){
     into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume,
             a.couponsCreated, a.creditsCreated
@@ -430,7 +432,9 @@ QUERY getPersonMonthlyAchieve (
     sendCreditsCount  int, --发积分码数量
     sendPostCount     int, --发积贴文数量
     orderCount        int, --订单数
-    saleVolume dec(12, 2)
+    saleVolume dec(12, 2),
+    couponsCreated int,
+    creditsCreated int,
 ){
     into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume,
             a.couponsCreated, a.creditsCreated
@@ -450,7 +454,9 @@ QUERY getPersonYearlyAchieve (
     sendCreditsCount  int, --发积分码数量
     sendPostCount     int, --发积贴文数量
     orderCount        int, --订单数
-    saleVolume dec(12, 2)
+    saleVolume dec(12, 2),
+    couponsCreated int,
+    creditsCreated int,
 ){
     into ret select yeara, montha, usera, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
             , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
@@ -477,7 +483,9 @@ QUERY getTeamDailyAchieve (
     sendCreditsCount  int, --发积分码数量
     sendPostCount     int, --发积贴文数量
     orderCount        int, --订单数
-    saleVolume dec(12, 2)
+    saleVolume dec(12, 2),
+    couponsCreated int,
+    creditsCreated int,
 ){
     into ret select a.date, a.user, a.endTaskCount, a.sendCreditsCount, a.sendPostCount, a.orderCount, a.saleVolume
             , a.couponsCreated, a.creditsCreated
@@ -501,7 +509,9 @@ QUERY getTeamMonthlyAchieve(
     sendCreditsCount  int, --发积分码数量
     sendPostCount     int, --发积贴文数量
     orderCount        int, --订单数
-    saleVolume dec(12, 2)   
+    saleVolume dec(12, 2),
+    couponsCreated int,
+    creditsCreated int,  
 ){
    into ret select yeara, montha, usera, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
         , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
@@ -526,7 +536,9 @@ QUERY getTeamYearlyAchieve(
     sendCreditsCount  int, --发积分码数量
     sendPostCount     int, --发积贴文数量
     orderCount        int, --订单数
-    saleVolume dec(12, 2)
+    saleVolume dec(12, 2),
+    couponsCreated int,
+    creditsCreated int,
 ){
     into ret select yeara, montha, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
         , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
@@ -551,7 +563,9 @@ QUERY getTeamMemberYearlyAchieve(
     sendCreditsCount  int, --发积分码数量
     sendPostCount     int, --发积贴文数量
     orderCount        int, --订单数
-    saleVolume dec(12, 2)
+    saleVolume dec(12, 2),
+    couponsCreated int,
+    creditsCreated int,
 ){
     into ret select yeara, usera, sum(a.endTaskCount) as endTaskCount, sum(a.sendCreditsCount) as sendCreditsCount
         , sum(a.sendPostCount) as sendPostCount, sum(a.orderCount) as orderCount, sum(a.saleVolume) as saleVolume
