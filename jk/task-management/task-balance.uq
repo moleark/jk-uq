@@ -145,12 +145,12 @@ TUID WithdrawalState(
     name char(20)
 );
 
---取款单状态
+-- 取款单状态
 BOOK WithdrawalStateBook(
     key Withdrawal ID,
     webuser ID [$user],
     amount dec(12, 2),
-    state ID WithdrawalState,
+    state ID WithdrawalState,   -- 1: 提交申请；2：财务已付款；3：财务驳回申请
     comments char(100),
     createTime datetime
 );
