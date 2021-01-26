@@ -19,7 +19,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
         -- step1. 获取优惠码所属销售和类型，没有优惠码获取客户当前轻代理和关联类型
         var couponID ID Coupon, order char(50), code bigint, sales ID [$user], mycustomer ID MyCustomer, types char(20);
         if(coupon > 0){
-            set     sales = c.user, --轻代理
+            set     sales = c.user, -- 轻代理
                     couponID = c.id, types = c.types
             from    Coupon as c
             where   c.id = coupon;
@@ -46,7 +46,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
             }
         }
 
-        -- step.3.记录销售记录(产品明细)
+        -- step.3. 在CustomerOrderPending中记录此订单的有效销售额，用于后续计算销售/轻代理提成;
         if(sales > 0){
             -- 计算合同的总代理价
             var sumAgentprice dec(12, 2);
@@ -70,7 +70,7 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
                 }
             }
 
-            -- 记录客户订单
+            -- 仅在CustomerOrderPending中记录轻代理的有效销售额(不记录销售人员的) 
             var pid ID;
             if(type in (1, 2)){
                 if not exists(select 1 from WebUserEmployeeMap as a where a.webuser = sales){
@@ -123,8 +123,8 @@ BUS psb ver 0.4 from [百灵威系统工程部]/coupon
             bus salesTaskBus.assistCustomerNowSales set sales=sales, customer = customer, webuser= webUser, createdate = NOW();
         }
         
-        if( sales > 0 ){
-            if not exists( select 1 from WebUserEmployeeMap as a where a.webuser = sales ){
+        if(sales > 0){
+            if not exists(select 1 from WebUserEmployeeMap as a where a.webuser = sales){
                 var pid ID;
                 PENDING CustomerOrderPending + ( sales:sales, webuser:webUser, order:1, orderNo:orderId, price:amount
                     , agentprices:amount, types:'credits' ) to pid;

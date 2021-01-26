@@ -140,7 +140,7 @@ returns ret (
 
         --获取总销量（加上本次订单金额）
         set oneSaleVolume_1 =  oneSaleVolume + sumprice;
-        --获取提成比例和 改比例的最大销量
+        --获取提成比例 和 该比例的最大销量
         set oneRate = value, oneMaxVolume = MaxAmount, oneTeamCount = TeamCount from AchievementRuleBook 
         where MinAmount <= oneSaleVolume and oneSaleVolume < MaxAmount and Type = 1;
 

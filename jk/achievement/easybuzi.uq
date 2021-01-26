@@ -1,0 +1,28 @@
+
+-- 轻代理绩效提成区间及比例设置
+BOOK AchievementRuleBook (
+    key Type int,               -- 1:轻代理本人绩效设置; 2:轻代理直接上级绩效规则设置;3:轻代理上上级绩效规则设置
+    key MinAmount dec(12, 2),   -- 销量区间下限
+    key MaxAmount dec(12, 2),   -- 销量区间上限
+    value dec(12, 2),           -- 该区间的提成比例
+    TeamCount smallint,         -- 需满足的团队成员最小个数
+);
+
+-- 轻代理当前销量及团队成员个数（用于获取其提成比例） 
+BOOK EasyBuziSalesVolume (
+    key agent ID $user,
+    salesVolumeL1 dec(12, 2),
+    salesVolumeL2 dec(12, 2),
+    salesVolumeL3 dec(12, 2),
+    teamCount int,
+);
+
+-- 轻代理销量历史
+HISTORY EasyBusiSalesVolumeHistory (
+    date,
+    orderItemId char(50),
+    agent ID $user,
+    customer ID Customer,
+    salesVolume dec(12, 2),
+    orderId char(50),
+);

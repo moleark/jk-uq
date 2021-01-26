@@ -1,49 +1,240 @@
+BUS salesTaskBus from [百灵威系统工程部]/SalesTask;
+
 BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
-    ACCEPT orderChanged {
-        var bSalesman int, bQuantity int, bPrice dec(12, 2), bCurrency int, 
-            bBottomPrice dec(12, 2), bBottomPriceCurrency int,
-            bCostPrice dec(12, 2), bCostPriceCurrency int,
+    ACCEPT orderChanged 
+    BUS salesTaskBus.getBindedSales as q into tb {
+        set q.customer = customer; 
+    } {
+        var bSalesman int, bEffectiveSalesVolume dec(12, 2), bSalesVolume dec(12, 2),
             bTaxRate dec(12, 4), bTradeType char(10), bPromotionId char(50),
             bMark char(10);
-        set bSalesman = salesman, bQuantity = quantity, bPrice = price, bCurrency = currency,
-            bBottomPrice = bottomPrice, bBottomPriceCurrency = bottomPriceCurrency,
-            bCostPrice = costPrice, bCostPriceCurrency = costPriceCurrency,
-            bTaxRate = taxRate, bTradeType = tradeType, bPromotionId = promotionId,
-            bMark = mark
+        set bSalesman = a.salesman, bEffectiveSalesVolume = a.effectiveSalesVolume, bSalesVolume = a.salesVolume,
+            bTaxRate = a.taxRate, bTradeType = a.tradeType, bPromotionId = a.promotionId,
+            bMark = a.mark
         from    OrderBack as a
         where   a.orderItemId = orderItemId; 
 
-        if(1 = 1) {
-            var effectiveSalesVolume dec(12, 2), commission dec(12, 2); 
-            var aboveBottom dec(12, 2), bi int;
-            set aboveBottom = price - bottomPrice;
+        var currentDate date, currentYear int, currentMonth int;
+        set currentDate = date(now());
+        set currentYear = year(currentDate), currentMonth = month(currentDate);
+
+        -- 1. 计算有效销售额
+        var effectiveSalesVolume dec(12, 2), salesVolume dec(12, 2); 
+        if(mark = 'C') {
+            set effectiveSalesVolume = 0, salesVolume = 0;
+        } else {
+            var priceRMB dec(12, 2), bottomPriceRMB dec(12, 2);
+            set priceRMB = price * a.RMBTo 
+            from    CurrencyExchangeRate as a
+            where   a.currency = currency and a.year = currentYear and a.month = currentMonth; 
+            set bottomPriceRMB = bottomPrice * a.RMBTo 
+            from    CurrencyExchangeRate as a
+            where   a.currency = bottomPriceCurrency and a.year = currentYear and a.month = currentMonth; 
+
+            var aboveBottom dec(12, 2);
+            set aboveBottom = priceRMB - bottomPriceRMB, salesVolume = priceRMB * quantity;
             if(aboveBottom > price * 0.08) {
                 set effectiveSalesVolume = aboveBottom;
-            }else {
+            } else {
                 set effectiveSalesVolume = price * 0.08;
             }
+            set effectiveSalesVolume = effectiveSalesVolume * quantity;
+        }
 
-            var currentDate date, currentYear int;
-            set currentDate = date(now());
-            set currentYear = year(currentDate);
-            if(mark = 'C' and bMark <> 'C') {
-                set bi = -1;
-            }else{
-                set bi = 1;
+        -- 如果是第一次接收该orderItem或者和以前接收的数据相比发生了变化，则计算绩效
+        var deltaESV dec(12, 2), deltaSalesVolume dec(12, 2);
+        set deltaESV = effectiveSalesVolume - ifnull(bEffectiveSalesVolume, 0),
+            deltaSalesVolume = salesVolume - ifnull(bSalesVolume, 0);
+        if(deltaESV <> 0) {
+            -- 2. 划分有效销售额所在的区间 
+            -- 2.1 获取销售本年度的累计有效销售额
+            var yearlyESV dec(12, 2), planESV dec(12, 2);
+            set yearlyESV = t.effectiveSalesVolume
+            from    SalesmanYearlySalesVolume as t
+            where   t.salesman = salesman and t.year = currentYear;
+            -- 2.2 获取销售本年度的有效销售额计划
+            set planESV = t.salesVolumePlan
+            from    salesVolumePlan as t
+            where   t.salesman = salesman and t.year = currentYear;
+
+            var e1 dec(12, 2), e2 dec(12, 2), e3 dec(12, 2), e4 dec(12, 2);
+            set e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+            var updatedYearlyESV dec(12, 2);
+            set updatedYearlyESV = yearlyESV + deltaESV;
+            if(yearlyESV < planESV){
+                if(updatedYearlyESV <= planESV) {
+                    set e1 = deltaESV; 
+                } else if(updatedYearlyESV < planESV * 1.25) {
+                    set e1 = planESV - yearlyESV;
+                    set e2 = updatedYearlyESV - planESV;
+                } else if(updatedYearlyESV < planESV * 1.5) {
+                    set e1 = planESV - yearlyESV;
+                    set e2 = planESV * (1.25 - 1.00);
+                    set e3 = updatedYearlyESV - planESV * 1.25;
+                } else {
+                    set e1 = planESV - yearlyESV;
+                    set e2 = planESV * (1.25 - 1.00);
+                    set e3 = planESV * (1.5 - 1.25);
+                    set e4 = updatedYearlyESV - planESV * 1.5;
+                }
+            } else if(yearlyESV < planESV * 1.25) {
+                if(updatedYearlyESV <= planESV) {
+                    set e1 = updatedYearlyESV - planESV; 
+                    set e2 = planESV - yearlyESV;
+                } else if(updatedYearlyESV < planESV * 1.25) {
+                    set e2 = deltaESV;
+                } else if(updatedYearlyESV < planESV * 1.5) {
+                    set e2 = planESV * 1.25 - yearlyESV;
+                    set e3 = updatedYearlyESV - planESV * 1.25;
+                } else {
+                    set e2 = planESV * 1.25 - yearlyESV;
+                    set e3 = planESV * (1.5 - 1.25);
+                    set e4 = updatedYearlyESV - planESV * 1.5;
+                }
+            } else if(yearlyESV < planESV * 1.5) {
+                if(updatedYearlyESV <= planESV) {
+                    set e1 = updatedYearlyESV - planESV; 
+                    set e2 = planESV * (1.00 - 1.25);
+                    set e3 = planESV - yearlyESV;
+                } else if(updatedYearlyESV < planESV * 1.25) {
+                    set e2 = updatedYearlyESV - planESV * 1.25;
+                    set e3 = planESV * 1.25 - yearlyESV;
+                } else if(updatedYearlyESV < planESV * 1.5) {
+                    set e3 = deltaESV;
+                } else {
+                    set e3 = planESV * 1.5 - yearlyESV;
+                    set e4 = updatedYearlyESV - planESV * 1.5;
+                }
+            } else {
+                if(updatedYearlyESV <= planESV) {
+                    set e1 = updatedYearlyESV - planESV; 
+                    set e2 = planESV * (1.00 - 1.25);
+                    set e3 = planESV * (1.25 - 1.5);
+                    set e4 = planESV - yearlyESV;
+                } else if(updatedYearlyESV < planESV * 1.25) {
+                    set e2 = updatedYearlyESV - planESV * 1.25;
+                    set e3 = planESV * (1.25 - 1.5);
+                    set e4 = planESV - yearlyESV;
+                } else if(updatedYearlyESV < planESV * 1.5) {
+                    set e3 = updatedYearlyESV - planESV * 1.5;
+                    set e4 = planESV - yearlyESV;
+                } else {
+                    set e4 = deltaESV;
+                }
             }
-            book SalesmanYearlySalesVolume at (salesman, currentYear) set salesVolume += quantity * price * bi;
-            book SalesmanAchievementBook at (salesman, currentDate) set salesVolume += quantity * price * bi;
 
-            -- TODO: 
-            history SalesmanAchievementHistory set orderId = orderId, orderItemId = orderItemId, salesman = salesman,
-                commission = commission;
+            BOOK SalesmanYearlySalesVolume at(salesman, currentYear) 
+                set ESV1 += e1, ESV2 += e2, ESV3 += e3, ESV4 += e4, effectiveSalesVolume += deltaESV, salesVolume += deltaSalesVolume; 
+
+            history SalesmanSalesVolumeHistory 
+                set orderItemId = orderItemId, salesman = salesman, ESV1 = e1, ESV2 = e2, ESV3 = e3, ESV4 = e4
+                    , effectiveSalesVolume = deltaESV, orderId = orderId; 
+
+            -- 3. 计算提成
+            -- 3.1 获取销售人员选择的提成策略类型类型
+            var commissionType char(10);
+            set commissionType = t.commissionType
+            from   SalesmanCommissionType as t
+            where   t.salesman = salesman and t.year = currentYear;
+
+            var commission dec(12, 2), commission1 dec(12, 2), commission2 dec(12, 2), commission3 dec(12, 2), commission4 dec(12, 2);
+            var allE1 dec(12, 2), allE2 dec(12, 2), allE3 dec(12, 2);
+            set allE1 = t.ESV1, allE2 = t.ESV2, allE3 = t.ESV3
+            from    SalesmanYearlySalesVolume as t
+            where   t.salesman = salesman and t.year = currentYear;
+
+            if(commissionType = 'A') {
+                set commission1 = e1 * 0.08;
+                set commission2 = e2 * 0.08;
+                set commission3 = e3 * 0.08 * 1.1;
+                set commission3 = e4 * 0.08 * 1.1;
+            }
+            if(commissionType = 'B') {
+                set commission1 = e1 * 0.08 * 0.9;
+                set commission2 = e2 * 0.08 * 0.9;
+                set commission3 = e3 * 0.08 * 2;
+                set commission4 = e4 * 0.08 * 2 * 1.1;
+                if(yearlyESV < planESV * 1.25 and updatedYearlyESV > planESV * 1.25) {
+                   set commission1 = commission1 + allE1 * 0.08 * (2 - 0.9); 
+                   set commission2 = commission2 + allE2 * 0.08 * (2 - 0.9); 
+                }
+                if(yearlyESV > planESV * 1.25 and updatedYearlyESV < planESV * 1.25) {
+                   set commission1 = commission1 - allE1 * 0.08 * (2 - 0.9); 
+                   set commission2 = commission2 - allE2 * 0.08 * (2 - 0.9); 
+                }
+            }
+            if(commissionType = 'C') {
+                set commission1 = e1 * 0.08 * 0.9;
+                set commission2 = e2 * 0.08 * 0.9;
+                set commission3 = e3 * 0.08 * 0.9 * 2;
+                set commission4 = e4 * 0.08 * 4 * 1.1;
+                if(yearlyESV < planESV * 1.25 and updatedYearlyESV > planESV * 1.25) {
+                   set commission2 = commission2 + allE2 * 0.08 * (2 - 0.9); 
+                }
+                if(yearlyESV > planESV * 1.25 and updatedYearlyESV < planESV * 1.25) {
+                   set commission2 = commission2 - allE2 * 0.08 * (2 - 0.9); 
+                }
+                if(yearlyESV < planESV * 1.5 and updatedYearlyESV > planESV * 1.5) {
+                   set commission2 = commission2 + allE2 * 0.08 * (4 - 0.9 - 0.9); 
+                   set commission3 = commission3 + allE3 * 0.08 * (4 - 0.9 - 0.9); 
+                }
+                if(yearlyESV > planESV * 1.5 and updatedYearlyESV < planESV * 1.5) {
+                   set commission2 = commission2 - allE2 * 0.08 * (4 - 0.9 - 0.9); 
+                   set commission3 = commission3 - allE3 * 0.08 * (4 - 0.9 - 0.9); 
+                }
+            }
+            BOOK SalesmanDailyCommission at (salesman, currentDate) 
+                set commission += (commission1 + commission2 + commission3 + commission4)
+                , commission1 += commission1, commission2 += commission2, commission3 += commission3, commission4 += commission4
+                , salesVolume += deltaSalesVolume, effectiveSalesVolume += deltaESV;
+
+            -- 记录销售人员通过发卡发券获取的收益
+            var salesmanWebUser id, salesType char(20), dSuperior id, iSuperior id;
+            foreach tb {
+                set salesmanWebUser = salesOrEasyBuzi, salesType = type, dSuperior = dSuperior, iSuperior = iSuperior;
+            }
+            if(salesmanWebUser > 0){
+                if(salesType = 'innerSales') {
+                    BOOK SalesmanDailyBindedCommission at (salesmanWebUser, currentDate)
+                        set commission += deltaESV * 0.1, effectiveSalesVolume += deltaESV, salesVolume += deltaSalesVolume;
+                    HISTORY SalesmanBindedCommissionHistory
+                        set orderItemId = orderItemId, salesman = salesmanWebUser, customer = customer,
+                        effectiveSalesVolume = deltaESV, salesVolume = deltaSalesVolume, orderId = orderId;
+                }
+                
+                if(salesType = 'easyBuzi') {
+                    -- 计算轻代理本人绩效
+                    var salesVolumeL1 dec(12, 2), salesVolumeL1Max dec(12, 2), salesVolumeL1Min dec(12, 2), 
+                        rateL1 dec(12, 2), commissionL1 dec(12, 2), easyESV dec(12, 2);
+                    set salesVolumeL1 = 0, rateL1 = 0, commissionL1 = 0, easyESV = 0;
+                    set salesVolumeL1 = a.salesVolumeL1 from EasyBuziSalesVolume as a where a.agent = salesmanWebUser;
+                    set rateL1 = a.value, salesVolumeL1Max = a.MaxAmount, salesVolumeL1Min = a.MinAmount
+                    from AchievementRuleBook as a where a.type = 1 and a.MinAmount <= salesVolumeL1 and a.MaxAmount > salesVolumeL1;
+                    if(salesVolumeL1 + easyESV > salesVolumeL1Max) {
+                        var rateL1_2 dec(12, 2); 
+                        set rateL1_2 = a.value
+                        from AchievementRuleBook as a where a.type = 1 and a.MinAmount <= salesVolumeL1
+                        order by a.MinAmount limit 1;
+                    }else if(salesVolumeL1 + easyESV < salesVolumeL1Min) {
+
+                    }else {
+                        set commissionL1 = easyESV * rateL1;
+                    }
+
+                    -- 计算直接上级的绩效
+
+                    -- 计算间接上级的绩效
+
+                }
+            }
         }
          
         book orderBack at(orderItemId) set orderId = orderId, seller = seller, salesman = salesman, salesRegion = salesRegion,
-            -- customer = customer, buyerAccount = buyerAccount, organization = organization, brand = brand, product = product, 
-            pack = pack, quantity = quantity, price = price, currency = currency
+            customer = customer, buyerAccount = buyerAccount, -- organization = organization, 
+            brand = brand, product = product, pack = pack, quantity = quantity, price = price, currency = currency
             bottomPrice = bottomPrice, bottomPriceCurrency = bottomPriceCurrency, 
             costPrice = costPrice, costPriceCurrency = costPriceCurrency,
+            salesVolume = salesVolume, effectiveSalesVolume = effectiveSalesVolume
             tradeType = tradeType, taxRate = taxRate, promotionId = promotionId,
-            mark = mark, createDate = createDate;
+            mark = mark, createDate = from_unixtime(createDate);
     };

@@ -1,13 +1,23 @@
 UQ 百灵威系统工程部/[achievement] version='1.00' author='ligsh'
 
--- 销售每日提成/销量/有效销售额BOOK
-BOOK SalesmanAchievementBook (
+
+-- 销售人员每日从所分配客户下单获得的提成/销量/有效销售额BOOK
+BOOK SalesmanDailyCommission(
     key salesman ID Employee,
     key date date,
     commission dec(12, 2),
+    commission1 dec(12, 2),
+    commission2 dec(12, 2),
+    commission3 dec(12, 2),
+    commission4 dec(12, 2),
     salesVolume dec(12, 2),
     effectiveSalesVolume dec(12, 2),
-    currency ID Currency, 
+    /*
+    ESV1 dec(12, 2),
+    ESV2 dec(12, 2),
+    ESV3 dec(12, 2),
+    ESV4 dec(12, 2),
+    */
 );
 
 -- 销售每年销量/有效销售额记录，用于获取当年累计有效销售额和计划额比较（是否完成计划）
@@ -16,7 +26,23 @@ BOOK SalesmanYearlySalesVolume (
     key year int,
     salesVolume dec(12, 2),
     effectiveSalesVolume dec(12, 2),
-    currency ID Currency, 
+    ESV1 dec(12, 2),
+    ESV2 dec(12, 2),
+    ESV3 dec(12, 2),
+    ESV4 dec(12, 2),
+);
+
+-- 销售人员每笔订单的有效销售额所在区间History(用于查看ESV区间明细)
+HISTORY SalesmanSalesVolumeHistory(
+    date,
+    orderItemId char(50),
+    salesman ID Employee,
+    effectiveSalesVolume dec(12, 2),
+    ESV1 dec(12, 2),
+    ESV2 dec(12, 2),
+    ESV3 dec(12, 2),
+    ESV4 dec(12, 2),
+    orderId char(50),
 );
 
 -- 销售选择的提成策略类型(A:标准计提；B：翻倍计提；C:翻倍再翻倍计提)
@@ -27,25 +53,34 @@ MAP SalesmanCommissionType (
 );
 
 -- 销售人员的月度销量计划
-BOOK SalesVolumePlan (
+MAP SalesVolumePlan (
     key salesman ID Employee,
     key year int,
     key month int,
     salesVolumePlan dec(12, 2),
-    currency ID Currency, 
 );
 
--- 销售人员提成History
-HISTORY SalesmanAchievementHistory (
-    date,
-    orderId char(50),
-    orderItemId char(50),
-    salesman ID Employee,
+-- 销售人员每日从绑定客户下单中获取的收益
+BOOK SalesmanDailyBindedCommission (
+    key salesman ID $user,
+    key date date,
     commission dec(12, 2),
     effectiveSalesVolume dec(12, 2),
-    commissionRate dec(12, 2),
-    currency ID Currency, 
+    salesVolume dec(12, 2),
 );
+
+-- 销售人员从所绑定客户下单获取的收益History
+HISTORY SalesmanBindedCommissionHistory(
+    date,
+    orderItemId char(50),
+    salesman ID $user,
+    customer ID Customer,
+    commission dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+    salesVolume dec(12, 2),
+    orderId char(50),
+);
+
 
 -- 订单数据，非业务实体，纯粹用于程序实现（因为内部系统会对同一个订单明细重复发bus，Achievment系统用此表判断订单明细是否
 -- 发生影响绩效的变化，决定是否重新计算销售人员提成）
@@ -57,6 +92,11 @@ MAP OrderBack (
     salesRegion ID SalesRegion,
     salesman ID Employee,
 
+    customer ID Customer,
+    buyerAccount ID BuyerAccount,
+
+    brand bigint,
+    product bigint,
     pack bigint,
     quantity int,
     price dec(12, 2),
@@ -67,6 +107,9 @@ MAP OrderBack (
     bottomPriceCurrency ID Currency,
     costPrice dec(12, 2),
     costPriceCurrency ID Currency,
+
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
 
     tradeType char(10),
     taxRate dec(12, 4),
