@@ -131,17 +131,17 @@ returns ret (
         var sumprice dec(12, 2);
         set sumprice = price * quantity;
 
-        -- step.1.计算一级绩效
-        -- step.1.1.获取基础变量
+        -- step.1.计算轻代理本人提成
         var oneSaleVolume dec(12, 2), oneMaxVolume dec(12, 2), oneRate dec(12, 2), oneSaleVolume_1 dec(12, 2), oneTeamCount smallint;
-        --获取历史总销量
+        -- 获取本人历史总销量
         set oneSaleVolume = oneSaleVolume from SalesAchievementBook where user = $user;
         set oneSaleVolume = ifnull(oneSaleVolume, 0);
 
-        --获取总销量（加上本次订单金额）
+        -- 本人历史总销量加上本次订单金额
         set oneSaleVolume_1 =  oneSaleVolume + sumprice;
-        --获取提成比例 和 该比例的最大销量
-        set oneRate = value, oneMaxVolume = MaxAmount, oneTeamCount = TeamCount from AchievementRuleBook 
+        -- 获取历史总销量所在销量级别的提成比例 和 该级别的销量上线设置
+        set oneRate = value, oneMaxVolume = MaxAmount, oneTeamCount = TeamCount 
+        from AchievementRuleBook 
         where MinAmount <= oneSaleVolume and oneSaleVolume < MaxAmount and Type = 1;
 
         -- step.1.2.计算绩效
@@ -151,14 +151,19 @@ returns ret (
             into ret select oneSaleVolume_1, oneMaxVolume, price, agentprices, quantity, 0 as oneRate_1, 0 as oneExcess, 
                 0 as oneNotExcess, oneRate, oneAchievement as result;
         }else{
-            var oneRate_1 dec(12, 2) , --超出部分提成比例
-                oneExcess dec(12, 2) , --超出部分
-                oneNotExcess dec(12, 2);--未超出部分
+            var oneRate_1 dec(12, 2) , -- 超出部分提成比例
+                oneExcess dec(12, 2) , -- 超出部分
+                oneNotExcess dec(12, 2);    -- 未超出部分
             set oneExcess = oneSaleVolume_1 - oneMaxVolume;
             set oneNotExcess = sumprice - (oneSaleVolume_1 - oneMaxVolume);
 
-            set oneRate_1 = value from AchievementRuleBook where MinAmount < oneSaleVolume_1 and MaxAmount >= oneSaleVolume_1 and Type = 1;
-            set oneAchievement = ((((price - agentprices) * oneRate_1 * ( oneExcess / sumprice) ) + ((price - agentprices) * oneRate * ( oneNotExcess / sumprice) ) ) * quantity) /1.13 ;
+            set oneRate_1 = value from AchievementRuleBook 
+            where MinAmount < oneSaleVolume_1 and MaxAmount >= oneSaleVolume_1 and Type = 1;
+
+            set oneAchievement = ((
+                ((price - agentprices) * oneRate_1 * (oneExcess / sumprice)) + 
+                ((price - agentprices) * oneRate * (oneNotExcess / sumprice)) 
+            ) * quantity) / 1.13 ;
 
             into ret select oneSaleVolume_1, oneMaxVolume, price, agentprices, quantity, 
                 oneRate_1, oneExcess, oneNotExcess, oneRate, oneAchievement as result;
@@ -192,9 +197,8 @@ returns ret (
             set twosale = parent from  Relation where children = $user;
             if(not twosale is null){
 
-                --step.2.1.获取基础变量
                 var twoSaleVolume dec(12, 2), twoMaxVolume dec(12, 2), twoRate dec(12, 2), twoSaleVolume_1 dec(12, 2), twoTeamCount smallint;
-                --获取总销量
+                -- 获取直属上级的所有下级的总销量
                 set twoSaleVolume = a.twoSaleVolume from SalesAchievementBook as a where a.user = twosale;
                 set twoSaleVolume = ifnull(twoSaleVolume, 0);
                 -- 获取总销量（加上订单金额）

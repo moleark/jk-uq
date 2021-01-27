@@ -11,9 +11,9 @@ BOOK AchievementRuleBook (
 -- 轻代理当前销量及团队成员个数（用于获取其提成比例） 
 BOOK EasyBuziSalesVolume (
     key agent ID $user,
-    salesVolumeL1 dec(12, 2),
-    salesVolumeL2 dec(12, 2),
-    salesVolumeL3 dec(12, 2),
+    salesVolumeL1 dec(12, 2),   -- 本人的销量
+    salesVolumeL2 dec(12, 2),   -- 直接团队的销量
+    salesVolumeL3 dec(12, 2),   -- 间接团队的销量
     teamCount int,
 );
 
@@ -24,5 +24,6 @@ HISTORY EasyBusiSalesVolumeHistory (
     agent ID $user,
     customer ID Customer,
     salesVolume dec(12, 2),
+    salesVolumeSource char(10),
     orderId char(50),
 );
