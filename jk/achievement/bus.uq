@@ -1,14 +1,18 @@
-BUS salesTaskBus from [百灵威系统工程部]/SalesTask;
+BUS stBus from [百灵威系统工程部]/SalesTask;
 
 BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
     ACCEPT orderChanged 
-    BUS salesTaskBus.getBindedSales as q into tb {
+    BUS stBus.getBindedSales as q into tb {
         set q.customer = customer; 
+    }
+    BUS stBus.getBrandBottomDiscount as q2 into tb2 {
+        set q2.brand = brand;
     } {
-        var bSalesman int, bEffectiveSalesVolume dec(12, 2), bSalesVolume dec(12, 2),
+        var bSalesman int, bEffectiveSalesVolume dec(12, 2), bAgentESV dec(12, 2), bSalesVolume dec(12, 2),
             bTaxRate dec(12, 4), bTradeType char(10), bPromotionId char(50),
             bMark char(10);
-        set bSalesman = a.salesman, bEffectiveSalesVolume = a.effectiveSalesVolume, bSalesVolume = a.salesVolume,
+        set bSalesman = a.salesman, bEffectiveSalesVolume = a.effectiveSalesVolume, bAgentESV = a.agentEffectiveSalesVolume,
+            bSalesVolume = a.salesVolume,
             bTaxRate = a.taxRate, bTradeType = a.tradeType, bPromotionId = a.promotionId,
             bMark = a.mark
         from    OrderBack as a
@@ -19,7 +23,7 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
         set currentYear = year(currentDate), currentMonth = month(currentDate);
 
         -- 1. 计算有效销售额
-        var effectiveSalesVolume dec(12, 2), salesVolume dec(12, 2); 
+        var effectiveSalesVolume dec(12, 2), salesVolume dec(12, 2), easyESV dec(12, 2); 
         if(mark = 'C') {
             set effectiveSalesVolume = 0, salesVolume = 0;
         } else {
@@ -50,11 +54,12 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
             BOOK SalesmanYearlySalesVolume at(salesman, currentYear) 
                 set effectiveSalesVolume += deltaESV, salesVolume += deltaSalesVolume; 
 
-            history SalesmanSalesVolumeHistory 
-                set orderItemId = orderItemId, salesman = salesman, effectiveSalesVolume = deltaESV, orderId = orderId; 
-
             BOOK SalesmanDailyCommission at (salesman, currentDate) 
                 set commission += deltaESV * 0.08, salesVolume += deltaSalesVolume, effectiveSalesVolume += deltaESV;
+
+            history SalesmanSalesVolumeHistory 
+                set orderItemId = orderItemId, salesman = salesman, 
+                commission = deltaESV * 0.8, salesVolume = deltaSalesVolume, effectiveSalesVolume = deltaESV, orderId = orderId; 
         }
 
         -- 以下是计算轻代理或销售人员发卡发券的提成的代码
@@ -74,8 +79,18 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
 
             -- 记录轻代理的提成
             if(salesType = 'easyBuzi' and deltaSalesVolume <> 0) {
-                var easyESV dec(12, 2);
-                set easyESV = 0;
+                var bottomDiscount dec(12, 2);
+                foreach tb2 {
+                    set bottomDiscount = discount; 
+                }
+                if(mark = 'C') {
+                    set easyESV = 0;
+                } else {
+                    set easyESV = (price - retail * (1 - ifnull(bottomDiscount, 0))) * quantity;
+                }
+                
+                var deltaEasyESV dec(12, 2);
+                set deltaEasyESV = easyESV - bAgentESV;
 
                 -- 计算轻代理本人提成
                 var salesVolumeL1 dec(12, 2), salesVolumeL1Max dec(12, 2), salesVolumeL1Min dec(12, 2), 
@@ -94,8 +109,8 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                     set rateL1_2 = a.value
                     from AchievementRuleBook as a where a.type = 1 and a.MinAmount <= salesVolumeL1
                     order by a.MinAmount limit 1;
-                    set commissionL1 = easyESV * overL1_2 * rateL1_2 / 1.13;
-                    set commissionL1 = commissionL1 + easyESV * (1 - overL1_2) * rateL1 / 1.13;
+                    set commissionL1 = deltaEasyESV * overL1_2 * rateL1_2 / 1.13;
+                    set commissionL1 = commissionL1 + deltaEasyESV * (1 - overL1_2) * rateL1 / 1.13;
                 }else if(salesVolumeL1 + deltaSalesVolume < salesVolumeL1Min) {
                     var overL1_3 dec(12, 2);
                     set overL1_3 = (salesVolumeL1 + deltaSalesVolume - salesVolumeL1Max) / deltaSalesVolume;
@@ -103,14 +118,16 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                     set rateL1_3 = a.value
                     from AchievementRuleBook as a where a.type = 1 and a.MaxAmount < salesVolumeL1
                     order by a.MinAmount limit 1;
-                    set commissionL1 = easyESV * overL1_3 * rateL1_3 / 1.13;
-                    set commissionL1 = commissionL1 + easyESV * (1 - overL1_3) * rateL1 / 1.13;
+                    set commissionL1 = deltaEasyESV * overL1_3 * rateL1_3 / 1.13;
+                    set commissionL1 = commissionL1 + deltaEasyESV * (1 - overL1_3) * rateL1 / 1.13;
                 }else {
-                    set commissionL1 = easyESV * rateL1 / 1.13;
+                    set commissionL1 = deltaEasyESV * rateL1 / 1.13;
                 }
                 BOOK EasyBuziSalesVolume at (salesmanWebUser) set salesVolumeL1 += deltaSalesVolume;
+                BOOK EasyBuziCommission at (salesmanWebUser) set commissionA += commissionL1;
                 HISTORY EasyBusiSalesVolumeHistory set orderItemId = orderItemId, agent = salesmanWebUser,
-                    customer = customer, salesVolumeSource = 'A', orderId = orderId;
+                    customer = customer, salesVolume = deltaSalesVolume, commission = commissionL1, effectiveSalesVolume = deltaEasyESV, 
+                    salesVolumeSource = 'A', orderId = orderId;
 
                 -- 计算直接上级的提成
                 if(dSuperior > 0){
@@ -130,8 +147,8 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                         set rateL2_2 = a.value
                         from AchievementRuleBook as a where a.type = 2 and a.MinAmount <= salesVolumeL2
                         order by a.MinAmount limit 1;
-                        set commissionL2 = easyESV * overL2_2 * rateL2_2 / 1.13;
-                        set commissionL2 = commissionL2 + easyESV * (1 - overL2_2) * rateL2 / 1.13;
+                        set commissionL2 = deltaEasyESV * overL2_2 * rateL2_2 / 1.13;
+                        set commissionL2 = commissionL2 + deltaEasyESV * (1 - overL2_2) * rateL2 / 1.13;
                     }else if(salesVolumeL2 + deltaSalesVolume < salesVolumeL2Min) {
                         var overL2_3 dec(12, 2);
                         set overL2_3 = (salesVolumeL2 + deltaSalesVolume - salesVolumeL2Max) / deltaSalesVolume;
@@ -139,14 +156,16 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                         set rateL2_3 = a.value
                         from AchievementRuleBook as a where a.type = 2 and a.MaxAmount < salesVolumeL2
                         order by a.MinAmount limit 1;
-                        set commissionL2 = easyESV * overL2_3 * rateL2_3 / 1.13;
-                        set commissionL2 = commissionL2 + easyESV * (1 - overL2_3) * rateL2 / 1.13;
+                        set commissionL2 = deltaEasyESV * overL2_3 * rateL2_3 / 1.13;
+                        set commissionL2 = commissionL2 + deltaEasyESV * (1 - overL2_3) * rateL2 / 1.13;
                     }else {
-                        set commissionL2 = easyESV * rateL2 / 1.13;
+                        set commissionL2 = deltaEasyESV * rateL2 / 1.13;
                     }
-                    BOOK EasyBuziSalesVolume at (salesmanWebUser) set salesVolumeL2 += deltaSalesVolume;
+                    BOOK EasyBuziSalesVolume at (dSuperior) set salesVolumeL2 += deltaSalesVolume;
+                    BOOK EasyBuziCommission at (dSuperior) set commissionB += commissionL2;
                     HISTORY EasyBusiSalesVolumeHistory set orderItemId = orderItemId, agent = dSuperior,
-                        customer = customer, salesVolumeSource = 'B', orderId = orderId;
+                        customer = customer, salesVolume = deltaSalesVolume, commission = commissionL2, effectiveSalesVolume = deltaEasyESV,
+                        salesVolumeSource = 'B', orderId = orderId;
                 }
 
                 -- 计算间接上级的提成
@@ -167,8 +186,8 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                         set rateL3_2 = a.value
                         from AchievementRuleBook as a where a.type = 3 and a.MinAmount <= salesVolumeL3
                         order by a.MinAmount limit 1;
-                        set commissionL3 = easyESV * overL3_2 * rateL3_2 / 1.13;
-                        set commissionL3 = commissionL3 + easyESV * (1 - overL3_2) * rateL3 / 1.13;
+                        set commissionL3 = deltaEasyESV * overL3_2 * rateL3_2 / 1.13;
+                        set commissionL3 = commissionL3 + deltaEasyESV * (1 - overL3_2) * rateL3 / 1.13;
                     }else if(salesVolumeL3 + deltaSalesVolume < salesVolumeL3Min) {
                         var overL3_3 dec(12, 2);
                         set overL3_3 = (salesVolumeL3 + deltaSalesVolume - salesVolumeL3Max) / deltaSalesVolume;
@@ -176,14 +195,16 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                         set rateL3_3 = a.value
                         from AchievementRuleBook as a where a.type = 3 and a.MaxAmount < salesVolumeL3
                         order by a.MinAmount limit 1;
-                        set commissionL3 = easyESV * overL3_3 * rateL3_3 / 1.13;
-                        set commissionL3 = commissionL3 + easyESV * (1 - overL3_3) * rateL3 / 1.13;
+                        set commissionL3 = deltaEasyESV * overL3_3 * rateL3_3 / 1.13;
+                        set commissionL3 = commissionL3 + deltaEasyESV * (1 - overL3_3) * rateL3 / 1.13;
                     }else {
-                        set commissionL3 = easyESV * rateL3 / 1.13;
+                        set commissionL3 = deltaEasyESV * rateL3 / 1.13;
                     }
-                    BOOK EasyBuziSalesVolume at (salesmanWebUser) set salesVolumeL2 += deltaSalesVolume;
+                    BOOK EasyBuziSalesVolume at (iSuperior) set salesVolumeL2 += deltaSalesVolume;
+                    BOOK EasyBuziCommission at (iSuperior) set commissionC += commissionL3;
                     HISTORY EasyBusiSalesVolumeHistory set orderItemId = orderItemId, agent = iSuperior,
-                        customer = customer, salesVolumeSource = 'C', orderId = orderId;
+                        customer = customer, salesVolume = deltaSalesVolume, commission = commissionL3, effectiveSalesVolume = deltaEasyESV,
+                        salesVolumeSource = 'C', orderId = orderId;
                 }
             }
         }
@@ -193,7 +214,7 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
             brand = brand, product = product, pack = pack, quantity = quantity, price = price, currency = currency
             bottomPrice = bottomPrice, bottomPriceCurrency = bottomPriceCurrency, 
             costPrice = costPrice, costPriceCurrency = costPriceCurrency,
-            salesVolume = salesVolume, effectiveSalesVolume = effectiveSalesVolume
+            salesVolume = salesVolume, effectiveSalesVolume = effectiveSalesVolume, agentEffectiveSalesVolume = easyESV,
             tradeType = tradeType, taxRate = taxRate, promotionId = promotionId,
             mark = mark, createDate = from_unixtime(createDate);
     };

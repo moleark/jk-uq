@@ -17,3 +17,10 @@ BUS salesTaskBusGetBindedSales from [百灵威系统工程部]/SalesTask
         }
         into bus select salesOrEasyBuzi, type, dSuperior, iSuperior;
     };
+
+BUS stBusGetBrandDis from [百灵威系统工程部]/SalesTask
+    QUERY getBrandBottomDiscount {
+        var discount dec(12, 2); 
+        set discount = c.discount from BottomDiscount as c where c.brand = brand;
+        into bus select discount;
+    };
