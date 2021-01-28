@@ -24,6 +24,7 @@ BOOK SalesmanDailyCommission(
 BOOK SalesmanYearlySalesVolume (
     key salesman ID Employee,
     key year int,
+    commission dec(12, 2),
     salesVolume dec(12, 2),
     effectiveSalesVolume dec(12, 2),
     ESV1 dec(12, 2),
@@ -80,6 +81,23 @@ HISTORY SalesmanBindedCommissionHistory(
     commission dec(12, 2),
     effectiveSalesVolume dec(12, 2),
     salesVolume dec(12, 2),
+    orderId char(50),
+);
+
+-- 销售人员每日回款账（及销售人员所属订单的每日回款汇总账，拟替换SalesAchievementBooK.ReceivableAmount）
+BOOK SalesmanDailyReceivePayment(
+    key salesman ID Employee,
+    key date date,
+    amount dec(12, 2),
+);
+
+-- 销售人员每日回款历史（及销售人员所属订单的每日回款历史，拟替换BanlanceHistory）
+BOOK SalesmanDailyReceivePaymentHistory(
+    date,
+    orderItemId char(50),
+    salesman ID Employee,
+    amount dec(12, 2),
+    direction tinyint,
     orderId char(50),
 );
 

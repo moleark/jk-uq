@@ -51,17 +51,20 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
             deltaSalesVolume = salesVolume - ifnull(bSalesVolume, 0);
         if(deltaESV <> 0) {
             -- 计算销售内部提成
+            var commission dec(12, 2);
+            set commission = deltaESV * 0.08;
             BOOK SalesmanYearlySalesVolume at(salesman, currentYear) 
-                set effectiveSalesVolume += deltaESV, salesVolume += deltaSalesVolume; 
+                set commission += commission, effectiveSalesVolume += deltaESV, salesVolume += deltaSalesVolume; 
 
             BOOK SalesmanDailyCommission at (salesman, currentDate) 
-                set commission += deltaESV * 0.08, salesVolume += deltaSalesVolume, effectiveSalesVolume += deltaESV;
+                set commission += commission, salesVolume += deltaSalesVolume, effectiveSalesVolume += deltaESV;
 
             history SalesmanSalesVolumeHistory 
                 set orderItemId = orderItemId, salesman = salesman, 
-                commission = deltaESV * 0.8, salesVolume = deltaSalesVolume, effectiveSalesVolume = deltaESV, orderId = orderId; 
+                commission = commission, salesVolume = deltaSalesVolume, effectiveSalesVolume = deltaESV, orderId = orderId; 
         }
 
+        /*
         -- 以下是计算轻代理或销售人员发卡发券的提成的代码
         var salesmanWebUser id, salesType char(20), dSuperior id, iSuperior id;
         foreach tb {
@@ -208,7 +211,8 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                 }
             }
         }
-         
+        */
+
         book orderBack at(orderItemId) set orderId = orderId, seller = seller, salesman = salesman, salesRegion = salesRegion,
             customer = customer, buyerAccount = buyerAccount, -- organization = organization, 
             brand = brand, product = product, pack = pack, quantity = quantity, price = price, currency = currency
@@ -362,3 +366,13 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                 , commission1 += commission1, commission2 += commission2, commission3 += commission3, commission4 += commission4
                 , salesVolume += deltaSalesVolume, effectiveSalesVolume += deltaESV;
 */
+
+BUS orderPaiedBus from [百灵威系统工程部]/[orderPaid]
+    ACCEPT orderPaid {
+        -- 查order 对应的销售人员，给销售记账 
+        var currentDate date;
+        set currentDate = date(now());
+        BOOK SalesmanDailyReceivePayment at (salesman, currentDate) set amount += amount * direction;
+        HISTORY SalesmanDailyReceivePaymentHistory set orderItemId = orderItemId, salesman = salesman,
+            amount = amount, direction = direction, orderId = orderId;
+    };
