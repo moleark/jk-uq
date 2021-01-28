@@ -37,6 +37,8 @@ HISTORY SalesmanSalesVolumeHistory(
     date,
     orderItemId char(50),
     salesman ID Employee,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
     effectiveSalesVolume dec(12, 2),
     ESV1 dec(12, 2),
     ESV2 dec(12, 2),
@@ -110,6 +112,7 @@ MAP OrderBack (
 
     salesVolume dec(12, 2),
     effectiveSalesVolume dec(12, 2),
+    agentEffectiveSalesVolume dec(12, 2),
 
     tradeType char(10),
     taxRate dec(12, 4),
