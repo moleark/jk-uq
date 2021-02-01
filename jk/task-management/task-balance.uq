@@ -2,11 +2,11 @@
 --回款单待处理记录
 PENDING OrderPaymentPending ver 0.6 (
     id,
-    sales ID [$user],    --销售(加这个字段是因为在计算的时候 由自己触发计算)
-    order ID,            --订单ID
-    orderNo char(20),          --订单号
-    paymentAmount dec(12, 2) not null,
-    state int,
+    sales ID [$user],    -- 销售(加这个字段是因为在计算的时候 由自己触发计算)
+    order ID,            -- 订单ID
+    orderNo char(20),          -- 订单号
+    paymentAmount dec(12, 2) not null,  -- 付款额/退款额 
+    state int,              -- 1:付款；-1：退款
     date,
     index ix_sales( order )
 );
@@ -14,12 +14,12 @@ PENDING OrderPaymentPending ver 0.6 (
 /**回款历史记录**/
 History BalanceHistory (
     date,
-    sales ID [$user],    --销售
-    order ID,            --回款单、取款单、退款单
-    orderNo char(20),          --订单号
-    ordertype char(10),  --回款类型
-    paymentAmount dec(12, 2) not null, --回款金额
-    amount dec(12, 2) not null, --增加收益额
+    sales ID [$user],    -- 销售
+    order ID,            -- 回款单、取款单、退款单
+    orderNo char(20),          -- 订单号
+    ordertype char(10),  -- 回款类型
+    paymentAmount dec(12, 2) not null, -- 回款金额
+    amount dec(12, 2) not null,     -- 从此回款获取的提成 
     currency ID
 );
 

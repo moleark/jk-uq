@@ -74,7 +74,8 @@ BUS orderbus ver 0.4 from [百灵威系统工程部]/order
             var pid ID;
             if(type in (1, 2)){
                 if not exists(select 1 from WebUserEmployeeMap as a where a.webuser = sales){
-                   PENDING CustomerOrderPending + ( sales:sales, webuser:webuser, order:orderId, orderNo:no, price:amount, agentprices:sumAgentprice, types:types ) to pid;
+                    PENDING CustomerOrderPending + ( sales:sales, webuser:webuser, order:orderId, orderNo:no, 
+                        price:amount, agentprices:sumAgentprice, types:types ) to pid;
                 }
             } 
 

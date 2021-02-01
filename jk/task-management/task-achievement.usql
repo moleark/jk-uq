@@ -1,7 +1,7 @@
 -- 客户下单后记录，
 PENDING CustomerOrderPending ver 0.6 (
     id,
-    sales ID [$user],    --销售
+    sales ID [$user],    -- 销售
     types  char(10),
     webuser ID [$user],  
     order ID,
@@ -88,15 +88,15 @@ BOOK SalesCustomerBook(
 /**业绩历史记录**/
 History AchievementHistory (
     date,
-    sales ID [$user],    --销售
-    webuser ID [$user],  
-    order ID,
-    orderNo char(50),
-    ordertype char(10), --作废
+    sales ID [$user],       -- 销售
+    webuser ID [$user],     -- 客户的webuser 
+    order ID,               -- 订单id
+    orderNo char(50),       -- 订单no
+    ordertype char(10),     -- 作废
     price dec(12, 2) not null,
     agentprices dec(12, 2) not null,
     types smallint,     -- 1:自己的收益;2:一级团队收益;3:二级团队收益;
-    amount dec(12, 2) not null,
+    amount dec(12, 2) not null,     --  从轻代理的收益历史
 );
 
 /** 订单回款状态 **/
