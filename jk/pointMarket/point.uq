@@ -45,12 +45,21 @@ MAP PointProductSource (
         point = point, startDate = unix_timestamp(startDate), endDate = unix_timestamp(endDate), imageUrl = imageUrl;
 };
 
+-- 
 MAP PointProductDetail (
     key pointProduct ID PointProductLib,
     content text,
 );
 
---可兑换产品表
+
+-- 品牌最低折扣表（低于此表中设置折扣的，不给积分）
+MAP BrandMinDiscount (
+    key brand ID Brand,
+    discount dec(12, 2),
+    isValid int,
+);
+
+-- 可兑换产品表(作废，被PointProductLib替代)
 MAP PointProduct (
     key product ID ProductX not null,           --产品编号
     key pack OF product.PackX not null,         --包装编号
@@ -61,7 +70,7 @@ MAP PointProduct (
     index idx_date,
 );
 
---积分明细表
+-- 积分BOOK(针对webuser)
 BOOK PointBook (
     key webUser ID [$user],                 -- 是webuser
     key pointYear int not null,             -- 积分所在年度
@@ -73,7 +82,7 @@ BOOK PointBook (
     tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清零, 2020-10-16, ligsh, 不再使用此字段
 );
 
---积分明细（备份，当审核通过时吧这个积分记录复制到 PointBook ）
+-- 积分明细（备份，当审核通过时吧这个积分记录复制到 PointBook ）
 BOOK PointBookByCustomer (
     key customer ID Customer,   -- 客户编号，不是webuser
     key pointYear int not null,             -- 积分所在年度
@@ -82,7 +91,7 @@ BOOK PointBookByCustomer (
     totalPoint int not null default 0      -- 总积分
 );
 
---积分变化表
+-- 积分变化表(针对webuser)
 HISTORY PointHistory (
     date,                       --生成时间
     pointYear int,              --积分年度
@@ -95,6 +104,20 @@ HISTORY PointHistory (
     row,                        --子表的第几行
 );
 
+-- 积分变化表(针对customer)
+HISTORY PointHistoryByCustomer (
+    date,                       --生成时间
+    pointYear int,              --积分年度
+    point int,                  --积分数(100 or -100)
+    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消；
+    comments char(1000) ,       --备注
+    customer ID Customer,       --客户
+    sheet,                      --单据
+    type,                       --不同的sheet类型
+    row,                        --子表的第几行
+);
+
+-- 当前客户积分分布表（在某个积分段有多少人）
 BOOK PointDistributionBook (
     key pointStart int not null,
     numbers int not null, 
