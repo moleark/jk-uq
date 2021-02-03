@@ -46,6 +46,7 @@ HISTORY SalesmanSalesVolumeHistory(
     ESV3 dec(12, 2),
     ESV4 dec(12, 2),
     orderId char(50),
+    comments char(50),
 );
 
 -- 销售选择的提成策略类型(A:标准计提；B：翻倍计提；C:翻倍再翻倍计提)
@@ -82,6 +83,7 @@ HISTORY SalesmanBindedCommissionHistory(
     effectiveSalesVolume dec(12, 2),
     salesVolume dec(12, 2),
     orderId char(50),
+    comments char(50),
 );
 
 -- 销售人员每日回款账（及销售人员所属订单的每日回款汇总账，拟替换SalesAchievementBooK.ReceivableAmount）
@@ -92,13 +94,15 @@ BOOK SalesmanDailyReceivePayment(
 );
 
 -- 销售人员每日回款历史（及销售人员所属订单的每日回款历史，拟替换BanlanceHistory）
-BOOK SalesmanDailyReceivePaymentHistory(
+History SalesmanReceivePaymentHistory(
     date,
     orderItemId char(50),
     salesman ID Employee,
     amount dec(12, 2),
-    direction tinyint,
+    currency ID Currency,
+    action tinyint,
     orderId char(50),
+    comments char(50),
 );
 
 

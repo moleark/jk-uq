@@ -36,4 +36,5 @@ HISTORY EasyBusiSalesVolumeHistory (
     effectiveSalesVolume dec(12, 2),
     salesVolumeSource char(10),
     orderId char(50),
+    comments char(50),
 );

@@ -367,12 +367,16 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
                 , salesVolume += deltaSalesVolume, effectiveSalesVolume += deltaESV;
 */
 
-BUS orderPaiedBus from [百灵威系统工程部]/[orderPaid]
-    ACCEPT orderPaid {
+BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
+    ACCEPT innerOrderPaid {
         -- 查order 对应的销售人员，给销售记账 
         var currentDate date;
         set currentDate = date(now());
-        BOOK SalesmanDailyReceivePayment at (salesman, currentDate) set amount += amount * direction;
-        HISTORY SalesmanDailyReceivePaymentHistory set orderItemId = orderItemId, salesman = salesman,
-            amount = amount, direction = direction, orderId = orderId;
+        var salesman bigint;
+        set salesman = o.salesman
+        from    orderBack as o
+        where   o.orderItemId = orderItemId;
+        BOOK SalesmanDailyReceivePayment at (salesman, currentDate) set amount += amount * action;
+        HISTORY SalesmanReceivePaymentHistory set orderItemId = orderItemId, salesman = salesman,
+            amount = amount, currency = currency, action = action, orderId = orderId;
     };
