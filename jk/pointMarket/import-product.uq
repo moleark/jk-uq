@@ -12,3 +12,5 @@ TUID ProductX from JKProduct (
     ),
     main imageUrl char(200),
 );
+
+TUID Brand from JKProduct;

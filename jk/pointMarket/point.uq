@@ -109,7 +109,7 @@ HISTORY PointHistoryByCustomer (
     date,                       --生成时间
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消；
+    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消;5:市场活动积分;6:有效积分变动;
     comments char(1000) ,       --备注
     customer ID Customer,       --客户
     sheet,                      --单据
@@ -288,3 +288,24 @@ from	pointshop.tv_pointproductlib a
 			and d.discountinued = 1
 where	a.enddate > now();
 */
+
+
+MAP OrderBack (
+    key orderItemId char(50),
+    orderId char(50),
+
+    customer ID Customer,
+
+    brand bigint,
+    product bigint,
+    pack bigint,
+    quantity int,
+    price dec(12, 2),
+    currency ID Currency,
+    retail dec(12, 2),
+    retailCurrency ID Currency,
+    mark char(10),
+    createDate datetime,
+    
+    totalPoint int not null default 0
+);
