@@ -102,3 +102,32 @@ QUERY GetPointDistribution (
     end while; 
     -/
 };
+
+/*
+ * 
+*/
+Query getBrandMinDiscount()
+PAGE (
+    seq bigint asc,
+    brand ID Brand,
+    discount dec(12,2),
+    isValid int
+) {
+    /-mysql
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_brandmindiscounts`;
+    CREATE TEMPORARY TABLE `_$page_brandmindiscounts` (`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, `brand` BIGINT NOT NULL) ENGINE=MyISAM;
+    insert  into `_$page_brandmindiscounts`( brand )
+    select  bd.brand
+    from    `tv_brandmindiscount` as bd
+    order   by bd.brand;
+
+    INSERT  INTO `_$page` (`seq`, `brand`, `discount`, `isValid`)
+    SELECT  b1.id, bd.brand, bd.discount, bd.isValid
+    from    `_$page_brandmindiscounts` as b1
+            inner join `tv_brandmindiscount` as bd on bd.`brand` = b1.brand
+    where   b1.id >`_$pagestart`
+    order   by b1.id
+    limit   `_$pagesize`;
+    -/
+};
