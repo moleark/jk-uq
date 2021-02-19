@@ -11,6 +11,8 @@ BUS pointBus from [百灵威系统工程部]/pointShop
     BUS webUserBus.getWuByCu as q into tb {
         set q.customer = customer;
     } {
+        book PointBookByCustomer at (customer, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint;
+
         -- 根据customer获取webuser
         var webUserid ID [$user];
         foreach tb {
@@ -20,8 +22,7 @@ BUS pointBus from [百灵威系统工程部]/pointShop
         if( not webUserid is null ){
             book PointBook at (webUserid, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint,
             tempPoint = 0;
-        }else
-            book PointBookByCustomer at (customer, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint;
+        }
     };
 
 /*
@@ -50,8 +51,6 @@ BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
             ) {
                 book PointBook at (webUser, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
             }
-        }else {
-            delete t from PointBookByCustomer as t where t.customer = customer;
         }
 
         -- 把webuser领用的积分券导入内部
