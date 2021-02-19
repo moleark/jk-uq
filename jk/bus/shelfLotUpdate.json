@@ -1,0 +1,28 @@
+{
+    "shelfLotUpdateHistory": [
+        {
+            "name": "shelfBlock",
+            "type": "number"
+        },
+        {
+            "name": "product",
+            "type": "number"
+        },
+        {
+            "name": "pack",
+            "type": "number"
+        },
+        {
+            "name": "lotNumber",
+            "type": "string"
+        },
+        {
+            "name": "quantity",
+            "type": "number"
+        },
+        {
+            "name": "inputTime",
+            "type": "string"
+        }
+    ]
+}
