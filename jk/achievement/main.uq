@@ -187,20 +187,20 @@ QUERY getSalesmanYearlyCommission (
     startDate date,
     endDate date,
 )returns ret(
-    salesman ID Employee,
-    year char(10),
-    month char(20),
+    salesmana ID Employee,
+    yeara int,
+    montha int,
     commission dec(12, 2),
     salesVolume dec(12, 2),
     effectiveSalesVolume dec(12, 2),
 ){
     -- var  startDate date, endDate date;
     -- set  startDate=CONCAT_WS('-', _year, '01', '01'), endDate=CONCAT_WS('-', _year, '12', '31');
-    into ret select a.salesman, year(a.date) as year, month(a.date) as month, sum(a.commission) as commission
+    into ret select salesmana, yeara, montha, sum(a.commission) as commission
             , sum(a.salesVolume) as salesVolume, sum(a.effectiveSalesVolume) as effectiveSalesVolume
     from    SalesmanDailyCommission as a
     where   a.salesman = salesman and a.date >= startDate and a.date <= endDate
-    group by a.salesman, year, month;
+    group by a.salesman as salesmana, year(a.date) as yeara, month(a.date) as montha;
 };
 
 -- 获取绑定客户的每日销量/有效销售额/提成
@@ -236,24 +236,24 @@ QUERY getBindSalesmanMonthlyCommission (
     where   a.salesman = salesman and a.date >= startDate and a.date < endDate; 
 }; 
 
--- 获取绑定客户的每年每月销量/有效销售额/提成
+-- 获取绑定客户的某年每月销量/有效销售额/提成
 QUERY getBindSalesmanYearlyCommission (
     salesman ID $user,
     startDate date,
     endDate date,
 )returns ret(
-    salesman ID $user, 
-    year char(10),
-    month char(20),
+    salesmana ID $user, 
+    year int,
+    month int,
     commission dec(12, 2),
     salesVolume dec(12, 2) ,
     effectiveSalesVolume dec(12, 2),
 ){ 
-    into ret select  a.salesman, year(a.date) as year, month(a.date) as month, sum(a.commission) as commission, sum(a.salesVolume) as salesVolume
+    into ret select salesmana, year, month, sum(a.commission) as commission, sum(a.salesVolume) as salesVolume
             , sum(a.effectiveSalesVolume) as effectiveSalesVolume
     from    SalesmanDailyBindedCommission as a
     where   a.salesman = salesman and a.date >= startDate and a.date <= endDate
-    group by a.salesman, year, month;
+    group by a.salesman as salesmana, year(a.date) as year, month(a.date) as month;
 };
 
 -- 获取销售某月累计度额
@@ -262,16 +262,16 @@ QUERY getSalesmanMonthCommission(
     startDate date,
     endDate date,
 )returns ret(
-    salesman ID Employee,
-    month char(20),
+    salesmana ID Employee,
+    month int,
     commission dec(12, 2),
     salesVolume dec(12, 2),
     effectiveSalesVolume dec(12, 2),
 ){
-    into ret select a.salesman, month(a.date) as month, sum(a.commission) as commission, sum(a.salesVolume) as salesVolume, sum(a.effectiveSalesVolume) as effectiveSalesVolume
+    into ret select salesmana, month, sum(a.commission) as commission, sum(a.salesVolume) as salesVolume, sum(a.effectiveSalesVolume) as effectiveSalesVolume
     from    SalesmanDailyCommission as a
     where   a.salesman = salesman and a.date >= startDate and a.date < endDate 
-    group by a.salesman, month;
+    group by a.salesman as salesmana, month(a.date) as month;
 };
 
 -- 获取销售某年累计的销量/有效销售额/提成
@@ -301,7 +301,7 @@ QUERY getSalesMonthVolumePlan(
     month int,
     salesVolumePlan dec(12, 2), 
 ){
-    into ret select a.salesman, a.year, a.month, a.salesman, a.salesVolumePlan
+    into ret select a.salesman, a.year, a.month, a.salesVolumePlan
     from    SalesVolumePlan as a
     where   a.salesman = salesman and a.year = year and a.month = month;
 };
@@ -311,14 +311,14 @@ QUERY getSalesYearVolumePlan(
     salesman ID Employee,
     year int,    
 )returns ret(
-    year int,
-    salesman ID Employee,
+    salesmana ID Employee,
+    yeara int,
     salesVolumePlan dec(12, 2), 
 ){
-    into ret select a.salesman, a.year, sum(a.salesVolumePlan) as salesVolumePlan
+    into ret select salesmana, yeara, sum(a.salesVolumePlan) as salesVolumePlan
     from    SalesVolumePlan as a
-    where   a.salesman = salesman and a.year = year 
-    group by a.salesman, a.year;
+    where   a.salesman = salesman and a.year = year
+    group by a.salesman as salesmana, a.year as yeara;
 };
 
 -- 获取销售每日回款
@@ -341,14 +341,14 @@ QUERY getSalesmanMonthlyReceivePayment(
     startDate date,
     endDate date,
 )returns ret(
-    salesman ID Employee,
-    month char(20),
+    salesmana ID Employee,
+    month int,
     amount dec(12, 2)
 ){
-    into ret select a.salesman, month(a.date) as month, sum(a.amount) as amount
+    into ret select salesmana, month, sum(a.amount) as amount
     from   SalesmanDailyReceivePayment as a
     where  a.salesman = salesman and a.date >= startDate and a.date < endDate 
-    group by a.salesman, month;
+    group by a.salesman as salesmana, month(a.date) as month;
 };
 
 -- 获取销售某年回款汇总
@@ -357,12 +357,12 @@ QUERY getSalesmanYearlyReceivePayment(
     startDate date,
     endDate date,
 )returns ret(
-    salesman ID Employee,
-    year char(10),
+    salesmana ID Employee,
+    year int,
     amount dec(12, 2)
 ){
-    into ret select a.salesman, year(a.date) as year, sum(a.amount) as amount
+    into ret select salesmana, year, sum(a.amount) as amount
     from   SalesmanDailyReceivePayment as a
-    where  a.salesman = salesman and  and a.date >= startDate and a.date <= endDate 
-    group by a.salesman, year;
+    where  a.salesman = salesman and a.date >= startDate and a.date <= endDate 
+    group by a.salesman as salesmana, year(a.date) as year;
 };
