@@ -7,7 +7,7 @@
         { "name": "quantity", "type": "number" },
         { "name": "consigneeName", "type": "string" },
         { "name": "consigneeUnitName", "type": "string" },
-        { "name": "consigneeAddress", "type": "number" },
+        { "name": "consigneeAddress", "type": "string" },
         { "name": "consigneeZipcode", "type": "string" },
         { "name": "consigneeTelphone", "type": "string" },
         { "name": "consigneeMobile", "type": "string" },
