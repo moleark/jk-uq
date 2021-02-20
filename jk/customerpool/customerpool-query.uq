@@ -1,0 +1,37 @@
+QUERY searchCustomer()
+PAGE (
+    id bigint start 0,
+    name char(50),
+    gender char(5),
+    organizationName char(200),
+    mobile char(50) not null,
+    telephone char(50),
+    email char(50),
+    addressString char(400)
+) {
+
+    --获取与轻代理研究领域一致的客户
+    table customerlist ( customer ID Customer,name char(50), gender char(5));
+    into   customerlist select a.id as customer,a.name,a.gender
+    from   CustomerPool as c
+            inner join Customer as a on c.customer=a.id
+            inner join CustomerDomain as b on a.id=b.customer
+            inner join SalesFeature as e on b.domain=e.domain
+
+    --获取与轻代理地域一致的客户
+    into    customerlist 
+    select  a.id as customer,a.name,a.gender
+    from   CustomerPool as c
+            inner join Customer as a on c.customer=a.id
+            inner join CustomerContacts as b on a.id=b.customer
+            inner join Contact as e on b.contact=e.id
+            inner join Address as f on e.address=f.id
+            inner join SalesFeature as g on f.city=g.city
+
+    PAGE select c.customer,c.name,c.gender,f.organizationName,f.mobile,f.telephone,f.email,f.addressString
+    from    customerlist as c
+            inner join CustomerContacts as e on e.customer=c.customer
+            inner join Contact as f on e.contact=f.id
+    where   c.id > $pageStart 
+    limit $pageSize;
+};

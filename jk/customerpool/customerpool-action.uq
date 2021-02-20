@@ -1,0 +1,14 @@
+/** 添加轻代理特征*/
+ACTION CreateSalesFeature(
+    _domain ID Domain, --研究领域
+    _city ID City --地域
+)returns ret (
+    result  bigint --返回结果
+){
+    var result      bigint;
+
+    BOOK SalesFeature at ( $user) set domain = _domain, city = _city;
+
+    set result = 1;
+    into ret select result;
+};
