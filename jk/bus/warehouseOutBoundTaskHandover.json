@@ -1,5 +1,5 @@
 {
-    "outBoundTaskHandover": [
+    "warehouseOutBoundTaskHandover": [
         { "name": "warehouse", "type": "number" },
         { "name": "shelfBlock", "type": "number" },
         { "name": "product", "type": "number" },
