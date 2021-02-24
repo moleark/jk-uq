@@ -155,7 +155,7 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
         set orderItemId = 'LCW1742012231406135837527', amount = 744;
         */
         
-        var totalPoint int, customer ID Customer,price dec(12, 2), quantity int;
+        var totalPoint int, customer ID Customer, price dec(12, 2), quantity int;
         set totalPoint = a.totalPoint, price = a.price, quantity = a.quantity, customer = a.customer
         from    OrderBack as a
         where   a.orderItemId = orderItemId;
@@ -180,8 +180,7 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
         if(action <> 1) {
             set realPoint = realPoint * -1, subVal = realPoint;
         }
-        book PointBookByCustomer at (customer, pointYear) set point += realPoint,totalPoint += subVal;
+        book PointBookByCustomer at (customer, pointYear) set point += realPoint, totalPoint += subVal;
         history PointHistoryByCustomer 
             set pointYear = pointYear, point = realPoint, source = 6, comments = orderItemId, customer = customer;
-   
     };

@@ -109,7 +109,7 @@ HISTORY PointHistoryByCustomer (
     date,                       --生成时间
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消;5:市场活动积分;6:有效积分变动;
+    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消; 5:订单积分;6:有效积分变动;
     comments char(1000) ,       --备注
     customer ID Customer,       --客户
     sheet,                      --单据
