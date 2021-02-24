@@ -5,6 +5,12 @@ TUID Brand from JKProduct(
     main name char(50) not null,
 );
 
+OPEN Map BrandSalesRegion (
+    key brand ID Brand,
+    key salesRegion ID SalesRegion,
+    level int not null,
+);
+
 TUID ProductX from JKProduct(
     id,
     main brand ID Brand not null,

@@ -63,7 +63,18 @@ ACTION CreateCoupon(
  
     var couponId ID;
     TUID Coupon into couponId set user = $user, code = code, validitydate = validitydate, customer = webUser,
-                discount = discount, types = types, createTime = now(), isValid = 1;
+        discount = discount, types = types, createTime = now(), isValid = 1;
+    -- bus couponBus.couponOrCreditsCreated set couponOrCredits = couponId, types = types, creator = $user, createTime = now();
+
+    var _month int, _year int, businessdate  DATE;
+    set businessdate = case when DAY(NOW()) > 20 then dateadd(month, 1, NOW()) else NOW() end;
+    set _month = month(businessdate);
+    set _year = year(businessdate);
+    if (types = 'coupon')
+        book achievement at (date(now()), 0, $user) set couponsCreated += 1, month = _month, year = _year; 
+    if (types = 'credits')
+        book achievement at (date(now()), 0, $user) set creditsCreated += 1, month = _month, year = _year; 
+
     into ret select couponId as coupon, code;
 };
 
@@ -195,7 +206,8 @@ returns ret (
     into ret select m.brand, m.discount
     from    BottomDiscount as m
             left join Brand as b on m.brand = b.id 
-    order by case when m.brand in (1565,18 ,71) then 0 else 1 end, b.name;
+            left join BrandSalesRegion as br on br.brand = m.brand and br.salesregion = 1
+    order by br.level desc, b.name;
 };
 
 

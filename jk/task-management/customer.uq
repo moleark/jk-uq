@@ -76,8 +76,8 @@ MAP OpenCustomersMap (
 BOOK CustomerNowSalesBOOK (
     key customer ID Customer,
     sales ID [$user],
-    webuser ID [$user],
-    types char(10),
+    webuser ID [$user],     -- 客户的webUser
+    types char(10),         -- 是卡券的类型 coupon/credits等
     validity datetime   -- 绑定的结束时间，每次客户下单都会延期3个月
 );
 

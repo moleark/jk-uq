@@ -2,3 +2,25 @@ BUS agentBus from 百灵威系统工程部/agent;
 BUS webUserBus from [百灵威系统工程部]/WebUser;
 BUS pointBus ver 0.4 from [百灵威系统工程部]/point;
 BUS salesTaskBus ver 0.4 from [百灵威系统工程部]/SalesTask;
+
+BUS salesTaskBusGetBindedSales from [百灵威系统工程部]/SalesTask
+    QUERY getBindedSales {
+        var salesOrEasyBuzi id, type char(20), dSuperior id, iSuperior id; 
+        set salesOrEasyBuzi = c.sales from CustomerNowSalesBOOK as c where c.customer = customer;
+        if exists (select 1 from WebUserEmployeeMap as w where w.webUser = salesOrEasyBuzi)
+            set type = 'innerSales';
+        else {
+            set type = 'easyBuzi';
+            set dSuperior = r.parent from relation as r where r.children = salesOrEasyBuzi;
+            if(dSuperior > 0)
+                set iSuperior = r.parent from relation as r where r.children = dSuperior;
+        }
+        into bus select salesOrEasyBuzi, type, dSuperior, iSuperior;
+    };
+
+BUS stBusGetBrandDis from [百灵威系统工程部]/SalesTask
+    QUERY getBrandBottomDiscount {
+        var discount dec(12, 2); 
+        set discount = c.discount from BottomDiscount as c where c.brand = brand;
+        into bus select discount;
+    };

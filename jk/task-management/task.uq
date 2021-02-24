@@ -178,7 +178,7 @@ ACTION CompletionTask(
     history TaskHistory
     set task=taskid, status=4, principal=$user, resultType=resultType, result=result;
 
-    delete from TaskBook where task = taskid;
+    delete t from TaskBook as t where t.task = taskid;
 
     foreach fields {
         var fieldId ID;
@@ -226,7 +226,7 @@ ACTION CompletionCustomerInfoTask(
 
     history TaskHistory
     set task=taskid, status=4, principal=$user, resultType=resultType, result=result;
-    delete from TaskBook where task = taskid;
+    delete t from TaskBook as t where t.task = taskid;
 };
 
 
@@ -240,7 +240,7 @@ ACTION InvalidTask(
     history TaskHistory
     set  task=taskid, status = 3, principal = $user, resultType = resultType, result= result;
 
-    delete from TaskBook where task = taskid;
+    delete t from TaskBook as t where t.task = taskid;
 };
 
 /** 延期任务*/

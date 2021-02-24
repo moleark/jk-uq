@@ -204,11 +204,12 @@ returns ret (
     orderAmount dec(12, 2) not null,
     state smallint
 ) {  
-    into ret select a.date, a.sales, a.webuser, b.mycustomer, a.order, a.orderno, a.ordertype, a.types, a.amount, a.price as orderAmount, o.state
+    into ret select a.date, a.sales, a.webuser, b.mycustomer, a.order, a.orderno, a.ordertype
+            , a.types, a.amount, a.price as orderAmount, o.state
     from    AchievementHistory as a
             left join CustomerMyCustomerMap as b on a.webuser = b.webuser
             left join OrderStateBook as o on a.order = o.order
-    where   a.sales= $user and a.types = types and ( state = 0 or ( state=1 and o.state = 0 ) )
+    where   a.sales = $user and a.types = types and (state = 0 or (state = 1 and o.state = 0))
     order by a.date desc 
     LIMIT 50;
 };

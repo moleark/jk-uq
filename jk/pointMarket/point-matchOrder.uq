@@ -100,14 +100,14 @@ ACTION MatchingOrderPoint(
     limit 1;
     
     if(couponId <> 0 ){
-        delete from WebUserCredits where webUser = _webuser and credits = couponId;
+        delete t from WebUserCredits as t where t.webUser = _webuser and t.credits = couponId;
         book WebUserCreditsUsed at (_webuser, couponId, _orderId ) set  usedDate = now();
         book PointBook at (_webuser, pointYear) set tempPoint += point;
         bus pointShopBus.couponUsed
             set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency, point = point, coupon = couponId;
     }
     
-    delete from PointShopOrder  where orderId = _orderId and  orderMaker = _customer;
+    delete t from PointShopOrder as t  where t.orderId = _orderId and  t.orderMaker = _customer;
     bus pointShopBus.creditsOrderMatched
         set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency
         , point = point, coupon = couponId;
@@ -133,7 +133,7 @@ BUS orderBus from [百灵威系统工程部]/order
             if(type = 1 or type = 2) {
                 var pointYear int;
                 set pointYear = YEAR(NOW());
-                delete from WebUserCredits where webUser = $user and coupon = coupon;
+                delete t from WebUserCredits as t where t.webUser = $user and t.coupon = coupon;
                 book WebUserCreditsUsed at (webUser, coupon, no ) set  usedDate = now();
                 book PointBook at ( webUser, pointYear) set tempPoint += point;
             }

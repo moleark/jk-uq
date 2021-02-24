@@ -8,7 +8,7 @@ OPEN TUID Brand (
     unique (no),
 );
 
-Map BrandSalesRegion (
+OPEN Map BrandSalesRegion (
     key brand ID Brand,
     key salesRegion ID SalesRegion,
     level int not null,

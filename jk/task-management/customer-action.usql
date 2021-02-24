@@ -41,7 +41,7 @@ ACTION CreateMyCustomer(
         var webuser ID [$user];
         set webuser = a.webuser from NewMyCustomerBook as a where a.customer = newcustomerid limit 1;
         BOOK CustomerMyCustomerMap at (myCustomerId) set customer = newcustomerid, webuser = webuser;
-        delete from NewMyCustomerBook where customer = newcustomerid;
+        delete t from NewMyCustomerBook as t where t.customer = newcustomerid;
     }
 
      book SalesCustomerBook at($user) set customerCount+=1;
@@ -73,5 +73,5 @@ ACTION UpateCustomerMyCustomerMap(
     _webuser ID [$user]
 ){
      BOOK CustomerMyCustomerMap at (_mycustomer) set customer = _customer, webuser = _webuser;
-     delete from NewMyCustomerBook where sales = $user and customer = _customer and webuser = _webuser;
+     delete t from NewMyCustomerBook as t where t.sales = $user and t.customer = _customer and t.webuser = _webuser;
 };

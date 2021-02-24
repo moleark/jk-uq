@@ -1,0 +1,9 @@
+{
+    "warehouseOutBoundResultSync": [
+        { "name": "saleOrderItemID", "type": "string" },
+        { "name": "oistockHJHID", "type": "string" },
+        { "name": "quantity", "type": "number" },
+        { "name": "result", "type": "string" },
+        { "name": "createTime", "type": "string" }
+    ]
+}

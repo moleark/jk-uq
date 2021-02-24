@@ -1,0 +1,368 @@
+UQ 百灵威系统工程部/[achievement] version='1.00' author='ligsh'
+
+
+-- 销售人员每日从所分配客户下单获得的提成/销量/有效销售额BOOK
+BOOK SalesmanDailyCommission(
+    key salesman ID Employee,
+    key date date,
+    commission dec(12, 2),
+    commission1 dec(12, 2),
+    commission2 dec(12, 2),
+    commission3 dec(12, 2),
+    commission4 dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+    /*
+    ESV1 dec(12, 2),
+    ESV2 dec(12, 2),
+    ESV3 dec(12, 2),
+    ESV4 dec(12, 2),
+    */
+);
+
+-- 销售每年销量/有效销售额记录，用于获取当年累计有效销售额和计划额比较（是否完成计划）
+BOOK SalesmanYearlySalesVolume (
+    key salesman ID Employee,
+    key year int,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+    ESV1 dec(12, 2),
+    ESV2 dec(12, 2),
+    ESV3 dec(12, 2),
+    ESV4 dec(12, 2),
+);
+
+-- 销售人员每笔订单的有效销售额所在区间History(用于查看ESV区间明细)
+HISTORY SalesmanSalesVolumeHistory(
+    date,
+    orderItemId char(50),
+    salesman ID Employee,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+    ESV1 dec(12, 2),
+    ESV2 dec(12, 2),
+    ESV3 dec(12, 2),
+    ESV4 dec(12, 2),
+    orderId char(50),
+    comments char(50),
+);
+
+-- 销售选择的提成策略类型(A:标准计提；B：翻倍计提；C:翻倍再翻倍计提)
+MAP SalesmanCommissionType (
+    key salesman ID Employee,
+    key year int,
+    commissionType char(10) not null,
+);
+
+-- 销售人员的月度销量计划
+MAP SalesVolumePlan (
+    key salesman ID Employee,
+    key year int,
+    key month int,
+    salesVolumePlan dec(12, 2),
+);
+
+-- 销售人员每日从绑定客户下单中获取的收益
+BOOK SalesmanDailyBindedCommission (
+    key salesman ID $user,
+    key date date,
+    commission dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+    salesVolume dec(12, 2),
+);
+
+-- 销售人员从所绑定客户下单获取的收益History
+HISTORY SalesmanBindedCommissionHistory(
+    date,
+    orderItemId char(50),
+    salesman ID $user,
+    customer ID Customer,
+    commission dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+    salesVolume dec(12, 2),
+    orderId char(50),
+    comments char(50),
+);
+
+-- 销售人员每日回款账（及销售人员所属订单的每日回款汇总账，拟替换SalesAchievementBooK.ReceivableAmount）
+BOOK SalesmanDailyReceivePayment(
+    key salesman ID Employee,
+    key date date,
+    amount dec(12, 2),
+);
+
+-- 销售人员每日回款历史（及销售人员所属订单的每日回款历史，拟替换BanlanceHistory）
+History SalesmanReceivePaymentHistory(
+    date,
+    orderItemId char(50),
+    salesman ID Employee,
+    amount dec(12, 2),
+    currency ID Currency,
+    action tinyint,
+    orderId char(50),
+    comments char(50),
+);
+
+
+-- 订单数据，非业务实体，纯粹用于程序实现（因为内部系统会对同一个订单明细重复发bus，Achievment系统用此表判断订单明细是否
+-- 发生影响绩效的变化，决定是否重新计算销售人员提成）
+MAP OrderBack (
+    key orderItemId char(50),
+    orderId char(50),
+
+    seller char(10),
+    salesRegion ID SalesRegion,
+    salesman ID Employee,
+
+    customer ID Customer,
+    buyerAccount ID BuyerAccount,
+
+    brand bigint,
+    product bigint,
+    pack bigint,
+    quantity int,
+    price dec(12, 2),
+    amount dec(12, 2),
+    currency ID Currency,
+
+    bottomPrice dec(12, 2),
+    bottomPriceCurrency ID Currency,
+    costPrice dec(12, 2),
+    costPriceCurrency ID Currency,
+
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+    agentEffectiveSalesVolume dec(12, 2),
+
+    tradeType char(10),
+    taxRate dec(12, 4),
+
+    promotionId char(50),
+
+    mark char(10),
+
+    createDate datetime,
+);
+
+
+
+-- 获取销售对所分配客户每日的销量/有效销售额/提成
+QUERY getSalesmanDailyCommission (
+    salesman ID Employee,
+    date char(10),
+)returns ret(
+    date date,
+    salesman ID Employee,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+){
+    into ret select a.date, a.salesman, a.commission, a.salesVolume, a.effectiveSalesVolume
+    from    SalesmanDailyCommission as a
+    where   a.salesman = salesman and a.date = date;
+};
+
+-- 获取销售对所分配客户每月每天的销量/有效销售额/提成 /每月回款汇总
+QUERY getSalesmanMonthlyCommission (
+    salesman ID Employee,
+    startDate date,
+    endDate date,
+)returns ret(
+    date date,
+    salesman ID Employee,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+){
+    into ret select a.date, a.salesman, a.commission, a.salesVolume, a.effectiveSalesVolume
+    from    SalesmanDailyCommission as a
+    where   a.salesman = salesman and a.date >= startDate and a.date < endDate;
+};
+
+-- 获取销售对所分配客户每年每月的销量/有效销售额/提成
+QUERY getSalesmanYearlyCommission (
+    salesman ID Employee,
+    startDate date,
+    endDate date,
+)returns ret(
+    salesmana ID Employee,
+    yeara int,
+    montha int,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+){
+    -- var  startDate date, endDate date;
+    -- set  startDate=CONCAT_WS('-', _year, '01', '01'), endDate=CONCAT_WS('-', _year, '12', '31');
+    into ret select salesmana, yeara, montha, sum(a.commission) as commission
+            , sum(a.salesVolume) as salesVolume, sum(a.effectiveSalesVolume) as effectiveSalesVolume
+    from    SalesmanDailyCommission as a
+    where   a.salesman = salesman and a.date >= startDate and a.date <= endDate
+    group by a.salesman as salesmana, year(a.date) as yeara, month(a.date) as montha;
+};
+
+-- 获取绑定客户的每日销量/有效销售额/提成
+QUERY getBindSalesmanDailyCommission (
+    salesman ID $user,
+    date char(10),
+)returns ret(
+    date date, 
+    salesman ID $user,
+    commission dec(12, 2),
+    salesVolume dec(12, 2) ,
+    effectiveSalesVolume dec(12, 2),
+){
+    into ret select a.date, a.salesman, a.commission, a.salesVolume, a.effectiveSalesVolume
+    from    SalesmanDailyBindedCommission as a
+    where   a.salesman = salesman and a.date = date;
+}; 
+
+-- 获取绑定客户的每月每日销量/有效销售额/提成
+QUERY getBindSalesmanMonthlyCommission (
+    salesman ID $user,
+    startDate date,
+    endDate date,
+)returns ret(
+    date date, 
+    salesman ID $user,
+    commission dec(12, 2),
+    salesVolume dec(12, 2) ,
+    effectiveSalesVolume dec(12, 2),
+){
+    into ret select a.date, a.salesman, a.commission, a.salesVolume, a.effectiveSalesVolume
+    from    SalesmanDailyBindedCommission as a
+    where   a.salesman = salesman and a.date >= startDate and a.date < endDate; 
+}; 
+
+-- 获取绑定客户的某年每月销量/有效销售额/提成
+QUERY getBindSalesmanYearlyCommission (
+    salesman ID $user,
+    startDate date,
+    endDate date,
+)returns ret(
+    salesmana ID $user, 
+    year int,
+    month int,
+    commission dec(12, 2),
+    salesVolume dec(12, 2) ,
+    effectiveSalesVolume dec(12, 2),
+){ 
+    into ret select salesmana, year, month, sum(a.commission) as commission, sum(a.salesVolume) as salesVolume
+            , sum(a.effectiveSalesVolume) as effectiveSalesVolume
+    from    SalesmanDailyBindedCommission as a
+    where   a.salesman = salesman and a.date >= startDate and a.date <= endDate
+    group by a.salesman as salesmana, year(a.date) as year, month(a.date) as month;
+};
+
+-- 获取销售某月累计度额
+QUERY getSalesmanMonthCommission(
+    salesman ID Employee,
+    startDate date,
+    endDate date,
+)returns ret(
+    salesmana ID Employee,
+    month int,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+){
+    into ret select salesmana, month, sum(a.commission) as commission, sum(a.salesVolume) as salesVolume, sum(a.effectiveSalesVolume) as effectiveSalesVolume
+    from    SalesmanDailyCommission as a
+    where   a.salesman = salesman and a.date >= startDate and a.date < endDate 
+    group by a.salesman as salesmana, month(a.date) as month;
+};
+
+-- 获取销售某年累计的销量/有效销售额/提成
+QUERY getSalesmanYearlySalesVolume (
+    salesman ID Employee,
+    year int,
+)returns ret(
+    salesman ID Employee,
+    year int,
+    commission dec(12, 2),
+    salesVolume dec(12, 2),
+    effectiveSalesVolume dec(12, 2),
+){
+    into ret select a.salesman, a.year, a.commission, a.salesVolume, a.effectiveSalesVolume
+    from    SalesmanYearlySalesVolume as a
+    where   a.salesman = salesman and a.year = year;
+}; 
+
+-- 获取月度计划额
+QUERY getSalesMonthVolumePlan(
+    salesman ID Employee,
+    year int, 
+    month int,   
+)returns ret(
+    salesman ID Employee,
+    year int,
+    month int,
+    salesVolumePlan dec(12, 2), 
+){
+    into ret select a.salesman, a.year, a.month, a.salesVolumePlan
+    from    SalesVolumePlan as a
+    where   a.salesman = salesman and a.year = year and a.month = month;
+};
+
+-- 获取年度计划额
+QUERY getSalesYearVolumePlan(
+    salesman ID Employee,
+    year int,    
+)returns ret(
+    salesmana ID Employee,
+    yeara int,
+    salesVolumePlan dec(12, 2), 
+){
+    into ret select salesmana, yeara, sum(a.salesVolumePlan) as salesVolumePlan
+    from    SalesVolumePlan as a
+    where   a.salesman = salesman and a.year = year
+    group by a.salesman as salesmana, a.year as yeara;
+};
+
+-- 获取销售每日回款
+QUERY getSalesmanDailyReceivePayment(
+    salesman ID Employee,
+    date char(10),
+)returns ret(
+    date date,
+    salesman ID Employee,
+    amount dec(12, 2)
+){
+    into ret select a.date, a.salesman, a.amount
+    from   SalesmanDailyReceivePayment as a
+    where  a.date = date and a.salesman = salesman;
+};
+
+-- 获取销售某月回款汇总
+QUERY getSalesmanMonthlyReceivePayment(
+    salesman ID Employee,
+    startDate date,
+    endDate date,
+)returns ret(
+    salesmana ID Employee,
+    month int,
+    amount dec(12, 2)
+){
+    into ret select salesmana, month, sum(a.amount) as amount
+    from   SalesmanDailyReceivePayment as a
+    where  a.salesman = salesman and a.date >= startDate and a.date < endDate 
+    group by a.salesman as salesmana, month(a.date) as month;
+};
+
+-- 获取销售某年回款汇总
+QUERY getSalesmanYearlyReceivePayment(
+    salesman ID Employee,
+    startDate date,
+    endDate date,
+)returns ret(
+    salesmana ID Employee,
+    year int,
+    amount dec(12, 2)
+){
+    into ret select salesmana, year, sum(a.amount) as amount
+    from   SalesmanDailyReceivePayment as a
+    where  a.salesman = salesman and a.date >= startDate and a.date <= endDate 
+    group by a.salesman as salesmana, year(a.date) as year;
+};

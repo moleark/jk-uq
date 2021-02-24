@@ -1,22 +1,6 @@
 {
     "shelfInOutBoundHistory": [
         {
-            "name": "warehouse",
-            "type": "number"
-        },
-        {
-            "name": "warehouseRoom",
-            "type": "number"
-        },
-        {
-            "name": "shelf",
-            "type": "number"
-        },
-        {
-            "name": "shelfLayer",
-            "type": "number"
-        },
-        {
             "name": "shelfBlock",
             "type": "number"
         },

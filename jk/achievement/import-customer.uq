@@ -1,0 +1,8 @@
+import JKCustomer = 百灵威系统工程部/customer;
+
+TUID Customer from JKCustomer (
+    id,
+    name char(50),
+);
+
+TUID BuyerAccount from JKCustomer;
