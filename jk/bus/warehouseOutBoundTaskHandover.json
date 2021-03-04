@@ -11,7 +11,7 @@
         { "name": "consigneeZipcode", "type": "string" },
         { "name": "consigneeTelphone", "type": "string" },
         { "name": "consigneeMobile", "type": "string" },
-        { "name": "expressLogistics", "type": "string" },
+        { "name": "expressLogistics", "type": "number" },
         { "name": "shouldExpressLogistics", "type": "string" },
         { "name": "shouldNotExpressLogistics", "type": "string" },
         { "name": "needInsuredWhenDelivery", "type": "number" },
@@ -27,7 +27,7 @@
         { "name": "isAppointLot", "type": "number" },
         { "name": "appointLot", "type": "string" },
         { "name": "deliveryNotes", "type": "string" },
-        { "name": "outBoundReason", "type": "string" },
+        { "name": "outBoundReason", "type": "number" },
         { "name": "relationId", "type": "string" },
         { "name": "state", "type": "number" },
         { "name": "createTime", "type": "string" }

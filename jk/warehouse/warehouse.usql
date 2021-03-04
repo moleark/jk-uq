@@ -3,6 +3,7 @@ TUID Warehouse (
     id,
     no char(10) not null,
     main name char(50) not null,
+    code char(20),
     search(name),
     unique(name),
 );
@@ -25,24 +26,13 @@ Map SalesRegionWarehouse (
     sequence int,
 );
 
-
--- 库区
-TUID WarehouseBuilding (
-    id,
-    no char(10) not null,
-    main name char(50) not null,
-    warehouse ID Warehouse not null,
-    isValid smallint not null,
-    stamp(create, update),
-    search(name)
-);
-
--- 库存房间 
+-- 库存房间
 TUID WarehouseRoom (
     id,
-    no char(10) not null,
+    no char(20) not null,
     main name char(50) not null,
-    warehouseBuilding ID WarehouseBuilding not null,
+    code char(20),
+    warehouse ID Warehouse not null,
     // currentLevel char(20) not null, -- HB1K1A
     isValid smallint not null,
     stamp(create, update),
@@ -52,8 +42,9 @@ TUID WarehouseRoom (
 -- 货架
 TUID Shelf (
     id,
-    no char(10) not null,
+    no char(20) not null,
     main name char(50) not null,
+    code char(20),
     warehouseRoom ID WarehouseRoom not null,
     // currentLevel char(20) not null, -- HB1K1A001
     isValid smallint not null,
@@ -64,8 +55,9 @@ TUID Shelf (
 -- 货架层
 TUID ShelfLayer (
     id,
-    no char(10) not null,
+    no char(20) not null,
     main name char(50) not null,
+    code char(20),
     shelf ID Shelf not null,
     // currentLevel char(20) not null, -- HB1K1A001A
     isValid smallint not null,
@@ -75,8 +67,9 @@ TUID ShelfLayer (
 -- 货架位置
 TUID ShelfBlock (
     id,
-    no char(10) not null,
+    no char(20) not null,
     main name char(50) not null,
+    code char(20),
     shelfLayer ID ShelfLayer not null,
     stamp(create, update),
     search(name)
@@ -113,3 +106,59 @@ TUID ShelfLevelUsed(
 -- 入库记录表、货架上架记录表、出库记录表、货架下架记录表 
 --
 */
+-- 货位层面记账
+-- 此book记录用于产品入库时候查找同产品 包装 lot的货位归并；
+BOOK ShelfBlockLotInventory(
+    key shelfBlock ID ShelfBlock not null,
+    key product ID ProductX not null,
+    key pack OF product.PackX not null,
+    lotNumber char(50),
+    quantity int not null
+);
+
+-- 此book记录用于产品入库时候计算空余货位
+BOOK ShelfBlockInventory(
+    key shelfBlock ID ShelfBlock not null,
+    quantity int not null
+);
+
+/*
+BOOK ShelfBlockInventory(
+    warehouse ID Warehouse not null,
+    warehouseRoom ID WarehouseRoom not null,
+    shelf ID Shelf not null,    
+    quantity int not null,
+    stamp(create, update)
+);
+*/
+
+History ShelfInOutBoundHistory(
+    date,
+    shelfBlock ID ShelfBlock not null,
+    product ID ProductX not null,
+    pack OF product.PackX not null,
+    -- lotNumber char(50),
+    inOutType int not null,
+    quantity int not null,
+    inOutBoundTime datetime
+);
+
+-- 快递、物流公司
+TUID ExpressLogistics(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    isValid smallint not null,
+    salesRegion ID SalesRegion not null,
+    stamp(create, update),
+    search(name)
+);
+
+-- 出入库原因
+TUID OutInBoundReason(
+    id,
+    no char(10),
+    main name char(100) not null,
+    note char(100),
+    stamp(create, update)
+);

@@ -2,3 +2,79 @@ BUS warehouseBus from [百灵威系统工程部]/warehouse
     ACCEPT productInventory {
         book ProductInventory at (warehouse, product, pack) set quantity = quantity;
     };
+
+BUS warehouseShelfBus from [百灵威系统工程部]/warehouse
+    ACCEPT shelfInOutBoundHistory {
+        if(inOutType = 1){
+
+            BOOK ShelfBlockInventory at(shelfBlock) set quantity += Quantity;
+            BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity += Quantity;
+        }else {
+
+            BOOK ShelfBlockInventory at(shelfBlock) set quantity -= Quantity;
+            BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity -= Quantity;
+        }
+
+        history ShelfInOutBoundHistory set shelfBlock = ShelfBlock, product = Product, pack = Pack,
+                inOutType = InOutType, quantity = Quantity, inOutBoundTime = InOutBoundTime;
+    };
+
+BUS warehouseShelfLotUpdateBus from [百灵威系统工程部]/warehouse
+    ACCEPT shelfLotUpdateHistory {
+        
+        if ( exists( select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity )) {
+            set lotNumber = lotNumber
+            from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity;
+        } else {
+            -- 没有找到对应记录的情况，暂不做新增处理
+            -- BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity = quantity;
+        }
+    };
+
+BUS outBoundTaskHandoverBus from [百灵威系统工程部]/warehouse2
+    ACCEPT warehouseOutBoundTaskHandover {
+
+        var rid ID;
+        PENDING OutBoundTaskHandover + ( warehouse: warehouse, shelfBlock: shelfBlock, product: product, pack: pack, quantity: quantity,
+                consigneeName: consigneeName, consigneeUnitName: consigneeUnitName, consigneeAddress: consigneeAddress, consigneeZipcode: consigneeZipcode, 
+                consigneeTelphone: consigneeTelphone, consigneeMobile: consigneeMobile, expressLogistics: expressLogistics, shouldExpressLogistics: shouldExpressLogistics, 
+                shouldNotExpressLogistics: shouldNotExpressLogistics, needInsuredWhenDelivery: needInsuredWhenDelivery, unitPrice: unitPrice, currency: currency,
+                isNeedDelivery: isNeedDelivery, deliveryData: deliveryData, coaQuantity: coaQuantity, msdsQuantity: msdsQuantity, receiptQuantity: receiptQuantity,
+                purchaseBillQuantity: purchaseBillQuantity, showPriceWhenPrintReceipt: showPriceWhenPrintReceipt, isAppointLot: isAppointLot, appointLot: appointLot, 
+                deliveryNotes: deliveryNotes, outBoundReason: outBoundReason, relationId: relationId, createTime: createTime 
+                ) to rid;
+    };
+
+BUS outboundResultSync from [百灵威系统工程部]/warehouse2
+    ACCEPT warehouseOutBoundResultSync {
+
+        var cId bigint, tId bigint, tWarehouse bigint, tShelfBlock bigint, tProduct bigint, tPack bigint, tQuantity int,
+        tConsigneeName char(20), tConsigneeUnitName char(50), tConsigneeAddress char(200), tConsigneeZipcode char(20), tConsigneeTelphone char(20), tConsigneeMobile char(20),
+        tExpressLogistics char(50), tShouldExpressLogistics char(50), tShouldNotExpressLogistics char(50),
+        tNeedInsuredWhenDelivery int, tUnitPrice DEC(12, 2), tCurrency char(10), tIsNeedDelivery int, tDeliveryData char(100), 
+        tCoaQuantity int, tMsdsQuantity int, tReceiptQuantity int, tPurchaseBillQuantity int, tShowPriceWhenPrintReceipt int, tIsAppointLot int, tAppointLot char(20),
+        tDeliveryNotes char(100), tOutBoundReason char(10), tRelationId char(50), tCreateTime datetime, tOutBoundOrder char(20) = '', tTrayNumber int = 0;
+
+        set     tId = o.id, tWarehouse = o.warehouse, tShelfBlock = o.shelfBlock, tProduct = o.product, tPack = o.pack, tQuantity = o.quantity,
+                tConsigneeName = o.consigneeName, tConsigneeUnitName = o.consigneeUnitName, tConsigneeAddress = o.consigneeAddress, tConsigneeZipcode = o.consigneeZipcode,
+                tConsigneeTelphone = o.consigneeTelphone, tConsigneeMobile = o.consigneeMobile, tExpressLogistics = o.expressLogistics, tShouldExpressLogistics = o.shouldExpressLogistics,
+                tShouldNotExpressLogistics = o.shouldNotExpressLogistics, tNeedInsuredWhenDelivery = o.needInsuredWhenDelivery, tUnitPrice = o.unitPrice, tCurrency = o.currency,
+                tIsNeedDelivery = o.isNeedDelivery, tDeliveryData = o.deliveryData, tCoaQuantity = o.coaQuantity, tMsdsQuantity = o.msdsQuantity, tReceiptQuantity = o.receiptQuantity, 
+                tPurchaseBillQuantity = o.purchaseBillQuantity, tShowPriceWhenPrintReceipt = o.showPriceWhenPrintReceipt, tIsAppointLot = o.isAppointLot, tAppointLot = o.appointLot,
+                tDeliveryNotes = o.deliveryNotes, tOutBoundReason = o.outBoundReason, tRelationId = o.relationId, tCreateTime = createTime
+        from    OutBoundTaskHandover as o
+        where   o.relationId = saleOrderItemID and o.shelfBlock = oistockHJHID and o.quantity = quantity;
+
+        PENDING OutBoundTaskCut + ( warehouse: tWarehouse, shelfBlock: tShelfBlock, product: tProduct, pack: tPack, quantity: tQuantity,
+                consigneeName: tConsigneeName, consigneeUnitName: tConsigneeUnitName, consigneeAddress: tConsigneeAddress, consigneeZipcode: tConsigneeZipcode, 
+                consigneeTelphone: tConsigneeTelphone, consigneeMobile: tConsigneeMobile, expressLogistics: tExpressLogistics, shouldExpressLogistics: tShouldExpressLogistics, 
+                shouldNotExpressLogistics: tShouldNotExpressLogistics, needInsuredWhenDelivery: tNeedInsuredWhenDelivery, unitPrice: tUnitPrice, currency: tCurrency,
+                isNeedDelivery: tIsNeedDelivery, deliveryData: tDeliveryData, coaQuantity: tCoaQuantity, msdsQuantity: tMsdsQuantity, receiptQuantity: tReceiptQuantity,
+                purchaseBillQuantity: tPurchaseBillQuantity, showPriceWhenPrintReceipt: tShowPriceWhenPrintReceipt, isAppointLot: tIsAppointLot, appointLot: tAppointLot, 
+                deliveryNotes: tDeliveryNotes, outBoundReason: tOutBoundReason, relationId: tRelationId, outBoundOrder: tOutBoundOrder, trayNumber: tTrayNumber, 
+                createTime: tCreateTime
+                ) to cId;
+
+        delete t from OutBoundTaskHandover as t where t.id = tId;
+    };
+
