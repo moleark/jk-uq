@@ -133,17 +133,21 @@ MAP Price ver 0.4 (
     retail dec(12,2) not null,
 );
 */
---lotNr批次信息
-TUID LotNr (
+
+--lot批次信息
+TUID Lot (
     id,
-    origin char(50) not null,--产品编号
-	lotnumber char(50),--lot号
-    index idx_orig_lot(origin,lotnumber),
+    product ID Product not null,                -- 产品编号
+	lotnumber char(50),                         -- lot号
+    index idx_origin_lotnr(origin,lotnumber),
 );
+
 --COA信息
 Map COAinfo (
-    key lotid id LotNr not null,
-    content text,--COA信息
-    Issuer char(50),--COA签发人
-    IssueDate date not null,--COA签发日期
+    key lot id Lot not null,
+    content text,                               -- COA信息
+    version char(50),                           -- COA版本
+    issuer char(50),                            -- COA签发人
+    issueDate date not null,                    -- COA签发日期
 );
+
