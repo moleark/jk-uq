@@ -1,0 +1,19 @@
+BUS pointShop2BusGetPointMultiple from [百灵威系统工程部]/pointShop2
+    QUERY getPointMultiple {
+        var multiple int;  --倍数
+        set multiple=1;  --默认值
+
+        --获取可用的积分有关的市场活动
+        var no char(50);
+        set no=p.no
+        from    Promotion as p
+        where   p.status=2
+                and (p.endDate is null or p.endDate > from_unixtime(createDate))
+                and p.type=14
+         order by p.id limit 1;
+
+        if(no='A08-20160422A'){   --常年市场活动
+            set multiple=1;
+        }
+        into BUS select multiple;
+    };

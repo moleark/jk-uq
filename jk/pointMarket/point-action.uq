@@ -1,13 +1,27 @@
 Action Signin(
     webuser ID [$user],     -- WebUser非Customer
     amount int not null     -- 积分
-){
+)
+BUS webUserBus.getCuByWu as q into tb {
+    set q.webUser = webUser;
+} {
     var pointYear int;
     set pointYear = year(now());
     book PointBook at (webuser, pointYear) set point += amount, totalPoint += amount;
     history PointHistory
         set webUser = webuser, pointYear = pointYear, source = 2, point = amount, comments = '签到';
-    bus pointShop2Bus.webUserSignIn set webUser = webUser, pointYear = pointYear, point = amount, comments = '';
+    bus ps2Bus.webUserSignIn set webUser = webUser, pointYear = pointYear, point = amount, comments = '';
+
+    --签到添加客户积分
+    var customerId int;
+    foreach tb {
+        set customerId = customer;
+    }
+    if(customerId > 0){
+        book PointBookByCustomer at (customerId, pointYear) set point += amount, totalpoint += amount;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = amount, source = 2, comments = '签到', customer = customerId;
+    }
 };
 
 QUERY checkIsSignin()

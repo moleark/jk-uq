@@ -109,3 +109,13 @@ OPEN TUID InvoiceType (
     main description char(30),
     unique(description),
 );
+
+MAP CurrencyExchangeRate (
+    key currency ID Currency,
+    key year int,
+    key month int,
+    RMBTo dec(12, 4),
+    USDTo dec(12, 4),
+    EURTo dec(12, 4),
+    GBPTo dec(12, 4),
+);
