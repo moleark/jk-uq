@@ -139,7 +139,7 @@ TUID Lot (
     id,
     product ID productx not null,                -- 产品编号
 	lotnumber char(50),                         -- lot号
-    index idx_origin_lotnr(origin,lotnumber),
+    index idx_origin_lotnr(product,lotnumber),
 );
 
 --COA信息
