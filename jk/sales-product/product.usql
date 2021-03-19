@@ -136,11 +136,11 @@ MAP Price ver 0.4 (
 --lotNr批次信息
 TUID LotNr (
     id,
-    -- product ID ProductX,
     origin char(50) not null,--产品编号
 	lotnumber char(50),--lot号
     index idx_orig_lot(origin,lotnumber),
 );
+--COA信息
 Map COAinfo (
     key lotid id LotNr not null,
     content text,--COA信息
