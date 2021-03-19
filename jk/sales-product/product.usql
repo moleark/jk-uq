@@ -134,10 +134,10 @@ MAP Price ver 0.4 (
 );
 */
 
---lot批次信息
+--lot批次信息,COA信息
 TUID Lot (
     id,
-    product ID ProductX not null,                -- 产品编号
+    product ID productx not null,                -- 产品编号
 	lotnumber char(50),                         -- lot号
     index idx_origin_lotnr(origin,lotnumber),
 );
