@@ -22,7 +22,7 @@ BUS warehouseShelfBus from [百灵威系统工程部]/warehouse
 BUS warehouseShelfLotUpdateBus from [百灵威系统工程部]/warehouse
     ACCEPT shelfLotUpdateHistory {
         
-        if ( exists( select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity )) {
+        if exists ( select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity ) {
             set lotNumber = lotNumber
             from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity;
         } else {
@@ -61,7 +61,7 @@ BUS outboundResultSync from [百灵威系统工程部]/warehouse2
                 tShouldNotExpressLogistics = o.shouldNotExpressLogistics, tNeedInsuredWhenDelivery = o.needInsuredWhenDelivery, tUnitPrice = o.unitPrice, tCurrency = o.currency,
                 tIsNeedDelivery = o.isNeedDelivery, tDeliveryData = o.deliveryData, tCoaQuantity = o.coaQuantity, tMsdsQuantity = o.msdsQuantity, tReceiptQuantity = o.receiptQuantity, 
                 tPurchaseBillQuantity = o.purchaseBillQuantity, tShowPriceWhenPrintReceipt = o.showPriceWhenPrintReceipt, tIsAppointLot = o.isAppointLot, tAppointLot = o.appointLot,
-                tDeliveryNotes = o.deliveryNotes, tOutBoundReason = o.outBoundReason, tRelationId = o.relationId, tCreateTime = createTime
+                tDeliveryNotes = o.deliveryNotes, tOutBoundReason = o.outBoundReason, tRelationId = o.relationId
         from    OutBoundTaskHandover as o
         where   o.relationId = saleOrderItemID and o.shelfBlock = oistockHJHID and o.quantity = quantity;
 
@@ -72,7 +72,7 @@ BUS outboundResultSync from [百灵威系统工程部]/warehouse2
                 isNeedDelivery: tIsNeedDelivery, deliveryData: tDeliveryData, coaQuantity: tCoaQuantity, msdsQuantity: tMsdsQuantity, receiptQuantity: tReceiptQuantity,
                 purchaseBillQuantity: tPurchaseBillQuantity, showPriceWhenPrintReceipt: tShowPriceWhenPrintReceipt, isAppointLot: tIsAppointLot, appointLot: tAppointLot, 
                 deliveryNotes: tDeliveryNotes, outBoundReason: tOutBoundReason, relationId: tRelationId, outBoundOrder: tOutBoundOrder, trayNumber: tTrayNumber, 
-                createTime: tCreateTime
+                createTime: createTime
                 ) to cId;
 
         delete t from OutBoundTaskHandover as t where t.id = tId;
