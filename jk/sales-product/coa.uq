@@ -19,9 +19,10 @@ QUERY getLotByLotnumber(
     lotnumber char(50),
     origin char(50),
 )returns ret(
-    id ID Lot
+    id ID Lot,
+    product ID ProductX
 ) {
-    into ret select l.id
+    into ret select l.id, l.product
     from    Lot as l
             join ProductX as p on p.id = l.product
     where   l.lotnumber = lotnumber and p.origin = origin and p.brand in (18, 71);
