@@ -1,6 +1,0 @@
---产品扩展信息
-MAP ProductExtention (
-    key product ID ProductX,
-    content text,
-    stamp(create, update),
-);
