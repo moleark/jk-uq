@@ -198,13 +198,15 @@ ACTION CountProductCategoryInclusion() {
 
     truncate table tv_productproductcategorycache;
     insert  into tv_productproductcategorycache(`$unit`, category, salesRegion, `order`, product)
-    select  ppc.`$unit`, ppc.category, pca.salesRegion, @rownum := @rownum + 1, ppc.product
-    from    `tv_productcategory` as pc
-            inner join `tv_productproductcategory` as ppc on ppc.`$unit` = pc.`$unit` and ppc.category = pc.id
-            inner join `tv_productcache` as pca on pca.$unit = ppc.$unit and pca.product = ppc.product
-            , (select @rownum := 0) r
-    where   ppc.$unit = `_$unit` and pc.isleaf = 1
-    order by pca.hasstock desc, pca.level desc, pca.product;
+    select  `$unit`, category, salesregion, @rownum := @rownum + 1, product
+    from    (
+                select  ppc.`$unit`, ppc.category, pca.salesRegion, ppc.product
+                from    `tv_productcategory` as pc
+                        inner join `tv_productproductcategory` as ppc on ppc.`$unit` = pc.`$unit` and ppc.category = pc.id
+                        inner join `tv_productcache` as pca on pca.$unit = ppc.$unit and pca.product = ppc.product
+                where   pc.$unit = `_$unit` and pc.isleaf = 1
+                order by pc.id, pca.salesregion, pca.hasstock desc, pca.level desc, pca.product
+            ) as t, (select @rownum := 0) r;
     end;
     -/
 };
