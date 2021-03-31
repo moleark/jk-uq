@@ -1,4 +1,4 @@
-TUID JNKRestrict (
+OPEN TUID JNKRestrict (
     id,
     description char(100),
     no char(10),
