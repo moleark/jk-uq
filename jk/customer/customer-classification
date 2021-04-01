@@ -1,0 +1,54 @@
+OPEN TUID Domain (
+    id,
+    main name char(200),
+    parent ID Domain,
+    no char(100),
+    createTime datetime 
+);
+
+MAP CustomerDomain (
+    key customer ID Customer,
+    key domain ID Domain
+);
+  
+TUID Post (
+    id,
+    main name char(200),
+    no char(100),
+    createTime datetime 
+);
+
+MAP PostRelation (
+    key child ID Post,
+    key parent ID Post
+);
+
+MAP CustomerPost  (
+    key customer ID Customer,
+    key post ID Post
+);
+
+
+MAP CustomerRelatedProducts(
+    key customer ID Customer,
+    key product ID  ProductX,
+    sort int 
+);
+ 
+TUID Research (
+    id,
+    main name char(200),
+    no char(30),
+    createTime datetime 
+);
+
+MAP CustomerResearch (
+    key customer ID Customer,
+    key research ID Research,
+    createTime datetime
+);
+
+MAP ResearchDomain (
+    key domain ID Domain,
+    key research ID Research 
+);

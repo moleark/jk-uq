@@ -86,6 +86,13 @@ OPEN MAP CustomerContractor (
     }
 };
 
+/*
+ * 买方账号，在toB应用中，下单人是代表“买方账号”在下单，而不是作为个人在下单
+ * 买方账号在审核下单人时创建，一般情况下，下单人的买方账号为其所在的单位；
+ * 在学校/研究所的情况下，下单人的买方账号一般为课题组中的负责老师（体现为老系统中的师生关系）。
+ * 在审核下单人时，若下单人无相关的老师，则其买方账号为其单位，否则，为其相关的老师账号；
+ * 若审核下单人时，未设置其买方账号，事后在老系统为下单人设置了师生关系，则需要在tonva中做同样的操作 
+*/
 OPEN TUID BuyerAccount (
     id,
     organization ID Organization,
@@ -122,60 +129,4 @@ TUID Department (
 MAP CustomerDepartment (
     key customer ID Customer,
     key department ID Department
-);
-
-
-OPEN TUID Domain (
-    id,
-    main name char(200),
-    parent ID Domain,
-    no char(100),
-    createTime datetime 
-);
-
-MAP CustomerDomain (
-    key customer ID Customer,
-    key domain ID Domain
-);
-  
-TUID Post (
-    id,
-    main name char(200),
-    no char(100),
-    createTime datetime 
-);
-
-MAP PostRelation (
-    key child ID Post,
-    key parent ID Post
-);
-
-MAP CustomerPost  (
-    key customer ID Customer,
-    key post ID Post
-);
-
-
-MAP CustomerRelatedProducts(
-    key customer ID Customer,
-    key product ID  ProductX,
-    sort int 
-);
- 
-TUID Research (
-    id,
-    main name char(200),
-    no char(30),
-    createTime datetime 
-);
-
-MAP CustomerResearch (
-    key customer ID Customer,
-    key research ID Research,
-    createTime datetime
-);
-
-MAP ResearchDomain (
-    key domain ID Domain,
-    key research ID Research 
 );
