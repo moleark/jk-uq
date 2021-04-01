@@ -27,3 +27,17 @@ returns ret(
             and cd.startDate < now()
             and ( cd.endDate is null or cd.endDate > now());
 };
+
+/*返回单个值的Query——获取客户的品牌折扣*/
+QUERY GetDiscountByOrganization(brand ID Brand, organization ID Organization)
+returns ret(
+    brand ID Brand,
+    discount dec(12,4)
+) {
+    Into ret select cd.brand, cd.discount as discount
+    from    OrganizationDiscount as cd
+    where   cd.organization = organization
+            and cd.brand = brand
+            and cd.startDate < now()
+            and ( cd.endDate is null or cd.endDate > now());
+};
