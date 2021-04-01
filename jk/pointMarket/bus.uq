@@ -141,7 +141,7 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
             }      
         }
 
-        if (mark <> 'N' and mark <> 'N1' and mark <> 'PR' and retailCurrency = 6 and tradeType = 'a'){
+        if (mark <> 'N' and mark <> 'N1' and mark <> 'PR' and retailCurrency = 5 and tradeType = 'a'){
             var rTotalPoint int;
             set rTotalPoint = a.totalPoint
             from    OrderBack as a
@@ -173,7 +173,7 @@ BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
 
             -- 计算积分差
             var nTotalPoint int, diffPoint int;
-            if(mark = 'C' or (price < retail * ifnull(1 - dDiscount, 1))) {
+            if(mark = 'C' or (price < (retail * ifnull(1 - dDiscount, 1)-1))) {
                 set nTotalPoint = 0;
             } else {
                 set nTotalPoint = price * quantity * ifnull(multiple, 1);
@@ -202,7 +202,12 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
         -- 测试数据 orderItemId找不到时的固定值
         set orderItemId = 'LCW1742012231406135837527', amount = 744;
         */
-        
+        if not exists (select 1 from OrderBack as w where w.orderItemId = orderItemId){
+            var pid ID;
+            PENDING SOrderPaymentPending + ( orderId:orderId, orderItemId:orderItemId, amount:amount, currency:currency, 
+                action:action) to pid;
+        }
+
         var pointYear int; --年度取值为最新的总积分年度
         var totalPoint int, customer ID Customer,price dec(12, 2), quantity int;
         set totalPoint = a.totalPoint, price = a.price, quantity = a.quantity, customer = a.customer, pointYear = year(a.createDate)
@@ -223,7 +228,11 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
         */
     
         var realPoint int;
-        set realPoint = amount / (price * quantity) * totalPoint;  --按订单明细的回款占比*订单明细的总积分计算订单明细的有效积分
+        if(amount / (price * quantity) >= 1){
+            set realPoint = 1 * totalPoint; 
+        }else{
+            set realPoint = amount / (price * quantity) * totalPoint;  --按订单明细的回款占比*订单明细的总积分计算订单明细的有效积分
+        }
 
         if(action <> 1) {
             set realPoint = realPoint * -1;   --有效积分取消
@@ -233,6 +242,8 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
 
     BUS pointInitializationBus from [百灵威系统工程部]/pointShop2
     ACCEPT pointInitialization {
+        
+        
         --订单积分
         if(source=5){
             
@@ -264,4 +275,10 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
                 set pointYear = pointYear, point = (0-mscore), source = 3, comments = comments, customer = customer; 
 
         }
+        /*
+        if(isvalid=1){
+            if exists (select 1 from PointBookByCustomer as e where e.customer=customer and e.pointYear=pointYear){
+                book PointBookByCustomer at (customer, pointYear) set point += mscore;
+            }
+        }*/
     };
