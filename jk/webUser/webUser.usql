@@ -98,6 +98,7 @@ OPEN MAP WebUserCustomer(
 );
 
 /*
+作废，由CustomerBuyeraccount代替
 WebUser 和 采购方账号 的关联关系
 数据来源：1.客户审核中的老师CID对应的customerid; 2.
 */
@@ -123,6 +124,7 @@ HISTORY WebUserAuditHistory(
     date,
     webUser ID WebUser,
     customer ID Customer,
+    buyerAccount ID BuyerAccount,
     user,
 );
 
