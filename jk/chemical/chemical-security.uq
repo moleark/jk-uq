@@ -1,4 +1,4 @@
 MAP ChemicalJNKRestrict (
     key chemical ID Chemical,
-    jnkRestrict ID JNKRestrict, 
+    key jnkRestrict ID JNKRestrict, 
 );
