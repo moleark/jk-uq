@@ -8,6 +8,23 @@ returns ret(
     where p.origin = origin and b.no in ('A01', 'A10'); 
 };
 
+QUERY GetAvailableProductById(product ID ProductX, salesRegion ID SalesRegion)
+returns ret (
+    id ID ProductX,
+    brand ID Brand,
+    origin char(50),
+    description char(1000),
+    descriptionC char(1000),
+    imageUrl char(200),
+    no char(50),
+    isValid tinyint
+) {
+    into ret select p.id, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, p.no, p.isValid
+    from ProductCache as pc
+         join ProductX as p on pc.product = p.id
+    where pc.product = product and pc.salesRegion = salesRegion;
+};
+
 QUERY GetFutureDeliveryTime(product ID ProductX, salesRegion ID SalesRegion)
 returns ret(
     minValue int,
@@ -98,6 +115,7 @@ PAGE (
     -/
     -- history ProductSearchHistory set webUser = $user, salesRegion = salesRegion, keyWord = keyWord;
 };
+
 
 /*
 use product;
