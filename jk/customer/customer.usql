@@ -33,6 +33,7 @@ OPEN TUID Organization (
 OPEN MAP OrganizationCustomer (
     key organization ID Organization,
     key customer ID Customer,
+    index idx_customer,
 );
 
 OPEN MAP CustomerHandler (
