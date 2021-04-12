@@ -91,7 +91,7 @@ OPEN MAP ProductSalesRegion (
 OPEN MAP ProductLegallyProhibited (
     key product ID ProductX,
     key salesRegion ID SalesRegion,
-    reason char(20),
+    reason char(200),
 );
 
 MAP ProductCache (
