@@ -6,4 +6,5 @@ MAP AgentPrice (
     expireDate datetime,
     discountinued tinyint not null default 0,
     agentPrice dec(12,2),
+    index idx_pack,
 );
