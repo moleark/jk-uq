@@ -8,6 +8,22 @@ returns ret(
     where p.origin = origin and b.no in ('A01', 'A10'); 
 };
 
+/**
+ * 根据产品编号/包装规格查询产品，在客户手动输入或提交excel表格下单的场景下使用
+*/
+QUERY GetProductPackByOrigin(origin char(50), salesRegion ID SalesRegion)
+returns ret(
+    product ID ProductX,
+    pack ID ProductX.PackX,
+) {
+    into ret select p.id as product, pk.id as pack 
+    from ProductCache as pc
+         join ProductX as p on pc.product = p.id
+         join ProductX.PackX as pk on pk.owner = p.id
+    where p.origin = origin 
+          and pc.salesRegion = salesRegion;
+};
+
 QUERY GetAvailableProductById(product ID ProductX, salesRegion ID SalesRegion)
 returns ret (
     id ID ProductX,
@@ -178,23 +194,4 @@ returns ret(
              and pp.radiox = radiox
              and pp.radioy = radioy
              and pp.unit = unit;
-};
-
-/**
- * 根据产品编号/包装规格查询产品，在客户手动输入或提交excel表格下单的场景下使用
-*/
-QUERY GetProductPackByOrigin(origin char(50), radiox dec(12, 2), radioy dec(12, 4), unit char(20), salesRegion ID SalesRegion)
-returns ret(
-    product ID ProductX,
-    pack ID ProductX.PackX,
-) {
-    into ret select p.id as product, pk.id as pack 
-    from ProductCache as pc
-         join ProductX as p on pc.product = p.id
-         join ProductX.PackX as pk on pk.owner = p.id
-    where p.origin = origin 
-          and pk.radiox = radiox
-          and pk.radioy = radioy
-          and pk.unit = unit
-          and pc.salesRegion = salesRegion;
 };
