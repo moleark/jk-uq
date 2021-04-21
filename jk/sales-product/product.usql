@@ -70,6 +70,7 @@ MAP PriceX ver 0.2 (
     expireDate datetime,
     discountinued tinyint not null default 0,
     retail dec(12,2),
+    index idx_pack,
 );
 
 OPEN Map ProductChemical (
