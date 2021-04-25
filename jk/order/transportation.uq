@@ -1,0 +1,34 @@
+MAP orderTransportation(
+    key order ID $Sheet,
+    key row int,
+    transCompany char(50),
+    transNumber char(30),
+    transTime datetime,
+);
+
+BUS orderDelivered from [百灵威系统工程部]/[Adapter]
+    ACCEPT deliveryConfirm {
+        var orderid bigint, row int;
+
+        /-mysql
+        select o.id into `_orderid_1`
+        from `tv_$archive` as o
+        where o.no = `_saleorderid`;
+
+        if `_orderid_1` is null then 
+            select o.id into `_orderid_1`
+            from `tv_$sheet` as o
+            where o.no = `_saleorderid`;
+        end if; 
+
+        if `_orderid_1` is not null then
+            set `_row_2` = cast(right(`_saleorderitemid`, 5) as SIGNED);
+            update `tv_ordertransportation` set `transcompany`=`_logisticscompanyid`, `transnumber`=`_logisticsnumber`, `transtime`=`_deliveygoodstime`
+            where `order`=`_orderid_1` AND `row`=`_row_2` AND `$unit`=`_$unit`;
+            if row_count() = 0 then
+                insert ignore into `tv_ordertransportation` (`transcompany`, `transnumber`, `transtime`, `order`, `row`, `$unit`)
+                values (`_logisticscompanyid`, `_logisticsnumber`, `_deliveygoodstime`, `_orderid_1`, `_row_2`, `_$unit`);
+            end if;
+        end if; 
+        -/
+    };

@@ -15,7 +15,7 @@ returns ret(
             and os.总金额 - os.已付金额 > 0;
 };
 
-
+-- 已作废，不再使用
 QUERY GetPendingAuditOrders(webUser bigint)
 returns ret(
     id bigint,
