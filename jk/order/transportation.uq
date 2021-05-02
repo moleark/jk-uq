@@ -1,6 +1,7 @@
 MAP orderTransportation(
     key order ID $Sheet,
     key row int,
+    expressLogistics ID ExpressLogistics,
     transCompany char(50),
     transNumber char(30),
     transTime datetime,
@@ -23,12 +24,12 @@ BUS orderDelivered from [百灵威系统工程部]/[Adapter]
 
         if `_orderid_1` is not null then
             set `_row_2` = cast(right(`_saleorderitemid`, 5) as SIGNED);
-            update `tv_ordertransportation` set `transcompany`=`_logisticscompanyid`, `transnumber`=`_logisticsnumber`, 
-                   `transtime`= date_add(from_unixtime(`_deliverygoodstime` / 1000), interval 8 hour)
+            update `tv_ordertransportation` set `transcompany` = `_logisticscompanyid`, `expressLogistics` = 
+                   `transnumber` = `_logisticsnumber`, `transtime` = date_add(from_unixtime(`_deliverygoodstime` / 1000), interval 8 hour)
             where `order`=`_orderid_1` AND `row`=`_row_2` AND `$unit`=`_$unit`;
             if row_count() = 0 then
-                insert ignore into `tv_ordertransportation` (`transcompany`, `transnumber`, `transtime`, `order`, `row`, `$unit`)
-                values (`_logisticscompanyid`, `_logisticsnumber`, date_add(from_unixtime(`_deliverygoodstime` / 1000), interval 8 hour)
+                insert ignore into `tv_ordertransportation` (`expressLogistics`, `transcompany`, `transnumber`, `transtime`, `order`, `row`, `$unit`)
+                values (`_logisticscompanyid`, `_logisticscompanyid`, `_logisticsnumber`, date_add(from_unixtime(`_deliverygoodstime` / 1000), interval 8 hour)
                     , `_orderid_1`, `_row_2`, `_$unit`);
             end if;
         end if; 
