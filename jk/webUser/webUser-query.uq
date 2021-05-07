@@ -21,15 +21,19 @@ ACTION applyAuditUser(
 /**/
 ACTION auditPendingUser(
     id bigint,
-    customerId bigint
+    customerId bigint,
+    buyerAccountId bigint,
 ) {
     var priority smallint;
     set priority = 1;
     if exists(select 1 from WebUserCustomer where customer = customerId)
         set priority = 2;
     book WebUserCustomer at (id) set customer = customerId, priority = priority;
-    bus webUserBus.WebUserAuditPass set webUser = id, customer = customerId;
-    HISTORY WebUserAuditHistory set webUser = id, customer = customerId;
+    if(not buyerAccountId is null) {
+        book WebUserBuyerAccount at (id, buyerAccountId);
+    }
+    bus webUserBus.WebUserAuditPass set webUser = id, customer = customerId, buyerAccount = buyerAccountId;
+    HISTORY WebUserAuditHistory set webUser = id, customer = customerId, buyerAccount = buyerAccountId;
 
     delete t from PendingAuditWebUser as t where t.webUser = id;
 

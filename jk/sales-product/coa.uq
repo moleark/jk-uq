@@ -1,0 +1,29 @@
+--lot批次信息,COA信息
+TUID Lot (
+    id,
+    product ID ProductX not null,                -- 产品编号
+	main lotnumber char(50),                         -- lot号
+    index idx_origin_lotnr(product, lotnumber),
+);
+
+--COA信息
+Map COA (
+    key lot ID Lot not null,
+    content text,                               -- COA信息
+    version char(50),                           -- COA版本
+    issuer char(50),                            -- COA签发人
+    issueDate date not null,                    -- COA签发日期
+);
+
+QUERY getLotByLotnumber(
+    lotnumber char(50),
+    origin char(50),
+)returns ret(
+    id ID Lot,
+    product ID ProductX
+) {
+    into ret select l.id, l.product
+    from    Lot as l
+            join ProductX as p on p.id = l.product
+    where   l.lotnumber = lotnumber and p.origin = origin and p.brand in (18, 71);
+};

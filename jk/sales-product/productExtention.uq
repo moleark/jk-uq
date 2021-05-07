@@ -1,0 +1,5 @@
+--产品扩展信息，D72, 2021年3月26日
+MAP ProductExtention (
+    key product ID ProductX,
+    content text,
+);

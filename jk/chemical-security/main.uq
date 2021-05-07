@@ -1,0 +1,7 @@
+OPEN TUID JNKRestrict (
+    id,
+    description char(100),
+    no char(10),
+    unique(no),
+    stamp(create, update)
+);

@@ -70,6 +70,7 @@ MAP PriceX ver 0.2 (
     expireDate datetime,
     discountinued tinyint not null default 0,
     retail dec(12,2),
+    index idx_pack,
 );
 
 OPEN Map ProductChemical (
@@ -91,7 +92,7 @@ OPEN MAP ProductSalesRegion (
 OPEN MAP ProductLegallyProhibited (
     key product ID ProductX,
     key salesRegion ID SalesRegion,
-    reason char(20),
+    reason char(200),
 );
 
 MAP ProductCache (

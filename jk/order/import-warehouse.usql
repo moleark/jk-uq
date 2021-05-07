@@ -12,3 +12,5 @@ Map SalesRegionWarehouse from JKWarehouse(
     key warehouse ID Warehouse,
     order,
 );
+
+TUID expressLogistics from JKWarehouse;

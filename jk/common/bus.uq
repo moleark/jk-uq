@@ -1,0 +1,12 @@
+BUS commonBusGetRmbRate from [百灵威系统工程部]/common
+    QUERY GetRmbRate {
+
+        foreach (var currency ID Currency, rate dec(12, 4)
+            of
+            select  ce.currency, ce.RMBTo as rate
+            from    currencies as c
+                    join CurrencyExchangeRate as ce on ce.year = year and ce.month = month and c.currency = ce.currency
+        ){
+            into bus.currencyRate select currency, rate;
+        }
+    };

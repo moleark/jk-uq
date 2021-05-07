@@ -8,6 +8,39 @@ returns ret(
     where p.origin = origin and b.no in ('A01', 'A10'); 
 };
 
+/**
+ * 根据产品编号/包装规格查询产品，在客户手动输入或提交excel表格下单的场景下使用
+*/
+QUERY GetProductPackByOrigin(origin char(50), salesRegion ID SalesRegion)
+returns ret(
+    product ID ProductX,
+    pack ID ProductX.PackX,
+) {
+    into ret select p.id as product, pk.id as pack 
+    from ProductCache as pc
+         join ProductX as p on pc.product = p.id
+         join ProductX.PackX as pk on pk.owner = p.id
+    where p.origin = origin 
+          and pc.salesRegion = salesRegion;
+};
+
+QUERY GetAvailableProductById(product ID ProductX, salesRegion ID SalesRegion)
+returns ret (
+    id ID ProductX,
+    brand ID Brand,
+    origin char(50),
+    description char(1000),
+    descriptionC char(1000),
+    imageUrl char(200),
+    no char(50),
+    isValid tinyint
+) {
+    into ret select p.id, p.brand, p.origin, p.description, p.descriptionC, p.imageUrl, p.no, p.isValid
+    from ProductCache as pc
+         join ProductX as p on pc.product = p.id
+    where pc.product = product and pc.salesRegion = salesRegion;
+};
+
 QUERY GetFutureDeliveryTime(product ID ProductX, salesRegion ID SalesRegion)
 returns ret(
     minValue int,
@@ -99,6 +132,7 @@ PAGE (
     -- history ProductSearchHistory set webUser = $user, salesRegion = salesRegion, keyWord = keyWord;
 };
 
+
 /*
 use product;
 
@@ -144,7 +178,7 @@ alter event EVT_InitProduct
 select * from mysql.eventCache enable;
 */
 
-
+-- 根据品牌名称/产品编号/包装规格查询产品及其包装，在和第三方做订单对接时使用
 QUERY GetPack(brandName char(20), origin char(50), radiox dec(12, 2), radioy dec(12, 4), unit char(20))
 returns ret(
     product ID ProductX,

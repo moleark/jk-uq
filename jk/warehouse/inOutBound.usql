@@ -1,0 +1,221 @@
+-- 出库任务交接表
+PENDING OutBoundTaskHandover(
+    id,
+    warehouse ID Warehouse not null,
+    shelfBlock ID ShelfBlock not null,
+    product ID ProductX not null,
+    pack OF product.PackX not null,
+    quantity int not null,
+
+    consigneeName char(20) not null,
+    consigneeUnitName char(50),
+    consigneeAddress char(200),
+    consigneeZipcode char(20),
+    consigneeTelphone char(20),
+    consigneeMobile char(20) not null,
+
+    expressLogistics ID ExpressLogistics not null,               -- 新系统使用范围的方式，暂时使用字段
+    shouldExpressLogistics char(50),    -- 允许发运物流范围
+    shouldNotExpressLogistics char(50), -- 不允许发运的物流范围
+
+    needInsuredWhenDelivery int,    -- 发货时候是否保价
+    unitPrice DEC(12, 2),          -- 回执单上显示单价
+    currency char(10),          -- 回执单上显示币种
+
+    isNeedDelivery int,        -- 是否需要发运
+    deliveryData char(100),    -- 发货资料，暂时使用此字段，新系统以后使用以下附带数量字段
+    coaQuantity int,           -- 附带产品COA数量，是我们产品的相关证书，后勤默认不附带根据发货要求来提供;
+    msdsQuantity int,          -- 附带产品MSDS数量，是我们产品安全使用说明书，后勤默认不附带根据发货要求来提供;
+    receiptQuantity int,       -- 附带回执单的数量，是我们发货产品的详细清单，后勤默认附带1份根据特殊要求会提供多份;
+    purchaseBillQuantity int,    -- 附带采购单的数量，是我们和客户签订的采购单，有客户指定要原始采购单的话则提供;
+    showPriceWhenPrintReceipt int, -- 打印回执单是否显示金额（默认都显示，贸易类型为“市场活动”、收货单位是贸易公司、并且满足特定条件的不显示）
+    
+    isAppointLot int,           -- 是否指定lot
+    appointLot char(20),        -- 指定lot
+    deliveryNotes char(100),    -- 发货备注
+    
+    outBoundReason ID OutInBoundReason not null,         -- 出库原因
+    relationId char(50),        -- 任务关联id
+    createTime datetime         -- 创建时间
+);
+
+
+-- 货架出库任务截单表
+PENDING OutBoundTaskCut(
+    id,
+    warehouse ID Warehouse not null,
+    shelfBlock ID ShelfBlock,
+    product ID ProductX not null,
+    pack OF product.PackX not null,
+    quantity int not null,
+
+    consigneeName char(20) not null,
+    consigneeUnitName char(50),
+    consigneeAddress char(200),
+    consigneeZipcode char(20),
+    consigneeTelphone char(20),
+    consigneeMobile char(20) not null,
+
+    expressLogistics ID ExpressLogistics not null,               -- 新系统使用范围的方式，暂时使用字段
+    shouldExpressLogistics char(50),    -- 允许发运物流范围
+    shouldNotExpressLogistics char(50), -- 不允许发运的物流范围
+
+    needInsuredWhenDelivery int,    -- 发货时候是否保价
+    unitPrice DEC(12, 2),          -- 回执单上显示单价
+    currency char(10),          -- 回执单上显示币种
+
+    isNeedDelivery int,        -- 是否需要发运
+    deliveryData char(100),   -- 发货资料，暂时使用此字段，新系统以后使用以下附带数量字段
+    coaQuantity int,        -- 附带产品COA数量，是我们产品的相关证书，后勤默认不附带根据发货要求来提供;
+    msdsQuantity int,       -- 附带产品MSDS数量，是我们产品安全使用说明书，后勤默认不附带根据发货要求来提供;
+    receiptQuantity int,    -- 附带回执单的数量，是我们发货产品的详细清单，后勤默认附带1份根据特殊要求会提供多份;
+    purchaseBillQuantity int,    -- 附带采购单的数量，是我们和客户签订的采购单，有客户指定要原始采购单的话则提供;
+    showPriceWhenPrintReceipt int, -- 打印回执单是否显示金额（默认都显示，贸易类型为“市场活动”、收货单位是贸易公司、并且满足特定条件的不显示）
+
+    isAppointLot int,           -- 是否指定lot
+    appointLot char(20),        -- 指定lot
+    deliveryNotes char(100),    -- 发货备注
+
+    outBoundReason ID OutInBoundReason not null,         -- 出库原因
+    relationId char(50),        -- 任务关联id
+    outBoundOrder char(20),     -- 出库单号
+    trayNumber int,             -- 托盘号（临时理货号）
+    createTime datetime         -- 创建时间
+);
+
+-- 出库截单历史记录表
+History OutBoundCutHistory(
+    date,
+    warehouse ID Warehouse not null,
+    shelfBlock ID ShelfBlock,
+    product ID ProductX not null,
+    pack OF product.PackX not null,
+    quantity int not null,
+    
+    consigneeName char(20) not null,
+    consigneeUnitName char(50),
+    consigneeAddress char(200),
+    consigneeZipcode char(20),
+    consigneeTelphone char(20),
+    consigneeMobile char(20) not null,
+
+    expressLogistics ID ExpressLogistics not null,               -- 新系统使用范围的方式，暂时使用字段
+    shouldExpressLogistics char(50),    -- 允许发运物流范围
+    shouldNotExpressLogistics char(50), -- 不允许发运的物流范围
+
+    needInsuredWhenDelivery int,    -- 发货时候是否保价
+    unitPrice DEC(12, 2),          -- 回执单上显示单价
+    currency char(10),          -- 回执单上显示币种
+
+    isNeedDelivery int,        -- 是否需要发运
+    deliveryData char(100),   -- 发货资料，暂时使用此字段，新系统以后使用以下附带数量字段
+    coaQuantity int,        -- 附带产品COA数量，是我们产品的相关证书，后勤默认不附带根据发货要求来提供;
+    msdsQuantity int,       -- 附带产品MSDS数量，是我们产品安全使用说明书，后勤默认不附带根据发货要求来提供;
+    receiptQuantity int,    -- 附带回执单的数量，是我们发货产品的详细清单，后勤默认附带1份根据特殊要求会提供多份;
+    purchaseBillQuantity int,    -- 附带采购单的数量，是我们和客户签订的采购单，有客户指定要原始采购单的话则提供;
+    showPriceWhenPrintReceipt int, -- 打印回执单是否显示金额（默认都显示，贸易类型为“市场活动”、收货单位是贸易公司、并且满足特定条件的不显示）
+    isAppointLot int,           -- 是否指定lot
+    appointLot char(20),        -- 指定lot
+
+    deliveryNotes char(100),    -- 发货备注
+    outBoundReason ID OutInBoundReason not null,    -- 出库原因
+    relationId char(50),        -- 任务关联id
+    outBoundOrder char(20),     -- 出库单号
+    trayNumber int,             -- 托盘号（临时理货号）
+    createTime datetime               -- 创建时间
+);
+
+-- 出入库单表
+TUID OutInBoundOrder(
+    id,
+    -- no char(50),
+    -- name char(50),
+    main warehouse ID Warehouse not null,
+
+    type int not null,  -- 1:入库单; 0:出库单;
+    state int,          -- 状态，是否确认；0未确认，1已确认
+    operator char(10),
+    confirmer char(10),
+    main createTime datetime not null,  -- 创建时间
+    main confirmTime datetime    -- 确认时间
+);
+
+
+-- 查询待截单任务
+Query SearchReadyOutBoundCutTastList(warehouse ID Warehouse)
+returns ret(
+    consigneeUnitName char(50), consigneeName char(20), product ID ProductX, pack of Product.PackX, quantity int, 
+    createTime datetime, warehouse ID Warehouse, outBoundReason ID OutInBoundReason
+){
+    Into ret select o.consigneeUnitName, o.consigneeName, o.product, o.pack, o.quantity, o.createTime, o.warehouse, o.outBoundReason
+    from    OutBoundTaskCut as o
+    where   o.warehouse = warehouse
+    order by o.consigneeUnitName, o.consigneeName, o.outBoundReason, o.id;
+};
+
+
+-- 出库截单
+ACTION OutBoundCut(
+    warehouse ID Warehouse
+)
+RETURNS ret (
+    outBoundOrderId bigint
+) {
+    -- 1、生成新的出库单号(使用tuid的id来表示);
+    var outBoundOrderId ID, trayNumber int = 1;
+    TUID OutInBoundOrder into outBoundOrderId set warehouse=warehouse, type=0, state=0, operator=$user, createTime = now();
+    
+    -- 2、按照待出库任务中数据分组，得到临时历史理货号
+    table  trayNumberList ( outBoundOrderId int, trayNumber int, consigneeName char(20), consigneeUnitName char(50), consigneeAddress char(200),
+            consigneeZipcode char(20), consigneeTelphone char(20), consigneeMobile char(20) );
+    
+    foreach ( var consigneeName char(20), consigneeUnitName char(50), consigneeAddress char(200), consigneeZipcode char(20), consigneeTelphone char(20), consigneeMobile char(20) of 
+        select o.consigneeName, o.consigneeUnitName, o.consigneeAddress, o.consigneeZipcode, o.consigneeTelphone, o.consigneeMobile
+        from   OutBoundTaskCut as o
+        where  o.warehouse = warehouse and o.outBoundOrder = '' and o.trayNumber = 0
+        group by o.outBoundOrder, o.consigneename, o.consigneeunitname, o.consigneeaddress, o.consigneemobile, o.consigneezipcode, o.consigneetelphone
+    ){
+        into trayNumberList
+        select outBoundOrderId, trayNumber, consigneeName, consigneeUnitName, consigneeAddress, consigneezipcode, consigneetelphone, consigneemobile;
+        set trayNumber = trayNumber + 1;
+    }
+
+    -- 3、把分组处理后的数据写入到 outboundcuthistory 表，删除当前截单表中的数据;
+    foreach ( var cid bigint, tWarehouse bigint, tShelfBlock bigint, tProduct bigint, tPack bigint, tQuantity int,
+            tConsigneeName char(20), tConsigneeUnitName char(50), tConsigneeAddress char(200), tConsigneeZipcode char(20), tConsigneeTelphone char(20), tConsigneeMobile char(20),
+            tExpressLogistics int, tShouldExpressLogistics char(50), tShouldNotExpressLogistics char(50),
+            tNeedInsuredWhenDelivery int, tUnitPrice DEC(12, 2), tCurrency char(10), tIsNeedDelivery int, tDeliveryData char(100),
+            tCoaQuantity int, tMsdsQuantity int, tReceiptQuantity int, tPurchaseBillQuantity int, tShowPriceWhenPrintReceipt int, tIsAppointLot int, tAppointLot char(20),
+            tDeliveryNotes char(100), tOutBoundReason int, tRelationId char(50), tOutBoundOrderId int, tTrayNumber int, createTime datetime of
+            select o.id as cid, o.warehouse as tWarehouse, o.shelfBlock as tShelfBlock, o.product as tProduct, o.pack as tPack, o.quantity as tQuantity,
+                o.consigneeName as tConsigneeName, o.consigneeUnitName as tConsigneeUnitName, o.consigneeAddress as tConsigneeAddress, o.consigneeZipcode as tConsigneeZipcode,
+                o.consigneeTelphone as tConsigneeTelphone, o.consigneeMobile as tConsigneeMobile,
+                o.expressLogistics as tExpressLogistics, o.shouldExpressLogistics as tShouldExpressLogistics, o.shouldNotExpressLogistics as tShouldNotExpressLogistics, 
+                o.needInsuredWhenDelivery as tNeedInsuredWhenDelivery, o.unitPrice as tUnitPrice, o.currency as tCurrency, o.isNeedDelivery as tIsNeedDelivery,
+                o.deliveryData as tDeliveryData, o.coaQuantity as tCoaQuantity, o.msdsQuantity as tMsdsQuantity, o.receiptQuantity as tReceiptQuantity, 
+                o.purchaseBillQuantity as tPurchaseBillQuantity, o.showPriceWhenPrintReceipt as tShowPriceWhenPrintReceipt, o.isAppointLot as tIsAppointLot, 
+                o.appointLot as tAppointLot, o.deliveryNotes as tDeliveryNotes, o.outBoundReason as tOutBoundReason, o.relationId as tRelationId, 
+                tr.outBoundOrderId as tOutBoundOrderId, tr.trayNumber as tTrayNumber, o.createTime
+            from    OutBoundTaskCut as o
+                    join trayNumberList as tr
+                        on tr.consigneeName = o.consigneeName and tr.consigneeUnitName = o.ConsigneeUnitName and tr.consigneeAddress = o.consigneeAddress
+                        and tr.consigneeZipcode = o.consigneeZipcode and tr.consigneeTelphone = o.consigneeTelphone and tr.consigneeMobile = o.consigneeMobile
+            where   o.warehouse = warehouse and o.outBoundOrder = '' and o.trayNumber = 0
+            order by tr.trayNumber
+    ){
+        history OutBoundCutHistory set warehouse = tWarehouse, shelfBlock = tShelfBlock, product = tProduct, pack = tPack, quantity = tQuantity,
+                consigneeName = tConsigneeName, consigneeUnitName = tConsigneeUnitName, consigneeAddress = tConsigneeAddress, consigneeZipcode = tConsigneeZipcode,
+                consigneeTelphone = tConsigneeTelphone, consigneeMobile = tConsigneeMobile, expressLogistics = tExpressLogistics, shouldExpressLogistics = tShouldExpressLogistics,
+                shouldNotExpressLogistics = tShouldNotExpressLogistics, needInsuredWhenDelivery = tNeedInsuredWhenDelivery, unitPrice = tUnitPrice, currency = tCurrency,
+                isNeedDelivery = tIsNeedDelivery, deliveryData = tDeliveryData, coaQuantity = tCoaQuantity, msdsQuantity = tMsdsQuantity, receiptQuantity = tReceiptQuantity,
+                purchaseBillQuantity = tPurchaseBillQuantity, showPriceWhenPrintReceipt = tShowPriceWhenPrintReceipt, isAppointLot = tIsAppointLot, appointLot = tAppointLot, 
+                deliveryNotes = tDeliveryNotes, outBoundReason = tOutBoundReason, relationId = tRelationId, outBoundOrder = tOutBoundOrderId, trayNumber = tTrayNumber,
+                createTime = now();
+
+        delete t from OutBoundTaskCut as t where t.id = cid;
+    }
+    
+    -- 3、截单完成要考虑出库单需要回传同步到老系统中去;
+
+    into ret select outBoundOrderId;
+};

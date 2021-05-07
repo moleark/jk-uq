@@ -1,1 +1,8 @@
 BUS webUserBus from [百灵威系统工程部]/WebUser;
+
+BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
+    ACCEPT WebUserAuditPass
+    {
+        if(not buyerAccount is null)
+            book CustomerBuyerAccount at (customer, buyerAccount);
+    };

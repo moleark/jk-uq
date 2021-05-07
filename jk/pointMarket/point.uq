@@ -158,6 +158,13 @@ Action submit {
             book PointBook at (webUser, pointYear) set usedPoint += p;
             history PointHistory
                 set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
+             
+            --添加客户积分兑换
+            if (customer > 0) {
+                book PointBookByCustomer at (customer, pointYear) set usedPoint += p;
+                history PointHistoryByCustomer
+                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
+            }
 
             set leftAmount = leftAmount - p;
             if(leftAmount <= 0){
@@ -213,6 +220,13 @@ STATE Shipping {
             book PointBook at (webUser, pointYear) set usedPoint -= point * -1;
             history PointHistory
                 set webUser = webUser, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;
+
+            --添加客户积分兑换取消
+            if (customer > 0) {
+                book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
+                history PointHistoryByCustomer
+                    set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;            
+            }
         } 
         STATE TO CANCELED;
     }
@@ -308,4 +322,16 @@ MAP OrderBack (
     createDate datetime,
     
     totalPoint int not null default 0
+);
+
+-- 当遇到先交换付款再交换订单时，先将不存在orderback的payment保存在pending中，后续再定时将pending中的数据导入到payment中重新执行
+PENDING SOrderPaymentPending ver 0.1 (
+    id,
+    orderId   char(50),
+    orderItemId  char(50),  
+    amount dec(12, 2),
+    currency  ID Currency,
+    action bigint,
+    createDate datetime,
+    date,
 );

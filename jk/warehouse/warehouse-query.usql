@@ -91,3 +91,123 @@ returns freight(
     }
 };
 */
+
+
+
+/*
+ * 查询库房列表
+*/
+QUERY SearchWarehouseByKey(key char(50))
+returns ret(
+    id bigint,
+    name char(50),
+    no char(10)
+) {
+    var key2 char(52);
+    set key2 = concat('%', key, '%');
+
+    Into ret select w.id, w.name, w.no 
+    from  Warehouse as w
+    where (key is null or w.name like key2)
+    order by w.id asc;
+};
+
+/*
+-- 查询库区列表
+QUERY SearchWarehouseBuilding(warehouse ID Warehouse, key char(50))
+returns ret(
+   id bigint,
+   name char(50),
+   no char(10),
+   warehouse bigint,
+   isValid int
+
+) {
+    var key2 char(52);
+    set key2 = concat('%', key, '%');
+
+    Into ret select b.id, b.name, b.no, b.warehouse, b.isValid
+    from    WarehouseBuilding as b
+    where   b.warehouse = warehouse and (key is null or b.name like key2)
+    order by b.id asc;
+};
+*/
+
+/*
+ * 查询房间列表
+*/
+QUERY SearchWarehouseRoom(warehouse ID Warehouse, key char(50))
+returns ret(
+   id bigint,
+   no char(10),
+   name char(50),
+   warehouse bigint,
+   isValid int
+) {
+    var key2 char(52);
+    set key2 = concat('%', key, '%');
+
+    Into ret select r.id, r.no, r.name, r.warehouse, r.isValid
+    from    WarehouseRoom as r
+    where   r.warehouse = warehouse and (key is null or r.name like key2)
+    order by r.id asc;
+};
+
+/*
+ * 查询货架组列表
+*/
+QUERY SearchShelf(warehouseRoom ID WarehouseRoom, key char(50))
+returns ret(
+   id bigint,
+   no char(10),
+   name char(50),
+   warehouseRoom int,
+   isValid int
+) {
+    var key2 char(52);
+    set key2 = concat('%', key, '%');
+
+    Into ret select s.id, s.no, s.name, s.warehouseRoom, s.isValid
+    from    Shelf as s
+    where   s.warehouseRoom = warehouseRoom and (key is null or s.name like key2)
+    order by s.id asc;
+};
+
+/*
+ * 查询货架层列表
+*/
+QUERY SearchShelfLayer(shelf ID Shelf, key char(50))
+returns ret(
+   id bigint,
+   no char(10),
+   name char(50),
+   shelf bigint,
+   isValid int
+) {
+    var key2 char(52);
+    set key2 = concat('%', key, '%');
+
+    Into ret select l.id, l.no, l.name, l.shelf, l.isValid
+    from    ShelfLayer as l
+    where   l.shelf = shelf and (key is null or l.name like key2)
+    order by l.id asc;
+};
+
+/*
+ * 查询货位列表
+*/
+QUERY SearchShelfBlock(shelfLayer ID ShelfLayer, key char(50))
+returns ret(
+   id bigint,
+   no char(10),
+   name char(50),
+   shelfLayer bigint
+) {
+    var key2 char(52);
+    set key2 = concat('%', key, '%');
+    
+    Into ret select b.id, b.no, b.name, b.shelfLayer
+    from    ShelfBlock as b
+    where   b.shelfLayer = shelfLayer and (key is null or b.name like key2)
+    order by b.id asc;
+};
