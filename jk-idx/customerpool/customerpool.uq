@@ -1,0 +1,18 @@
+--池
+TUID Pool(
+    id,
+    main name char(200)
+);
+
+--客户与池的关系
+MAP CustomerPool(
+    key pool ID Pool,
+    key customer ID Customer
+);
+
+-- 轻代理的特征
+MAP SalesFeature (
+    key sales ID [$user],
+    domain ID Domain, --研究领域
+    city ID City --地域
+);
