@@ -92,7 +92,20 @@ returns freight(
 };
 */
 
-
+/*
+ * 查询有效库房列表
+*/
+QUERY GetValidWarehouseList()
+returns ret(
+    id bigint,
+    name char(50),
+    no char(10)
+) {
+    Into ret select w.id, w.name, w.no
+    from  Warehouse as w
+    where w.isValid = 1
+    order by w.id asc;
+};
 
 /*
  * 查询库房列表
