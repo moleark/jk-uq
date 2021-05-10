@@ -35,7 +35,7 @@ BUS outBoundTaskHandoverBus from [百灵威系统工程部]/warehouse2
     ACCEPT warehouseOutBoundTaskHandover {
 
         var rid ID;
-        PENDING OutBoundHandoverTask + ( warehouse: warehouse, shelfBlock: shelfBlock, product: product, pack: pack, quantity: quantity,
+        PENDING OutBoundHandoverTask + ( warehouse: warehouse, shelfBlock: shelfBlock, product: product, pack: pack, quantity: quantity, descriptionE: descriptionE,
                 consigneeName: consigneeName, consigneeUnitName: consigneeUnitName, consigneeAddress: consigneeAddress, consigneeZipcode: consigneeZipcode, 
                 consigneeTelphone: consigneeTelphone, consigneeMobile: consigneeMobile, expressLogistics: expressLogistics, shouldExpressLogistics: shouldExpressLogistics, 
                 shouldNotExpressLogistics: shouldNotExpressLogistics, needInsuredWhenDelivery: needInsuredWhenDelivery, unitPrice: unitPrice, currency: currency,
@@ -48,14 +48,14 @@ BUS outBoundTaskHandoverBus from [百灵威系统工程部]/warehouse2
 BUS outboundResultSync from [百灵威系统工程部]/warehouse2
     ACCEPT warehouseOutBoundResultSync {
 
-        var cId bigint, tId bigint, tWarehouse bigint, tShelfBlock bigint, tProduct bigint, tPack bigint,
+        var cId bigint, tId bigint, tWarehouse bigint, tShelfBlock bigint, tProduct bigint, tPack bigint, tDescriptionE char(400),
         tConsigneeName char(20), tConsigneeUnitName char(50), tConsigneeAddress char(200), tConsigneeZipcode char(20), tConsigneeTelphone char(20), tConsigneeMobile char(20),
         tExpressLogistics char(50), tShouldExpressLogistics char(50), tShouldNotExpressLogistics char(50),
         tNeedInsuredWhenDelivery int, tUnitPrice DEC(12, 2), tCurrency char(10), tIsNeedDelivery int, tDeliveryData char(100), 
         tCoaQuantity int, tMsdsQuantity int, tReceiptQuantity int, tPurchaseBillQuantity int, tShowPriceWhenPrintReceipt int, tIsAppointLot int, tAppointLot char(20),
         tDeliveryNotes char(100), tOutBoundReason char(10), tRelationId char(50), tHandOverTime datetime, tOutBoundOrder char(20) = '', tTrayNumber int = 0;
 
-        set     tId = o.id, tWarehouse = o.warehouse, tShelfBlock = o.shelfBlock, tProduct = o.product, tPack = o.pack,
+        set     tId = o.id, tWarehouse = o.warehouse, tShelfBlock = o.shelfBlock, tProduct = o.product, tPack = o.pack, tDescriptionE = o.descriptionE,
                 tConsigneeName = o.consigneeName, tConsigneeUnitName = o.consigneeUnitName, tConsigneeAddress = o.consigneeAddress, tConsigneeZipcode = o.consigneeZipcode,
                 tConsigneeTelphone = o.consigneeTelphone, tConsigneeMobile = o.consigneeMobile, tExpressLogistics = o.expressLogistics, tShouldExpressLogistics = o.shouldExpressLogistics,
                 tShouldNotExpressLogistics = o.shouldNotExpressLogistics, tNeedInsuredWhenDelivery = o.needInsuredWhenDelivery, tUnitPrice = o.unitPrice, tCurrency = o.currency,
@@ -65,7 +65,7 @@ BUS outboundResultSync from [百灵威系统工程部]/warehouse2
         from    OutBoundHandoverTask as o
         where   o.relationId = saleOrderItemID and o.shelfBlock = oistockHJHID and o.quantity = quantity;
 
-        PENDING OutBoundReadyCutTask + ( warehouse: tWarehouse, shelfBlock: tShelfBlock, product: tProduct, pack: tPack, quantity: quantity,
+        PENDING OutBoundReadyCutTask + ( warehouse: tWarehouse, shelfBlock: tShelfBlock, product: tProduct, pack: tPack, quantity: quantity, descriptionE: tDescriptionE,
                 consigneeName: tConsigneeName, consigneeUnitName: tConsigneeUnitName, consigneeAddress: tConsigneeAddress, consigneeZipcode: tConsigneeZipcode, 
                 consigneeTelphone: tConsigneeTelphone, consigneeMobile: tConsigneeMobile, expressLogistics: tExpressLogistics, shouldExpressLogistics: tShouldExpressLogistics, 
                 shouldNotExpressLogistics: tShouldNotExpressLogistics, needInsuredWhenDelivery: tNeedInsuredWhenDelivery, unitPrice: tUnitPrice, currency: tCurrency,
