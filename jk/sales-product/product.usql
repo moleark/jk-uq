@@ -54,6 +54,7 @@ OPEN TUID ProductX ver 0.5 (
         main radiox dec(12,2),
         main radioy dec(12,4),
         main unit char(10),
+        main salesLevel ID PackSalesLevel,
     ),
     main imageUrl char(200),
     isValid tinyint not null default 1,
@@ -107,6 +108,12 @@ HISTORY ProductSearchHistory (
     webUser bigint,
     salesRegion ID SalesRegion,
     keyword char(100),
+);
+
+TUID PackSalesLevel (
+    id,
+    no char(10) not null,
+    main name char(50) not null,
 );
 
 /*

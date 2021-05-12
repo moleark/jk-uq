@@ -195,3 +195,20 @@ returns ret(
              and pp.radioy = radioy
              and pp.unit = unit;
 };
+
+-- 
+QUERY GetProductPrices(product ID ProductX, salesRegion ID SalesRegion)
+returns ret (
+    product ID ProductX,
+    pack ID ProductX.PackX,
+    salesRegion ID SalesRegion,
+    retail dec(12, 2),
+    expireDate datetime,
+    discountinued tinyint,
+    salesLevel ID PackSalesLevel,
+) {
+    into ret select p.product, p.pack, p.salesRegion, p.retail, p.expireDate, p.discountinued, pk.salesLevel
+    from PriceX as p
+         join ProductX.PackX as pk on p.product = pk.owner and p.pack = pk.id
+    where p.product = product and p.salesRegion = salesRegion;
+};
