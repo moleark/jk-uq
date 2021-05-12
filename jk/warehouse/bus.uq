@@ -22,12 +22,11 @@ BUS warehouseShelfBus from [百灵威系统工程部]/warehouse
 BUS warehouseShelfLotUpdateBus from [百灵威系统工程部]/warehouse
     ACCEPT shelfLotUpdateHistory {
         
+        -- 数量匹配进行修改，不存在数量不匹配的情况，因为数据来源有判断数量相等的情况出发bus，不相等则增加货架出入记录处理；
         if exists ( select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity ) {
             set lotNumber = lotNumber
-            from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity;
-        } else {
-            -- 没有找到对应记录的情况，暂不做新增处理
-            -- BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity = quantity;
+            from ShelfBlockLotInventory as s
+            where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity;
         }
     };
 
