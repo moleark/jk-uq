@@ -72,6 +72,7 @@ TUID ShelfBlock (
     main name char(50) not null,
     code char(20),
     shelfLayer ID ShelfLayer not null,
+    isValid smallint not null,
     stamp(create, update),
     search(name)
 );
