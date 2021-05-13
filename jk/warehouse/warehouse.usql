@@ -4,6 +4,7 @@ TUID Warehouse (
     no char(10) not null,
     main name char(50) not null,
     code char(20),
+    isValid smallint not null,
     search(name),
     unique(name),
 );
