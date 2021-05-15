@@ -1,0 +1,48 @@
+ID OrderMain (
+	id
+	KEY no CHAR(20),
+	customer ID,
+	sumQuanity DEC(12,2), 	-- 各行数量和
+	sumAmount DEC(12,2),	-- 各行金额和
+	couponNo CHAR(16),
+	INDEX customer_id(customer, id) UNIQUE;
+);
+
+ID OrderDetail (
+	id,
+	KEY master ID OrderMain,
+	KEY row SMALLINT,
+	product ID,
+	pack ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+);
+
+IDX DxOrderDraft (
+	id,
+);
+
+IDX DxOrderProcessing (
+	id,
+	deliveredQuantity DEC(12,2),
+	paidAmount DEC(12,2),
+	invoicedAmount DEC(12,2),
+);
+
+IDX DxOrderReturning (
+	id,
+);
+
+IDX DxOrderDetail (
+	id,
+	deliveredQuantity DEC(12,2) SUM LOG,
+	paidAmount DEC(12,2) SUM LOG,
+	invoicedAmount DEC(12,2) SUM LOG,
+	askReturnBeforeDeliverQuantity DEC(12,2) SUM LOG,
+	askReturnDeforeDeliverAmount DEC(12,2) SUM LOG,
+	askReturnAfterDeliverQuantity DEC(12,2) SUM LOG,
+	askReturnAfterDeliverAmount DEC(12,2) SUM LOG,
+	returnedQuantity DEC(12,2) SUM LOG,					-- 实际已退回的数量
+	refundAmount DEC(12,2) SUM LOG,						-- 实际已退款的金额
+);
