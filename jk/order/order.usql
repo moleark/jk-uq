@@ -54,6 +54,11 @@ Action submit
 BUS webUserBus.getCuByWu as q into tb {
     set q.webUser = webUser;
 } {
+    var id0 ID;
+    set id0 = ID(orderMain, $sheet_no);
+    update  orderMain set customer = webUser, customerProxy = customer, shippingContact = shippingContact
+    where   id = id0;
+
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
 
@@ -65,11 +70,16 @@ BUS webUserBus.getCuByWu as q into tb {
             set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee,
                 salesRegion = salesRegion;
+        
+        var itemId ID;
+        set itemId = ID(orderItems, id0, ?); -- row 值怎么写?
+        update orderItems set product = product, pack = pack, price = price, quantity = quantity
+        where  id = itemId;
     }
     
     var customerid int;
     foreach tb {
-        set customerid = customer;
+        set customerid = customer;   -- 这个customer是bus query中返回的字段名称，不是order中的customer，其含义是webuser对应的CID
     }
 
     var bustype int;
@@ -86,6 +96,7 @@ BUS webUserBus.getCuByWu as q into tb {
         bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
 
+    -- 下面这个发bus是非常复杂的代码，它应该有更好的解决方法
     var pointMultiple int;
     set pointMultiple = 2;
     if (now() > '2020-09-01' and now() < '2020-10-01') 
