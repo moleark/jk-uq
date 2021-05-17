@@ -1,11 +1,11 @@
 ID OrderMain (
-	id
-	KEY no CHAR(20),
+	id,
+	KEY no,
 	customer ID,
 	sumQuanity DEC(12,2), 	-- 各行数量和
 	sumAmount DEC(12,2),	-- 各行金额和
 	couponNo CHAR(16),
-	INDEX customer_id(customer, id) UNIQUE;
+	INDEX customer_id(customer, id) UNIQUE,
 );
 
 ID OrderDetail (
