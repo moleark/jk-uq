@@ -5,7 +5,10 @@ ID OrderMain (
 	sumQuanity DEC(12,2), 	-- 各行数量和
 	sumAmount DEC(12,2),	-- 各行金额和
 	couponNo CHAR(16),
+	sheetId ID,
+    shippingContact ID Contact,
 	INDEX customer_id(customer, id) UNIQUE,
+	INDEX sheetId(sheetId) UNIQUE,
 );
 
 ID OrderDetail (
@@ -21,6 +24,7 @@ ID OrderDetail (
 
 IDX DxOrderDraft (
 	id,
+	salesPerson ID,
 );
 
 IDX DxOrderProcessing (
@@ -32,6 +36,11 @@ IDX DxOrderProcessing (
 
 IDX DxOrderReturning (
 	id,
+);
+
+IDX DxDone (
+	id,
+	flag TINYINT DEFAULT 0,  --- -1: canceled
 );
 
 IDX DxOrderDetail (
