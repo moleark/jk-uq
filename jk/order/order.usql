@@ -72,8 +72,10 @@ BUS webUserBus.getCuByWu as q into tb {
         WITH OrderDetail as a ID detailId 
 			SET a.product = product, a.pack = pack, a.price = price, a.quantity = quantity;
         history OrderHistory
-            set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
-                freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee,
+            set webUser = webUser, product = product, pack = pack, 
+				price = price, quantity = quantity, amount = subAmount, currency = currency,
+                freezingFee = freezingFee, refrigerationFee = refrigerationFee, 
+				packingFee = packingFee, proxyFreightFee = proxyFreightFee,
                 salesRegion = salesRegion;
     }
     
