@@ -127,7 +127,7 @@ returns ret(
 };
 
 /*
--- 查询库区列表
+-- 查询库区列表 (取消库区层面概念作废)
 QUERY SearchWarehouseBuilding(warehouse ID Warehouse, key char(50))
 returns ret(
    id bigint,
