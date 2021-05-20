@@ -13,7 +13,7 @@ ID OrderMain (
 
 ID OrderDetail (
 	id,
-	KEY master ID OrderMain,
+	KEY main ID OrderMain,
 	KEY row SMALLINT,
 	product ID,
 	pack ID,
@@ -24,23 +24,26 @@ ID OrderDetail (
 
 IDX DxOrderDraft (
 	id,
+	draft TINYINT DEFAULT 1,
 	salesPerson ID,
 );
 
 IDX DxOrderProcessing (
 	id,
-	deliveredQuantity DEC(12,2),
-	paidAmount DEC(12,2),
-	invoicedAmount DEC(12,2),
+	processing TINYINT DEFAULT 1,
+	-- deliveredQuantity DEC(12,2),
+	-- paidAmount DEC(12,2),
+	-- invoicedAmount DEC(12,2),
 );
 
 IDX DxOrderReturning (
 	id,
+	returning TINYINT DEFAULT 1,
 );
 
-IDX DxDone (
+IDX DxOrderDone (
 	id,
-	flag TINYINT DEFAULT 0,  --- -1: canceled
+	done TINYINT DEFAULT 1,		-- canceled -1
 );
 
 IDX DxOrderDetail (
@@ -54,4 +57,19 @@ IDX DxOrderDetail (
 	askReturnAfterDeliverAmount DEC(12,2) SUM LOG,
 	returnedQuantity DEC(12,2) SUM LOG,					-- 实际已退回的数量
 	refundAmount DEC(12,2) SUM LOG,						-- 实际已退款的金额
+);
+
+IX IxCustomerPendingDeliver (
+	ix,
+	xi OrderDetail,
+);
+
+IX IxCustomerPendingReceive (
+	ix,
+	xi OrderDetail,
+);
+
+IX IxCustomerPendingInvoice (
+	ix,
+	xi OrderDetail,
 );
