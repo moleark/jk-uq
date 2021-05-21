@@ -73,3 +73,23 @@ IX IxCustomerPendingInvoice (
 	ix,
 	xi OrderDetail,
 );
+
+QUERY GetCustomerPendingDeliver (
+)
+RETURNS ret (
+	customer ID,
+	quantity DEC(12,2),			-- 要发运合计
+) {
+	INTO ret SELECT customer, sum(
+			b.quantity
+				-- - IFNULL(c.askReturnBeforeDeliverQuantity,0) // 不确定怎么加减这个，以后细想
+				-- - IFNULL(c.askReturnAfterDeliverQuantity,0) 	// 不确定怎么加减这个，以后细想
+				-- - IFNULL(c.returnedQuantity,0) 				// 不确定怎么加减这个，以后细想
+				- IFNULL(c.deliveredQuantity,0)				
+		) as quantity
+		FROM IxCustomerPendingDeliver as a
+			JOIN OrderDetail as b ON a.xi=b.id
+			LEFT JOIN DxOrderDetail as c ON b.id=c.id
+		GROUP BY a.ix as customer
+		ORDER BY customer;
+};
