@@ -1,4 +1,4 @@
-ID OrderMain (
+ID OrderMain ver 0.3 (
 	id,
 	KEY no,
 	customer ID,
@@ -11,7 +11,7 @@ ID OrderMain (
 	INDEX sheetId(sheetId) UNIQUE,
 );
 
-ID OrderDetail (
+ID OrderDetail ver 0.1 (
 	id,
 	KEY main ID OrderMain,
 	KEY row SMALLINT,
