@@ -1,6 +1,6 @@
 -- ACCESS accOrder(Order);
 
-SHEET Order ver 0.6 (
+SHEET Order ver 0.7 (
     webUser ID WebUser,         -- 当前的webuser
     organization ID Organization,
     customer ID BuyerAccount,   -- webUser相关的buyerAccount
@@ -54,11 +54,12 @@ Action submit
 BUS webUserBus.getCuByWu as q into tb {
     set q.webUser = webUser;
 } {
-    var id0 ID;
-    set id0 = ID(orderMain, $sheet_no);
-    update  orderMain set customer = webUser, customerProxy = customer, shippingContact = shippingContact
-    where   id = id0;
-
+	var mainId ID;
+	SET mainId = ID(orderMain new, $sheet_no);
+	WITH OrderMain as a ID mainId
+		SET a.customer = webUser, a.sheetId=$id, a.shippingContact = shippingContact;
+	WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
+	
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
 
@@ -66,9 +67,15 @@ BUS webUserBus.getCuByWu as q into tb {
     pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: $id, amount: amount, currency: currency, date: now()) to pid;
 
     foreach orderItems {
+      	var detailId ID;
+        SET detailId = ID(OrderDetail new, mainId, $row); -- row 值怎么写?
+        WITH OrderDetail as a ID detailId 
+			SET a.product = product, a.pack = pack, a.price = price, a.quantity = quantity;
         history OrderHistory
-            set webUser = webUser, product = product, pack = pack, price = price, quantity = quantity, amount = subAmount, currency = currency,
-                freezingFee = freezingFee, refrigerationFee = refrigerationFee, packingFee = packingFee, proxyFreightFee = proxyFreightFee,
+            set webUser = webUser, product = product, pack = pack, 
+				price = price, quantity = quantity, amount = subAmount, currency = currency,
+                freezingFee = freezingFee, refrigerationFee = refrigerationFee, 
+				packingFee = packingFee, proxyFreightFee = proxyFreightFee,
                 salesRegion = salesRegion;
         
         var itemId ID;
@@ -118,7 +125,6 @@ BUS webUserBus.getCuByWu as q into tb {
             }
         }
     }
-
     if (customer > 0){
         STATE TO END;
     } else {
