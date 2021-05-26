@@ -35,12 +35,15 @@ RETURNS ret (
 	INTO ret SELECT no;
 };
 
-ACT Delivered (
+ACT Delivered ver 0.5 (
 	deliverMainId ID
 ) {
 	FOR (VAR orderDetailId ID, deliverQuantity DEC(12,2) OF
 		SELECT a.orderDetailId, a.deliverQuantity FROM DeliverDetail as a WHERE a.main=deliverMainId)
 	{
-		WITH DxOrderDetail as a ID=orderDetailId SET a.deliveredQuantity=deliverQuantity;
+		-- WITH DxOrderDetail as a ID=orderDetailId
+		--	SET a.deliveredQuantity=deliverQuantity;
+		WITH DxOrderDetail as a ID=orderDetailId
+			SETX a.deliveredQuantity=deliverQuantity ACT=1;
 	}
 };

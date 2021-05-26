@@ -46,15 +46,22 @@ IDX DxOrderDone (
 	done TINYINT DEFAULT 1,		-- canceled -1
 );
 
-IDX DxOrderDetail (
+IDX DxOrderDetail ver 0.1 (
 	id,
 	deliveredQuantity DEC(12,2) SUM LOG,
 	paidAmount DEC(12,2) SUM LOG,
 	invoicedAmount DEC(12,2) SUM LOG,
-	askReturnBeforeDeliverQuantity DEC(12,2) SUM LOG,
-	askReturnDeforeDeliverAmount DEC(12,2) SUM LOG,
-	askReturnAfterDeliverQuantity DEC(12,2) SUM LOG,
-	askReturnAfterDeliverAmount DEC(12,2) SUM LOG,
+	returnQuantity DEC(12,2) SUM LOG,			-- 退货量。未发量 = quantity - returnQuantity - deliveredQuantity
+	returnAmount DEC(12,2) SUM LOG,				-- 退款额
+	returnInvoiceAmount DEC(12,2) SUM LOG,		-- 退票额
+);
+
+-- 这个表是退货过程中，各种数据的记录
+-- DxOrderDetail中的退货，是退货相关的确认值
+IDX DxOrderDetailReturn (
+	id,
+	askQuantity DEC(12,2) SUM LOG,
+	askAmount DEC(12,2) SUM LOG,
 	returnedQuantity DEC(12,2) SUM LOG,					-- 实际已退回的数量
 	refundAmount DEC(12,2) SUM LOG,						-- 实际已退款的金额
 );
