@@ -56,6 +56,8 @@ BUS webUserBus.getCuByWu as q into tb {
 } {
 	var mainId ID;
 	SET mainId = ID(orderMain new, $sheet_no);
+	BUS JkOrderBus.order SET id=mainId, customer=webUser;
+
 	WITH OrderMain as a ID mainId
 		SET a.customer = webUser, a.sheetId=$id, a.shippingContact = shippingContact;
 	WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
@@ -71,6 +73,8 @@ BUS webUserBus.getCuByWu as q into tb {
         SET detailId = ID(OrderDetail new, mainId, $row); -- row 值怎么写?
         WITH OrderDetail as a ID detailId 
 			SET a.product = product, a.pack = pack, a.price = price, a.quantity = quantity;
+		BUS JkOrderBus.order INTO [detail]
+			ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
         history OrderHistory
             set webUser = webUser, product = product, pack = pack, 
 				price = price, quantity = quantity, amount = subAmount, currency = currency,

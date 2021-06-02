@@ -1,0 +1,89 @@
+{
+	"--1": "说明：order可以在主表加其它字段，来分解成note。",
+	"$": "百灵威系统工程部/jk-order",
+	"order": [
+		"-- this is comments. starts with #. order pushed when comfirmed or paid",
+		"id: id",
+		"customer: id",
+		"no: string",
+		"detail: order-detail -- { name: detail, type: array, fields: order-detail }"
+	],
+	"order-detail": [
+		"id: id",
+		{ "name": "item", "type": "id", "-": "if item is ID, the item is pack ID, include product ID, else item is pack, product must have value" },
+		{ "name": "product", "type": "id", "-": "my be undefined when item is ID" },
+		{ "name": "quantity", "type": "number" },
+		{ "name": "price", "type": "number" },
+		{ "name": "amount", "type": "number" }
+	],
+	"return-detail": [
+		"-- return detail id",
+		"id: id",
+		"-- 对应的 order detail id",
+		"order-detail-id: id",
+		"quantity: number",
+		"amount: number",
+		"-- price不需要, 在order detail id 里面可以获得"
+	],
+	"note": [
+		{ "name": "id", "type": "id" },
+		{ "name": "detail", "type": "array", "fields": "note-detail" }
+	],
+	"note-detail": [
+		{ "name": "id", "type": "id" },
+		{ "name": "value", "type": "number" }
+	],
+	"deliver-note": [
+		"warehouse: id -- 如果不分库，这个id空",
+		"note"
+	],
+	"deliver": [
+		"deliver-note"
+	],
+	"done-deliver": [
+		"deliver-note"
+	],
+	"deliver-cancel": [
+		"deliver-note"
+	],
+	"done-deliver-cancel": [
+		"deliver-note"
+	],
+	"receive": [
+		"note"
+	],
+	"done-receive": [
+		"note"
+	],
+	"receive-cancel": [
+		"note"
+	],
+	"done-receive-cancel": [
+		"note"
+	],
+	"invoice": [
+		"note"
+	],
+	"done-invoice": [
+		"note"
+	],
+	"invoice-cancel": [
+		"note"
+	],
+	"done-invoice-cancel": [
+		"note"
+	],
+	"return": [
+		"id: id",
+		"detail: return-detail"
+	],
+	"done-return-product": [
+		"note"
+	],
+	"done-return-receive": [
+		"note"
+	],
+	"done-return-invoice": [
+		"note"
+	]
+}

@@ -1,0 +1,46 @@
+BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order]
+ACCEPT order {
+	VAR mainId ID, row INT;
+	SET mainId = id;
+	WITH OrderMain as a ID=id SET a.no=no, a.customer=customer;
+	SET row = 1;
+	FOR detail {
+		WITH OrderDetail as a 
+			ID = id
+			SET a.main=mainId, a.row=row
+				, a.item=item, a.product=product
+				, a.quantity=quantity, a.amount=amount, a.price=price;
+		SET row=row+1;
+	}
+}
+ACCEPT deliver {
+	VAR customer ID;
+	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
+	FOR detail {
+		WITH IxPendingDeliver ixx=warehouse ix=customer xi=id;
+		WITH DxOrderDetail as a ID=id SET a.deliver=value, a.deliverCenter=warehouse;
+	}
+}
+ACCEPT [deliver-cancel] {
+	VAR customer ID;
+	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
+	Bus JkOrderBus.[done-deliver-cancel] SET id=id, warehouse=warehouse;
+	FOR detail {
+		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customer AND xi=id) {
+			WITH DxOrderDetail ID=id SET cancelDone=value;
+		}
+		ELSE {
+			SET value=0;
+		}
+		Bus JkOrderBus.[done-deliver-cancel] INTO detail
+			ADD id=id, value=value;
+	}
+}
+ACCEPT [return] {
+	VAR customer ID;
+	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
+	FOR detail {
+		WITH IxCustomerPendingReturn ix=customer xi=id;
+		WITH DxReturnDetail as a ID=id SET a.orderDetail=[order-detail-id], a.quantity=quantity;
+	}
+};

@@ -1,4 +1,4 @@
-ID OrderMain ver 0.3 (
+ID OrderMain ver 0.5 (
 	id,
 	KEY no,
 	customer ID,
@@ -11,7 +11,7 @@ ID OrderMain ver 0.3 (
 	INDEX sheetId(sheetId) UNIQUE,
 );
 
-ID OrderDetail ver 0.1 (
+ID OrderDetail ver 0.5 (
 	id,
 	KEY main ID OrderMain,
 	KEY row SMALLINT,
@@ -50,15 +50,15 @@ IDX DxOrderDetail ver 0.1 (
 	id,
 	deliveredQuantity DEC(12,2) SUM LOG,
 	paidAmount DEC(12,2) SUM LOG,
-	invoicedAmount DEC(12,2) SUM LOG,
+	invoiced DEC(12,2) SUM LOG,
 	returnQuantity DEC(12,2) SUM LOG,			-- 退货量。未发量 = quantity - returnQuantity - deliveredQuantity
 	returnAmount DEC(12,2) SUM LOG,				-- 退款额
-	returnInvoiceAmount DEC(12,2) SUM LOG,		-- 退票额
+	returnInvoice DEC(12,2) SUM LOG,			-- 退票额
 );
 
 -- 这个表是退货过程中，各种数据的记录
 -- DxOrderDetail中的退货，是退货相关的确认值
-IDX DxOrderDetailReturn (
+IDX DxReturnDetail (
 	id,
 	askQuantity DEC(12,2) SUM LOG,
 	askAmount DEC(12,2) SUM LOG,
@@ -72,7 +72,7 @@ IX IxCustomerPendingDeliver (
 );
 
 IX IxCustomerPendingReceive (
-	ix,
+	ix,				 -- Customer
 	xi OrderDetail,
 );
 

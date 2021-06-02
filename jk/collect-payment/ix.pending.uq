@@ -1,0 +1,33 @@
+IX IxCustomerPendingReceive (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+IX IxCustomerPendingInvoice (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+IX IxCustomerPendingReturn (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+IDX DxOrderDetail (
+	id,									-- order detail
+	receive DEC(12,2),					-- 请收
+	receiveDone DEC(12,2),				-- 已收
+	cancelReceiveDone DEC(12,2),		-- 已取消收款
+	invoice DEC(12,2),					-- 请开票
+	invoiceDone DEC(12,2),				-- 已开票
+	cancelInvoiceDone DEC(12,2),		-- 已取消开票
+);
+
+IDX DxReturnDetail (
+	id,									-- return detail
+	orderDetail id,						-- 对应的order detail
+	quantity DEC(12,2) SUM,				-- 请退货数量
+	amount DEC(12,2) SUM,				-- 请退货金额
+	receiveReturned DEC(12,2) SUM,		-- 已退钱款额
+	invoiceReturned DEC(12,2) SUM,		-- 已退发票额
+);
