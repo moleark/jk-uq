@@ -18,7 +18,7 @@ IDX DxOrderDetail (
 	id,									-- return detail id
 	deliver DEC(12,2),					-- 请发
 	deliverDone DEC(12,2),				-- 已发
-	cancelDone DEC(12,2),				-- 已取消
+	returnDone DEC(12,2),				-- 已退货
 	deliverCenter ID DeliverCenter,
 );
 
@@ -26,5 +26,5 @@ IDX DxReturnDetail (
 	id,									-- return detail
 	orderDetail id,						-- 对应的order detail
 	quantity DEC(12,2) SUM,				-- 请退货数量
-	quantityReturned DEC(12,2) SUM,		-- 已退钱数量
+	quantityDone DEC(12,2) SUM,			-- 已退货数量
 );

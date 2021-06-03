@@ -43,22 +43,10 @@
 	"done-deliver": [
 		"deliver-note"
 	],
-	"deliver-cancel": [
-		"deliver-note"
-	],
-	"done-deliver-cancel": [
-		"deliver-note"
-	],
 	"receive": [
 		"note"
 	],
 	"done-receive": [
-		"note"
-	],
-	"receive-cancel": [
-		"note"
-	],
-	"done-receive-cancel": [
 		"note"
 	],
 	"invoice": [
@@ -67,17 +55,11 @@
 	"done-invoice": [
 		"note"
 	],
-	"invoice-cancel": [
-		"note"
-	],
-	"done-invoice-cancel": [
-		"note"
-	],
 	"return": [
 		"id: id",
 		"detail: return-detail"
 	],
-	"done-return-product": [
+	"done-return-deliver": [
 		"note"
 	],
 	"done-return-receive": [
@@ -85,5 +67,15 @@
 	],
 	"done-return-invoice": [
 		"note"
+	],
+	"order-binding": [
+		"-- order id, binding可以是coupon，也可以是userid，或者其它标志。如果网页点击，可以直接带id",
+		"id: id",
+		"binding: string"
+	],
+	"order-bound": [
+		"-- order id, coupon体系根据coupon，找到order的绑定人",
+		"id: id",
+		"promoter: id  -- 推广人"
 	]
 }

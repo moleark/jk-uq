@@ -21,21 +21,6 @@ ACCEPT receive {
 		WITH DxOrderDetail as a ID=id SET a.receive=value;
 	}
 }
-ACCEPT [receive-cancel] {
-	VAR customer ID;
-	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
-	Bus JkOrderBus.[done-receive-cancel] SET id=id;
-	FOR detail {
-		IF exists(SELECT xi FROM IxCustomerPendingReceive WHERE ix=customer AND xi=id) {
-			WITH DxOrderDetail ID=id SET cancelReceiveDone=value;
-		}
-		ELSE {
-			SET value=0;
-		}
-		Bus JkOrderBus.[done-receive-cancel] INTO detail
-			ADD id=id, value=value;
-	}
-}
 ACCEPT invoice {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
@@ -44,26 +29,55 @@ ACCEPT invoice {
 		WITH DxOrderDetail as a ID=id SET a.invoice=value;
 	}
 }
-ACCEPT [invoice-cancel] {
-	VAR customer ID;
-	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
-	Bus JkOrderBus.[done-invoice-cancel] SET id=id;
-	FOR detail {
-		IF exists(SELECT xi FROM IxCustomerPendingInvoice WHERE ix=customer AND xi=id) {
-			WITH DxOrderDetail ID=id SET cancelInvoiceDone=value;
-		}
-		ELSE {
-			SET value=0;
-		}
-		Bus JkOrderBus.[done-invoice-cancel] INTO detail
-			ADD id=id, value=value;
-	}
-}
 ACCEPT [return] {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
 	FOR detail {
-		WITH IxCustomerPendingReturn IX=customer XI=id;
-		WITH DxReturnDetail as a ID=id SET a.orderDetail=[order-detail-id], a.quantity=quantity, a.amount=amount;
+		VAR retReceive DEC(12,2);
+		VAR receive DEC(12,2), receiveDone DEC(12,2), receiveReturnDone DEC(12,2);
+		VAR retInvoice DEC(12,2);
+		VAR invoice DEC(12,2), invoiceDone DEC(12,2), invoiceReturnDone DEC(12,2);
+		SET receive=IFNULL(a.receive, 0)
+			, receiveDone=IFNULL(a.receiveDone, 0)
+			, receiveReturnDone=IFNULL(a.receiveReturnDone, 0)
+			, invoice=IFNULL(a.invoice, 0)
+			, invoiceDone=IFNULL(a.invoiceDone, 0)
+			, invoiceReturnDone=IFNULL(a.invoiceReturnDone, 0)
+			FROM DxOrderDetail as a WHERE a.id=[order-detail-id];
+		WITH DxReturnDetail as a ID=id SET a.orderDetail=[order-detail-id]
+			, a.receive=amount
+			, a.invoice=amount;
+
+		-- receive return相关操作
+		IF exists(SELECT xi FROM IxCustomerPendingReceive WHERE ix=customer AND xi=id) {
+			SET retReceive = amount;
+			WITH DxOrderDetail ID=id SET receiveReturnDone=retReceive;
+			IF receive - receiveDone - receiveReturnDone- retReceive <= 0 {
+				WITH IxCustomerPendingReceive IX=customer XI=id DEL;
+				WITH DxReturnDetail as a ID=id SET a.receiveDone=retReceive;
+			}
+		}
+		ELSE {
+			WITH IxCustomerPendingReceiveReturn ix=customer xi=id;
+			SET retReceive = 0;
+		}
+		Bus JkOrderBus.[done-return-receive] INTO detail
+			ADD id=id, value=retReceive;
+
+		-- invoice return相关操作
+		IF exists(SELECT xi FROM IxCustomerPendingInvoice WHERE ix=customer AND xi=id) {
+			SET retInvoice = amount;
+			WITH DxOrderDetail ID=id SET invoiceReturnDone=retInvoice;
+			IF invoice - invoiceDone - invoiceReturnDone- retInvoice <= 0 {
+				WITH IxCustomerPendingInvoice IX=customer XI=id DEL;
+				WITH DxReturnDetail as a ID=id SET a.invoiceDone=retInvoice;
+			}
+		}
+		ELSE {
+			WITH IxCustomerPendingInvoiceReturn ix=customer xi=id;
+			SET retInvoice = 0;
+		}
+		Bus JkOrderBus.[done-return-invoice] INTO detail
+			ADD id=id, value=retInvoice;
 	}
 };
