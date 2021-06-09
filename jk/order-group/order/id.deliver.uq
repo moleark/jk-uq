@@ -13,7 +13,7 @@ ID DeliverDetail ver 0.1 (
 );
 
 ID DeliverCenter;
-
+/*
 ACT SaveDeliver (
 	customer ID,
 	ARR detail (
@@ -49,3 +49,4 @@ ACT Delivered ver 0.5 (
 			SETX a.deliveredQuantity=deliverQuantity ACT=1;
 	}
 };
+*/

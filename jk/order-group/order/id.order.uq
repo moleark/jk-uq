@@ -1,0 +1,241 @@
+ID OrderMain ver 0.5 (
+	id,
+	KEY no,
+	customer ID,
+	sumQuanity DEC(12,2), 	-- 各行数量和
+	sumAmount DEC(12,2),	-- 各行金额和
+	couponNo CHAR(16),
+	sheetId ID,
+    shippingContact ID Contact,
+	INDEX customer_id(customer, id) UNIQUE,
+	INDEX sheetId(sheetId) UNIQUE,
+);
+
+ID OrderDetail ver 0.5 (
+	id,
+	main ID OrderMain,
+	warehouse ID DeliverCenter,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+);
+
+ID ReturnMain (
+	id,
+	orderMain ID,
+);
+
+ID ReturnDetail (
+	id,
+	main ID ReturnMain,
+	orderDetail ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+);
+
+IDX DxOrderDetail (
+	id,									-- order detail
+	deliver DEC(12,2),					-- 请发
+	deliverDone DEC(12,2),				-- 已发
+	receive DEC(12,2),					-- 请收
+	receiveDone DEC(12,2),				-- 已收
+	invoice DEC(12,2),					-- 请开票
+	invoiceDone DEC(12,2),				-- 已开票
+);
+
+IDX DxReturnDetail (
+	id,									-- return detail
+	orderDetail id,						-- 对应的order detail
+	deliver DEC(12,2) SUM,				-- 请退数量
+	deliverDone DEC(12,2) SUM,			-- 已退数量
+	receive DEC(12,2) SUM,				-- 请退款金额
+	receiveDone DEC(12,2) SUM,			-- 已退款金额
+	invoice DEC(12,2) SUM,				-- 请收回票金额
+	invoiceDone DEC(12,2) SUM,			-- 已收回票金额
+);
+/*
+IX IxPendingDeliver (
+	ix,					-- customer
+	xi OrderDetail,
+);
+
+IX IxPendingDeliverReturn (
+	ix,				 	-- customer
+	xi OrderDetail,
+);
+
+IX IxPendingReceive (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+IX IxPendingInvoice (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+IX IxPendingReceiveReturn (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+IX IxPendingInvoiceReturn (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+QUERY GetPendingDeliver (
+)
+RETURNS ret (
+	customer ID,
+	quantity DEC(12,2),			-- 要发运合计
+) {
+	INTO ret SELECT customer, sum(
+			b.quantity
+				-- - IFNULL(c.askReturnBeforeDeliverQuantity,0) // 不确定怎么加减这个，以后细想
+				-- - IFNULL(c.askReturnAfterDeliverQuantity,0) 	// 不确定怎么加减这个，以后细想
+				-- - IFNULL(c.returnedQuantity,0) 				// 不确定怎么加减这个，以后细想
+				-- - IFNULL(c.deliveredQuantity,0)				
+		) as quantity
+		FROM IxPendingDeliver as a
+			JOIN OrderDetail as b ON a.xi=b.id
+			LEFT JOIN DxOrderDetail as c ON b.id=c.id
+		GROUP BY a.ix as customer
+		ORDER BY customer;
+};
+*/
+
+-- 网上直接付款。这个应该走url通道，由网上支付公司来调用？
+-- 或者收款走手工，然后由收款人调用这个Action
+ACTION OrderPaid (
+	id ID OrderMain,
+	amount DEC(12,2),
+) 
+RETURNS ret (
+	ok TINYINT,			-- 0: succeed, 1: over amount, 2: short amount
+) {
+	VAR sumAmount DEC(12,2), ok TINYINT;
+	SET sumAmount=a.sumAmount FROM OrderMain as a WHERE a.id=id;
+	IF amount=sumAmount {
+		SET ok = 0;
+		BUS JkOrderBus.deliver SET id=id;
+		FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
+			OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse FROM OrderDetail as a WHERE a.main=id)
+		{
+			WITH DxOrderDetail as a ID = detailId
+				SET a.deliver=quantity					-- 请发
+					, a.receive=amount
+					, a.receiveDone=amount;
+			BUS JkOrderBus.deliver INTO detail 
+				ADD id=detailId, warehouse=warehouse;
+			BUS JkOrderBus.invoice INTO detail 
+				ADD id=detailId, value=amount;
+		}
+	}
+	ELSEIF amount<sumAmount {
+		SET ok = 2;
+	}
+	ELSE {
+		SET ok = 1;
+	}
+	INTO ret SELECT ok;
+};
+
+-- 客服确认订单
+ACTION OrderConfirm (
+	id ID OrderMain,
+) {
+	BUS JkOrderBus.deliver SET id=id;
+	FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
+		OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse FROM OrderDetail as a WHERE a.main=id)
+	{
+		WITH DxOrderDetail as a ID = detailId
+			SET a.deliver=quantity;					-- 请发
+		BUS JkOrderBus.deliver INTO detail 
+			ADD id=detailId, warehouse=warehouse;
+	}
+};
+
+
+-- 保存退货单
+ACTION SaveOrderReturn (
+	# [ReturnMain],
+	ARR detail (
+		# ReturnDetail,
+	),
+)
+RETURNS ret (
+	id ID,				-- 退货单id
+) {
+	-- 可以做退货复核检查。所有退货总金额，不能超过订单
+	-- 如果复核错误，返回0。退货单不能保存
+	VAR mainId ID, checkOk TINYINT;
+	SET mainId = 0;
+	SET checkOk = 1;
+	IF checkOk = 1 {
+		SET mainId=ID(ReturnMain new);
+		WITH ReturnMain ID=mainId;
+		BUS JkOrderBus.return SET id=mainId, [order-id]=orderMain;
+		FOR detail {
+			VAR detailId ID;
+			SET detailId=ID(ReturnDetail new);
+			WITH ReturnDetail ID=detailId SET main=mainId
+				, quantity=quantity, amount=amount;
+			BUS JkOrderBus.return INTO detail 
+				ADD id = detailId
+					, [order-detail-id] = orderDetail
+					, quantity = quantity
+					, amount = amount;
+		}
+	}
+	INTO ret SELECT mainId as id;
+};
+
+-- 保存订单，为了mock数据，直接发order bus，同时发deliver
+ACTION SaveOrder (
+	# [OrderMain],
+	ARR detail (
+		# OrderDetail,
+	),
+)
+RETURNS ret (
+	id ID,				-- 退货单id
+) {
+	-- 复核数量，单价。
+	-- 如果复核错误，返回0。订单单不能保存
+	VAR mainId ID, checkOk TINYINT;
+	SET mainId = 0;
+	SET checkOk = 1;
+	IF checkOk = 1 {
+		VAR orderNo CHAR(20);
+		SET orderNo = NO(OrderMain);
+		SET mainId=ID(OrderMain new, orderNo);
+		WITH OrderMain ID=mainId SET customer=customer
+			, sumQuanity=sumQuanity 	-- 各行数量和
+			, sumAmount=sumAmount		-- 各行金额和
+			, couponNo=couponNo
+			, sheetId=sheetId
+    		, shippingContact=shippingContact;
+		BUS JkOrderBus.order SET id=mainId, no=orderNo, customer=customer;
+		BUS JkOrderBus.deliver SET id=mainId;
+		FOR detail {
+			VAR detailId ID;
+			SET detailId=ID(OrderDetail new);
+			WITH OrderDetail ID=detailId SET main=mainId
+				, item=item, product=product
+				, quantity=quantity, amount=amount, price=price;
+			BUS JkOrderBus.order INTO detail 
+				ADD id = detailId
+					, item = item
+					, product = product
+					, quantity = quantity
+					, amount = amount
+					, price = price;
+			BUS JkOrderBus.deliver INTO detail 
+				ADD id = detailId, warehouse = warehouse;
+		}
+	}
+	INTO ret SELECT mainId as id;
+};

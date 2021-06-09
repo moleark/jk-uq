@@ -1,4 +1,4 @@
-BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order]
+BUS JkOrderBus ver 0.3 from 百灵威系统工程部/[jk-order]
 ACCEPT order {
 	VAR mainId ID, row INT;
 	SET mainId = id;

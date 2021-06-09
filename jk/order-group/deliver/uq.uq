@@ -1,0 +1,6 @@
+UQ 百灵威系统工程部/deliver version='1.00' author='ligsh';
+
+ROLE
+	warehouseManager: '库房经理',
+	dispatcher: '派货员，做发运操'
+;
