@@ -12,6 +12,8 @@ ID DeliverDetail ver 0.1 (
 	deliverQuantity DEC(12,2),
 );
 
+ID DeliverCenter;
+
 ACT SaveDeliver (
 	customer ID,
 	ARR detail (
