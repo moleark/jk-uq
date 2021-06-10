@@ -1,4 +1,3 @@
-BUS JkOrderBus from 百灵威系统工程部/[jk-order];
 BUS orderBus from 百灵威系统工程部/order;
 BUS webUserBus from 百灵威系统工程部/WebUser;
 BUS couponBus from 百灵威系统工程部/coupon;
@@ -27,3 +26,36 @@ bus fiReceivable from 百灵威系统工程部/FiReceivable
         delete p from OrderReceivable as p where p.order = order;
 
     };
+
+
+BUS JkOrderBus from 百灵威系统工程部/[jk-order]
+ACCEPT [done-deliver] {
+	FOR detail {
+		WITH DxOrderDetail ID=id SET deliverDone=value;
+	}
+}
+ACCEPT [done-receive] {
+	FOR detail {
+		WITH DxOrderDetail ID=id SET receiveDone=value;
+	}
+}
+ACCEPT [done-invoice] {
+	FOR detail {
+		WITH DxOrderDetail ID=id SET invoiceDone=value;
+	}
+}
+ACCEPT [done-return-deliver] {
+	FOR detail {
+		WITH DxReturnDetail ID=id SET deliverDone=value;
+	}
+}
+ACCEPT [done-return-receive] {
+	FOR detail {
+		WITH DxReturnDetail ID=id SET receiveDone=value;
+	}
+}
+ACCEPT [done-return-invoice] {
+	FOR detail {
+		WITH DxReturnDetail ID=id SET invoiceDone=value;
+	}
+};

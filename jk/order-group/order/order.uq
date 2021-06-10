@@ -60,7 +60,7 @@ BUS webUserBus.getCuByWu as q into tb {
 
 	WITH OrderMain as a ID mainId
 		SET a.customer = webUser, a.sheetId=$id, a.shippingContact = shippingContact;
-	WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
+	-- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
 	
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
     book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
@@ -70,9 +70,11 @@ BUS webUserBus.getCuByWu as q into tb {
 
     foreach orderItems {
       	var detailId ID;
-        SET detailId = ID(OrderDetail new, mainId, $row); -- row 值怎么写?
+        SET detailId = ID(OrderDetail new); -- row 值怎么写?
         WITH OrderDetail as a ID detailId 
-			SET a.product = product, a.pack = pack, a.price = price, a.quantity = quantity;
+			SET a.main = mainId
+				, a.product = product, a.item = pack
+				, a.price = price, a.quantity = quantity, a.amount = amount;
 		BUS JkOrderBus.order INTO [detail]
 			ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
         history OrderHistory

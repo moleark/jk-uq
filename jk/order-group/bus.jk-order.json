@@ -33,15 +33,20 @@
 		{ "name": "id", "type": "id" },
 		{ "name": "value", "type": "number" }
 	],
+	"deliver-detail": [
+		"id: id  -- order id",
+		"warehouse: id"
+	],
 	"deliver-note": [
-		"warehouse: id -- 如果不分库，这个id空",
-		"note"
+		"id: id  -- order id",
+		"detail: deliver-detail"
 	],
 	"deliver": [
 		"deliver-note"
 	],
 	"done-deliver": [
-		"deliver-note"
+		"note",
+		"warehouse: id"
 	],
 	"receive": [
 		"note"
@@ -57,6 +62,7 @@
 	],
 	"return": [
 		"id: id",
+		"order-id: id -- ?? 可以没有",
 		"detail: return-detail"
 	],
 	"done-return-deliver": [

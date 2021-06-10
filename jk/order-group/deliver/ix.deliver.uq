@@ -1,0 +1,91 @@
+ID Warehouse (
+	id,
+	KEY name CHAR(20),
+);
+
+IX IxUserWarehouse (
+	ix User,
+	xi Warehouse,
+);
+
+IX IxPendingDeliver (
+	ixx Warehouse,	
+	ix,					-- customer
+	xi OrderDetail,
+);
+
+IX IxCustomerPendingReturn (
+	ix,				 -- Customer
+	xi OrderDetail,
+);
+
+IDX DxOrderDetail (
+	id,									-- order detail id
+	deliver DEC(12,2),					-- 请发
+	deliverDone DEC(12,2),				-- 已发
+	returnDone DEC(12,2),				-- 已退货
+);
+
+IDX DxReturnDetail (
+	id,									-- return detail
+	orderDetail id,						-- 对应的order detail
+	quantity DEC(12,2) SUM,				-- 请退货数量
+	quantityDone DEC(12,2) SUM,			-- 已退货数量
+);
+
+QUERY WarehousePendingDeliver(
+)
+RETURNS ret (
+	warehouse ID,
+	customer ID,
+	rowCount DEC(12,2),
+) {
+	INTO ret SELECT warehouse, customer, count(b.xi) as rowCount
+		FROM IxUserWarehouse as a
+			JOIN IxPendingDeliver as b on a.xi=b.ixx
+		WHERE a.ix=$user
+		GROUP BY b.ixx as warehouse, b.ix as customer;
+};
+
+QUERY CustomerPendingDeliver(
+	warehouse ID,
+	customer ID,
+)
+RETURNS ret (
+	orderDetail ID,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+	deliver DEC(12,2),					-- 请发
+	deliverDone DEC(12,2),				-- 已发
+	returnDone DEC(12,2),				-- 已退货
+) {
+	INTO ret SELECT b.id as orderDetail
+		, b.item, b.product, b.quantity, b.amount, b.price
+		, c.deliver, c.deliverDone, c.returnDone
+		FROM IxPendingDeliver as a
+			JOIN OrderDetail as b on a.xi=b.id
+			JOIN DxOrderDetail as c on b.id=c.id
+		WHERE a.ixx=warehouse AND a.ix=customer;
+};
+
+ACT DoneDeliver ver 0.2 (
+	warehouse ID,
+	customer ID,
+	ARR detail (
+		orderDetail ID,
+		quantity DEC(12,2),
+	)
+) {
+	BUS JkOrderBus.[done-deliver] SET warehouse=warehouse;
+	FOR detail {
+		IF quantity IS NULL CONTINUE;
+		WITH DxOrderDetail as a ID=orderDetail
+			SET a.deliverDone=quantity;
+		WITH IxPendingDeliver IXX=warehouse IX=customer XI=orderDetail DEL;
+		BUS JkOrderBus.[done-deliver] INTO detail 
+			ADD id=orderDetail, value=quantity;
+	}
+};
