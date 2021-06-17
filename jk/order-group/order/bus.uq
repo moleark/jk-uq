@@ -28,10 +28,18 @@ bus fiReceivable from 百灵威系统工程部/FiReceivable
     };
 
 
-BUS JkOrderBus from 百灵威系统工程部/[jk-order]
+BUS JkOrderBus ver 0.1 from 百灵威系统工程部/[jk-order]
 ACCEPT [done-deliver] {
+	BUS JkOrderBus.receive SET id=id;	-- 因为可以是多张订单上的内容一起发送，所以，id可能是null
+	BUS JkOrderBus.invoice SET id=id;
 	FOR detail {
-		WITH DxOrderDetail ID=id SET deliverDone=value;
+		VAR amount DEC(12,2);
+		SET amount = (value * a.amount) / a.quantity FROM OrderDetail as a WHERE a.id=id;
+		WITH DxOrderDetail ID=id SET deliverDone=value, receive=amount, invoice=amount;
+		BUS JkOrderBus.receive INTO detail
+			ADD id = id, value = amount;
+		BUS JkOrderBus.invoice INTO detail
+			ADD id = id, value = amount;
 	}
 }
 ACCEPT [done-receive] {

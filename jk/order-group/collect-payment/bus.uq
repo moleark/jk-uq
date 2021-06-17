@@ -1,4 +1,4 @@
-BUS JkOrderBus ver 0.3 from 百灵威系统工程部/[jk-order]
+BUS JkOrderBus ver 0.7 from 百灵威系统工程部/[jk-order]
 ACCEPT order {
 	VAR mainId ID, row INT;
 	SET mainId = id;
@@ -14,17 +14,21 @@ ACCEPT order {
 	}
 }
 ACCEPT receive {
-	VAR customer ID;
-	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
 	FOR detail {
+		VAR customer ID;
+		SET customer = b.customer 
+			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
+			WHERE a.id=id;
 		WITH IxCustomerPendingReceive IX=customer XI=id;
 		WITH DxOrderDetail as a ID=id SET a.receive=value;
 	}
 }
 ACCEPT invoice {
-	VAR customer ID;
-	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
 	FOR detail {
+		VAR customer ID;
+		SET customer = b.customer 
+			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
+			WHERE a.id=id;
 		WITH IxCustomerPendingInvoice IX=customer XI=id;
 		WITH DxOrderDetail as a ID=id SET a.invoice=value;
 	}

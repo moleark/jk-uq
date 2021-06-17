@@ -1,7 +1,8 @@
-ID OrderMain ver 0.5 (
+ID OrderMain ver 0.5 GLOBAL (
 	id,
 	KEY no,
 	customer ID,
+	contact ID,
 	sumQuanity DEC(12,2), 	-- 各行数量和
 	sumAmount DEC(12,2),	-- 各行金额和
 	couponNo CHAR(16),
@@ -11,10 +12,10 @@ ID OrderMain ver 0.5 (
 	INDEX sheetId(sheetId) UNIQUE,
 );
 
-ID OrderDetail ver 0.5 (
+ID OrderDetail ver 0.5 GLOBAL (
 	id,
 	main ID OrderMain,
-	warehouse ID DeliverCenter,
+	warehouse ID,
 	item ID,
 	product ID,
 	quantity DEC(12,2),
@@ -22,12 +23,12 @@ ID OrderDetail ver 0.5 (
 	price DEC(12,2),
 );
 
-ID ReturnMain (
+ID ReturnMain GLOBAL (
 	id,
 	orderMain ID,
 );
 
-ID ReturnDetail (
+ID ReturnDetail GLOBAL (
 	id,
 	main ID ReturnMain,
 	orderDetail ID,
@@ -122,7 +123,8 @@ RETURNS ret (
 		SET ok = 0;
 		BUS JkOrderBus.deliver SET id=id;
 		FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
-			OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse FROM OrderDetail as a WHERE a.main=id)
+			OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse 
+			FROM OrderDetail as a WHERE a.main=id)
 		{
 			WITH DxOrderDetail as a ID = detailId
 				SET a.deliver=quantity					-- 请发
@@ -147,17 +149,20 @@ RETURNS ret (
 ACTION OrderConfirm (
 	id ID OrderMain,
 ) {
-	BUS JkOrderBus.deliver SET id=id;
+	BUS JkOrderBus.[deliver-ext] SET id=id;
+	BUS JkOrderBus.deliver SET id=id, contact=null;
 	FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
-		OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse FROM OrderDetail as a WHERE a.main=id)
+		OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse 
+		FROM OrderDetail as a WHERE a.main=id)
 	{
 		WITH DxOrderDetail as a ID = detailId
 			SET a.deliver=quantity;					-- 请发
+		BUS JkOrderBus.[deliver-ext] INTO detail 
+			ADD id=detailId, needInsuredWhenDelivery=1;
 		BUS JkOrderBus.deliver INTO detail 
 			ADD id=detailId, warehouse=warehouse;
 	}
 };
-
 
 -- 保存退货单
 ACTION SaveOrderReturn (
@@ -219,13 +224,15 @@ RETURNS ret (
 			, sheetId=sheetId
     		, shippingContact=shippingContact;
 		BUS JkOrderBus.order SET id=mainId, no=orderNo, customer=customer;
-		BUS JkOrderBus.deliver SET id=mainId;
+		BUS JkOrderBus.[deliver-ext] SET id=mainId;
+		BUS JkOrderBus.deliver SET id=mainId, contact=contact;
 		FOR detail {
 			VAR detailId ID;
 			SET detailId=ID(OrderDetail new);
 			WITH OrderDetail ID=detailId SET main=mainId
 				, item=item, product=product
 				, quantity=quantity, amount=amount, price=price;
+			WITH DxOrderDetail ID=detailId SET deliver=quantity;
 			BUS JkOrderBus.order INTO detail 
 				ADD id = detailId
 					, item = item
@@ -233,6 +240,8 @@ RETURNS ret (
 					, quantity = quantity
 					, amount = amount
 					, price = price;
+			BUS JkOrderBus.[deliver-ext] INTO detail 
+				ADD id = detailId, needInsuredWhenDelivery = 0;
 			BUS JkOrderBus.deliver INTO detail 
 				ADD id = detailId, warehouse = warehouse;
 		}

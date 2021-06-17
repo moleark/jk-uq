@@ -70,7 +70,7 @@ BUS webUserBus.getCuByWu as q into tb {
 
     foreach orderItems {
       	var detailId ID;
-        SET detailId = ID(OrderDetail new); -- row 值怎么写?
+        SET detailId = ID(OrderDetail new);
         WITH OrderDetail as a ID detailId 
 			SET a.main = mainId
 				, a.product = product, a.item = pack
