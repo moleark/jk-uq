@@ -21,6 +21,9 @@ ACCEPT deliver {
 		SET quantity = a.quantity FROM OrderDetail as a WHERE a.id=id;
 		WITH IxPendingDeliver ixx=warehouse ix=customer xi=id;
 		WITH DxOrderDetail as a ID=id SET a.deliver=quantity;
+		FOR (VAR user ID OF SELECT ix as user FROM IxUserWarehouse WHERE xi=warehouse) {
+			TUID [$User] ID (user) SET poke=1;
+		}
 	}
 }
 ACCEPT [deliver-ext] {

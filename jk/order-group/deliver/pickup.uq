@@ -71,7 +71,7 @@ RETURNS delivers (
 				WHERE a.ixx=warehouse
 				LIMIT pickupMaxRows;
 		IF (select count(*) from tblPickup)=0 {
-			RETURN;
+			BREAK;
 		}
 		DELETE a 
 			FROM IxPendingDeliver as a JOIN tblPickup as b ON a.xi=b.orderDetail
@@ -89,6 +89,9 @@ RETURNS delivers (
 		}
 		WITH DxPicking ID=pickup;
 		INTO pickups SELECT pickup as id, pickupNo as no;
+	}
+	FOR (VAR user ID OF SELECT ix as user FROM IxUserWarehouse WHERE xi=warehouse) {
+		TUID [$User] ID (user) SET poke=1;
 	}
 };
 
