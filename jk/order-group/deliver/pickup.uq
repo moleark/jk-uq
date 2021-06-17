@@ -1,0 +1,139 @@
+ID Pickup (
+	id,
+	KEY no,
+	warehouse ID,
+	picker ID,
+	startTime TIMESTAMP,
+	finishTime TIMESTAMP,
+	sys(create, owner),	
+);
+
+ID PickupDetail (
+	id,						-- orderDetail
+	main ID Pickup,			-- Pickup id
+);
+
+IDX DxPicking (
+	id,							-- pickup id
+);
+
+-- 把当前所有待发货条目，生成发运单和拣货单
+ACT Pick(
+	warehouse ID,
+	pickupMaxRows INT
+)
+RETURNS pickups (
+	id ID,
+	no CHAR(20),			-- 拣货单编号
+)
+RETURNS delivers (
+	id ID,
+	no CHAR(20),			-- 发运单编号
+) {
+	-- 操作权限检查
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=warehouse) {
+		RETURN;
+	}
+
+	-- 生成发运单
+	TABLE tblDeliver(key customer ID);
+	INTO tblDeliver SELECT customer
+		FROM IxPendingDeliver as a
+		WHERE a.ixx=warehouse
+		GROUP BY a.ix as customer;
+	FOR (VAR customer ID OF SELECT customer FROM tblDeliver WHERE 1=1) {
+		VAR deliver ID, deliverNo CHAR(20);
+		SET deliverNo=NO(DeliverMain);
+		SET deliver=ID(DeliverMain new, deliverNo);
+		WITH DeliverMain as a ID=deliver SET a.customer=customer, a.warehouse=warehouse;
+		FOR (VAR orderDetail ID OF
+			SELECT a.xi as orderDetail
+				FROM IxPendingDeliver as a 
+				WHERE a.ixx=warehouse AND a.ix=customer)
+		{
+			WITH DeliverDetail ID=orderDetail SET main=deliver;
+		}
+		WITH IxWarehoueDeliverMain IX=warehouse XI=deliver;
+		INTO delivers SELECT deliver as id, deliverNo as no;
+	}
+
+	-- 生成拣货单
+	IF pickupMaxRows IS NULL {
+		SET pickupMaxRows=1000;
+	}
+	TABLE tblPickup(key orderDetail ID, customer ID);
+	WHILE 1=1 { 
+		DELETE FROM tblPickup as a WHERE 1=1;
+		INTO tblPickup SELECT a.xi as orderDetail, a.ix as customer 
+				FROM IxPendingDeliver as a
+					LEFT JOIN PickupDetail as b ON a.xi=b.id
+					LEFT JOIN DxPicking as c ON b.main=c.id
+				WHERE a.ixx=warehouse
+				LIMIT pickupMaxRows;
+		IF (select count(*) from tblPickup)=0 {
+			RETURN;
+		}
+		DELETE a 
+			FROM IxPendingDeliver as a JOIN tblPickup as b ON a.xi=b.orderDetail
+			WHERE a.ixx=warehouse;
+		VAR pickup ID, pickupNo CHAR(20);
+		SET pickupNo=NO(Pickup);
+		SET pickup=ID(Pickup new, pickupNo);
+		WITH Pickup as a ID=pickup SET a.warehouse=warehouse;
+		WITH DxPicking as a ID=pickup;
+		FOR (VAR orderDetail ID, customer ID 
+			OF SELECT a.orderDetail, a.customer 
+				FROM tblPickup as a)
+		{
+			WITH PickupDetail ID=orderDetail SET main=pickup;
+		}
+		WITH DxPicking ID=pickup;
+		INTO pickups SELECT pickup as id, pickupNo as no;
+	}
+};
+
+ACT DonePickupDeliver(
+	pickup ID,
+) {
+	VAR warehouse ID;
+	SET warehouse=a.warehouse FROM Pickup as a WHERE a.id=pickup;
+	-- 操作权限检查
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=warehouse) {
+		RETURN;
+	}
+	BUS JkOrderBus.[done-deliver] SET warehouse=warehouse;
+	FOR (VAR orderDetail ID, customer ID, quantity DEC(12,2)
+		OF SELECT a.id as orderDetail, c.customer, b.quantity
+			FROM PickupDetail as a 
+				JOIN OrderDetail as b ON a.id=b.id
+				JOIN OrderMain as c ON b.main=c.id
+			WHERE a.main=pickup
+	 ) {
+		IF quantity IS NULL CONTINUE;
+		WITH DxOrderDetail as a ID=orderDetail
+			SET a.deliverDone=quantity;
+		WITH IxPendingDeliver IXX=warehouse IX=customer XI=orderDetail DEL;
+		BUS JkOrderBus.[done-deliver] INTO detail 
+			ADD id=orderDetail, value=quantity;
+	}
+	WITH DxPicking ID=pickup DEL;
+};
+
+QUERY WarehousePickups(
+	-- warehouse ID,
+)
+RETURNS ret (
+	warehouse ID,
+	pickup ID,
+	no CHAR(20),
+	create TIMESTAMP,
+	picker ID,
+) {
+	INTO ret SELECT b.warehouse, b.id as pickup, b.no
+		, b.[$create] as create
+		, b.picker
+		FROM IxUserWarehouse as uw
+			JOIN Pickup as b ON uw.xi=b.warehouse
+			JOIN DxPicking as a ON a.id=b.id
+		WHERE uw.ix=$user;
+};

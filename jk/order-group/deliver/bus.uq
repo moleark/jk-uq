@@ -1,6 +1,6 @@
-BUS JkOrderBus ver 0.6 from 百灵威系统工程部/[jk-order]
+BUS JkOrderBus ver 0.7 from 百灵威系统工程部/[jk-order]
 ACCEPT order {
-	VAR mainId ID, row INT;
+	VAR mainId ID;
 	SET mainId = id;
 	WITH OrderMain as a ID=id SET a.no=no, a.customer=customer;
 	FOR detail {
@@ -9,18 +9,23 @@ ACCEPT order {
 			SET a.main=mainId
 				, a.item=item, a.product=product
 				, a.quantity=quantity, a.amount=amount, a.price=price;
-		SET row=row+1;
 	}
 }
 ACCEPT deliver {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
+	WITH OrderMain as a ID=id SET a.contact=contact;
 	FOR detail {
 		VAR quantity DEC(12,2);
 		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
 		SET quantity = a.quantity FROM OrderDetail as a WHERE a.id=id;
 		WITH IxPendingDeliver ixx=warehouse ix=customer xi=id;
 		WITH DxOrderDetail as a ID=id SET a.deliver=quantity;
+	}
+}
+ACCEPT [deliver-ext] {
+	FOR detail {
+		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery;
 	}
 }
 ACCEPT [return] {

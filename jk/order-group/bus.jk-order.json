@@ -34,15 +34,24 @@
 		{ "name": "value", "type": "number" }
 	],
 	"deliver-detail": [
-		"id: id  -- order id",
+		"id: id  -- order detail id",
 		"warehouse: id"
 	],
-	"deliver-note": [
+	"deliver": [
+		"-- 通用些的发运字段，一般不会变化",
 		"id: id  -- order id",
+		"contact: id -- 发货地址id。",
 		"detail: deliver-detail"
 	],
-	"deliver": [
-		"deliver-note"
+	"deliver-detail-ext": [
+		"-- ext是对deliver的扩展，都是具体业务相关内容。变化可能性比较大",
+		"id: id  -- order detail id",
+		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1"
+	],
+	"deliver-ext": [
+		"-- 这个bus消息必须在deliver消息之前发。是附加消息，可能根据业务的形态发生变化",
+		"id: id  -- order id",
+		"detail: deliver-detail-ext"
 	],
 	"done-deliver": [
 		"note",

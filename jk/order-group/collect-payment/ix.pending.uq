@@ -36,3 +36,115 @@ IDX DxReturnDetail (
 	invoice DEC(12,2) SUM,				-- 请收回票金额
 	invoiceDone DEC(12,2) SUM,			-- 已收回票金额
 );
+
+------------------------------------------------------
+----------------------- INVOICE ----------------------
+------------------------------------------------------
+QUERY PendingReceive(
+)
+RETURNS ret (
+	customer ID,
+	rowCount DEC(12,2),
+) {
+	INTO ret SELECT customer, count(b.xi) as rowCount
+		FROM IxCustomerPendingReceive as b
+		-- WHERE a.ix=$user
+		GROUP BY b.ix as customer;
+};
+
+QUERY CustomerPendingReceive(
+	customer ID,
+)
+RETURNS ret (
+	orderDetail ID,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+	receive DEC(12,2),					-- 请收款
+	receiveDone DEC(12,2),				-- 已收款
+	receiveReturnDone DEC(12,2),		-- 退货已退款
+) {
+	INTO ret SELECT b.id as orderDetail
+		, b.item, b.product, b.quantity, b.amount, b.price
+		, c.receive, c.receiveDone, c.receiveReturnDone
+		FROM IxCustomerPendingReceive as a
+			JOIN OrderDetail as b on a.xi=b.id
+			JOIN DxOrderDetail as c on b.id=c.id
+		WHERE a.ix=customer;
+};
+
+ACT DoneReceive ver 0.2 (
+	customer ID,
+	ARR detail (
+		orderDetail ID,
+		amount DEC(12,2),
+	)
+) {
+	BUS JkOrderBus.[done-receive] SET id=null;
+	FOR detail {
+		IF amount IS NULL CONTINUE;
+		WITH DxOrderDetail as a ID=orderDetail
+			SET a.receiveDone=amount;
+		WITH IxCustomerPendingReceive IX=customer XI=orderDetail DEL;
+		BUS JkOrderBus.[done-receive] INTO detail 
+			ADD id=orderDetail, value=amount;
+	}
+};
+
+------------------------------------------------------
+----------------------- INVOICE ----------------------
+------------------------------------------------------
+QUERY PendingInvoice(
+)
+RETURNS ret (
+	customer ID,
+	rowCount DEC(12,2),
+) {
+	INTO ret SELECT customer, count(b.xi) as rowCount
+		FROM IxCustomerPendingInvoice as b
+		-- WHERE a.ix=$user
+		GROUP BY b.ix as customer;
+};
+
+QUERY CustomerPendingInvoice(
+	customer ID,
+)
+RETURNS ret (
+	orderDetail ID,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+	invoice DEC(12,2),					-- 请开票
+	invoiceDone DEC(12,2),				-- 已开票
+	invoiceReturnDone DEC(12,2),		-- 退货已退票
+) {
+	INTO ret SELECT b.id as orderDetail
+		, b.item, b.product, b.quantity, b.amount, b.price
+		, c.invoice, c.invoiceDone, c.invoiceReturnDone
+		FROM IxCustomerPendingInvoice as a
+			JOIN OrderDetail as b on a.xi=b.id
+			JOIN DxOrderDetail as c on b.id=c.id
+		WHERE a.ix=customer;
+};
+
+ACT DoneInvoice ver 0.2 (
+	customer ID,
+	ARR detail (
+		orderDetail ID,
+		amount DEC(12,2),
+	)
+) {
+	BUS JkOrderBus.[done-invoice] SET id=null;
+	FOR detail {
+		IF amount IS NULL CONTINUE;
+		WITH DxOrderDetail as a ID=orderDetail
+			SET a.invoiceDone=amount;
+		WITH IxCustomerPendingInvoice IX=customer XI=orderDetail DEL;
+		BUS JkOrderBus.[done-invoice] INTO detail 
+			ADD id=orderDetail, value=amount;
+	}
+};

@@ -3,6 +3,31 @@ ID Warehouse (
 	KEY name CHAR(20),
 );
 
+ID DeliverMain (
+	id,
+	KEY no,
+	customer ID,
+	warehouse ID,
+	sys(create),
+);
+
+ID DeliverDetail (
+	id,						-- orderDetail
+	main ID DeliverMain,	-- DeliverMain id
+);
+
+IDX DxDeliver (
+	id,										-- pickup id
+	staff ID,								-- 发运人
+	picked TINYINT DEFAULT 0,				-- 已拣货
+	deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
+);
+
+IX IxWarehoueDeliverMain (
+	ix Warehouse,
+	xi DeliverMain,
+);
+
 IX IxUserWarehouse (
 	ix User,
 	xi Warehouse,
@@ -37,14 +62,35 @@ QUERY WarehousePendingDeliver(
 )
 RETURNS ret (
 	warehouse ID,
-	customer ID,
 	rowCount DEC(12,2),
 ) {
-	INTO ret SELECT warehouse, customer, count(b.xi) as rowCount
+	INTO ret SELECT warehouse
+		-- , customer
+		, count(b.xi) as rowCount
 		FROM IxUserWarehouse as a
 			JOIN IxPendingDeliver as b on a.xi=b.ixx
 		WHERE a.ix=$user
-		GROUP BY b.ixx as warehouse, b.ix as customer;
+		GROUP BY b.ixx as warehouse; -- , b.ix as customer;
+};
+
+QUERY WarehouseDeliverMain (
+)
+RETURNS ret (
+	warehouse ID,
+	deliverMan ID,
+	no CHAR(20),
+	customer ID,
+	create TIMESTAMP,
+	picked TINYINT,
+) {
+	INTO ret SELECT uw.xi as warehouse
+		, b.id as deliverMan, b.no
+		, b.customer, b.[$create] as create, c.picked
+		FROM IxUserWarehouse as uw
+			JOIN IxWarehoueDeliverMain as a ON uw.xi=a.ix
+			JOIN DeliverMain as b ON a.xi=b.id
+			LEFT JOIN DxDeliver as c ON b.id=c.id
+		WHERE uw.ix=$user;
 };
 
 QUERY CustomerPendingDeliver(
@@ -68,6 +114,7 @@ RETURNS ret (
 		FROM IxPendingDeliver as a
 			JOIN OrderDetail as b on a.xi=b.id
 			JOIN DxOrderDetail as c on b.id=c.id
+			-- JOIN IxUserWarehouse as d on d.ix=$user AND d.xi=a.ixx
 		WHERE a.ixx=warehouse AND a.ix=customer;
 };
 
@@ -79,6 +126,10 @@ ACT DoneDeliver ver 0.2 (
 		quantity DEC(12,2),
 	)
 ) {
+	-- 操作权限检查
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=warehouse) {
+		RETURN;
+	}
 	BUS JkOrderBus.[done-deliver] SET warehouse=warehouse;
 	FOR detail {
 		IF quantity IS NULL CONTINUE;
