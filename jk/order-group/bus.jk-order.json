@@ -27,11 +27,11 @@
 	],
 	"note": [
 		{ "name": "id", "type": "id" },
-		{ "name": "detail", "type": "array", "fields": "note-detail" }
+		"detail: note-detail"
 	],
 	"note-detail": [
-		{ "name": "id", "type": "id" },
-		{ "name": "value", "type": "number" }
+		"id: id",
+		"value: number"
 	],
 	"deliver-detail": [
 		"id: id  -- order detail id",
@@ -56,6 +56,9 @@
 	"done-deliver": [
 		"note",
 		"warehouse: id"
+	],
+	"done-pickup": [
+		"detail: note-detail"
 	],
 	"receive": [
 		"note"

@@ -1,0 +1,18 @@
+ID OrderMain ver 0.3 (
+	id,
+	KEY no,
+);
+
+ID OrderDetail ver 0.1 (
+	id,
+	main ID OrderMain,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	warehouse ID,						-- 库房
+);
+
+IDX OrderDetailX (
+	id,
+	needInsuredWhenDelivery TINYINT,
+);

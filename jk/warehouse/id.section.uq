@@ -1,0 +1,34 @@
+-- 库存分段。可以是x, y, z。例如：x=Lane, y=shelf, z=layer
+ID Section (	
+	id,
+	parent ID Location DEFAULT 0,
+	name CHAR(20),
+	warehouse ID,
+	INDEX parent_id(parent, id) UNIQUE,
+);
+
+IX WarehouseSection (
+	ix,		-- Warehouse -- 目前是Tuid，以后改成ID
+	xi Section,
+);
+
+-- 存放货位，放货时刻生成的。
+ID StorePoint (
+	id,
+	KEY x ID Section DEFAULT 0,
+	KEY y ID Section DEFAULT 0,
+	KEY z ID Section DEFAULT 0,
+);
+
+ID Item (
+	id,
+	KEY product ID,
+	KEY pack ID,
+);
+
+IX ItemStore (
+	ix Item,
+	xi StorePoint,
+	quantity DEC(12,2),
+);
+
