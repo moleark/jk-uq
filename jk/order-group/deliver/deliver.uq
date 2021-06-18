@@ -13,7 +13,7 @@ ID DeliverMain (
 
 ID DeliverDetail (
 	id,						-- orderDetail
-	main ID DeliverMain,	-- DeliverMain id
+	main ID DeliverMain,	-- DeliverMain id	
 );
 
 IDX DxDeliver (

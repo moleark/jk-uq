@@ -9,8 +9,10 @@ ID Pickup (
 );
 
 ID PickupDetail (
-	id,						-- orderDetail
+	id,
 	main ID Pickup,			-- Pickup id
+	orderDetail ID,
+	quantity DEC(12,2),
 );
 
 IDX DxPicking (

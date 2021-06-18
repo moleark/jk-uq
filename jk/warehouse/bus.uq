@@ -1,3 +1,28 @@
+BUS JkOrderBus ver 0.7 from 百灵威系统工程部/[jk-order]
+ACCEPT order {
+	VAR mainId ID;
+	SET mainId = id;
+	WITH OrderMain as a ID=id SET a.no=no;
+	FOR detail {
+		WITH OrderDetail as a 
+			ID = id
+			SET a.main=mainId
+				, a.item=item, a.product=product
+				, a.quantity=quantity;
+	}
+}
+ACCEPT deliver {
+	FOR detail {
+		VAR quantity DEC(12,2);
+		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
+	}
+}
+ACCEPT [deliver-ext] {
+	FOR detail {
+		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery;
+	}
+};
+
 BUS warehouseBus from [百灵威系统工程部]/warehouse
     ACCEPT productInventory {
         book ProductInventory at (warehouse, product, pack) set quantity = quantity;
