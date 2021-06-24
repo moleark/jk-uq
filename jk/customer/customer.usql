@@ -37,7 +37,7 @@ OPEN MAP OrganizationCustomer (
 );
 
 -- Organization的默认发票信息表
-OPEN MAP WebUserSetting ver 0.1(
+OPEN MAP OrganizationSetting ver 0.1(
     key organization ID Organization,
     invoiceType ID InvoiceType,
     invoiceInfo ID InvoiceInfo,
