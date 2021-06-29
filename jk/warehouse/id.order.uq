@@ -15,4 +15,5 @@ ID OrderDetail ver 0.1 (
 IDX OrderDetailX (
 	id,
 	needInsuredWhenDelivery TINYINT,
+	expressLogistics ID ExpressLogistics
 );

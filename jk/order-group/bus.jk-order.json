@@ -46,7 +46,11 @@
 	"deliver-detail-ext": [
 		"-- ext是对deliver的扩展，都是具体业务相关内容。变化可能性比较大",
 		"id: id  -- order detail id",
-		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1"
+		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1",
+
+		"--扩展信息怎么使用？ 例如：我要新增扩展信息： 发运方式 expressLogistics，直接在表中新增 “expressLogistics”的字段使用？",
+		"expressLogistics: id  -- 快递物流"
+
 	],
 	"deliver-ext": [
 		"-- 这个bus消息必须在deliver消息之前发。是附加消息，可能根据业务的形态发生变化",
