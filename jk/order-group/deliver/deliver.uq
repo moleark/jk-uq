@@ -17,13 +17,14 @@ ID DeliverDetail (
 );
 
 IDX DxDeliver (
-	id,										-- pickup id
+	id,										-- deliver main id
 	staff ID,								-- 发运人
-	picked TINYINT DEFAULT 0,				-- 已拣货
+	rows SMALLINT DEFAULT 0,				-- 行数
+	pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
 	deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
 );
 
-IX IxWarehoueDeliverMain (
+IX IxWarehouseDeliverMain (
 	ix Warehouse,
 	xi DeliverMain,
 );
@@ -46,7 +47,8 @@ IX IxCustomerPendingReturn (
 
 IDX DxOrderDetail (
 	id,									-- order detail id
-	deliver DEC(12,2),					-- 请发
+	deliverShould DEC(12,2),			-- 请发, 一个订单分仓，有可能跟订单上不一样
+	pickDone DEC(12,2) DEFAULT -1,		-- 已捡
 	deliverDone DEC(12,2),				-- 已发
 	returnDone DEC(12,2),				-- 已退货
 );
@@ -77,17 +79,18 @@ QUERY WarehouseDeliverMain (
 )
 RETURNS ret (
 	warehouse ID,
-	deliverMan ID,
+	deliverMain ID,
 	no CHAR(20),
 	customer ID,
 	create TIMESTAMP,
-	picked TINYINT,
+	rows SMALLINT,
+	pickRows SMALLINT,
 ) {
 	INTO ret SELECT uw.xi as warehouse
-		, b.id as deliverMan, b.no
-		, b.customer, b.[$create] as create, c.picked
+		, b.id as deliverMain, b.no
+		, b.customer, b.[$create] as create, c.rows, c.pickRows
 		FROM IxUserWarehouse as uw
-			JOIN IxWarehoueDeliverMain as a ON uw.xi=a.ix
+			JOIN IxWarehouseDeliverMain as a ON uw.xi=a.ix
 			JOIN DeliverMain as b ON a.xi=b.id
 			LEFT JOIN DxDeliver as c ON b.id=c.id
 		WHERE uw.ix=$user;
@@ -104,13 +107,13 @@ RETURNS ret (
 	quantity DEC(12,2),
 	amount DEC(12,2),
 	price DEC(12,2),
-	deliver DEC(12,2),					-- 请发
+	deliverShould DEC(12,2),			-- 请发
 	deliverDone DEC(12,2),				-- 已发
 	returnDone DEC(12,2),				-- 已退货
 ) {
 	INTO ret SELECT b.id as orderDetail
 		, b.item, b.product, b.quantity, b.amount, b.price
-		, c.deliver, c.deliverDone, c.returnDone
+		, c.deliverShould, c.deliverDone, c.returnDone
 		FROM IxPendingDeliver as a
 			JOIN OrderDetail as b on a.xi=b.id
 			JOIN DxOrderDetail as c on b.id=c.id
@@ -139,4 +142,76 @@ ACT DoneDeliver ver 0.2 (
 		BUS JkOrderBus.[done-deliver] INTO detail 
 			ADD id=orderDetail, value=quantity;
 	}
+};
+
+ACT AutoWarehouseDeliver()
+{
+	-- 生成发运单
+	LOG 'AutoWarehouseDeliver' SUBJECT 'start';
+	TABLE tblWarehouseDeliver(key warehouse ID, key customer ID, deliver ID);
+	WHILE 1=1 {
+		VAR warehouse ID, customer ID, orderDetail ID;
+		SET warehouse=NULL;
+		SET warehouse=a.ixx, customer=a.ix, orderDetail=a.xi
+			FROM IxPendingDeliver as a
+			ORDER BY a.ixx, a.ix, a.xi
+			LIMIT 1;
+		IF warehouse IS NULL {
+			BREAK;
+		}
+		DELETE a FROM IxPendingDeliver as a 
+			WHERE a.ixx=warehouse AND a.ix=customer AND a.xi=orderDetail;
+
+		VAR deliver ID, deliverNo CHAR(20);
+		SET deliver=NULL;
+		SET deliver=a.deliver FROM tblWarehouseDeliver as a 
+			WHERE a.warehouse=warehouse AND a.customer=customer;
+		IF deliver IS NULL {
+			SET deliverNo=NO(DeliverMain);
+			SET deliver=ID(DeliverMain new, deliverNo);
+			WITH DeliverMain as a ID=deliver SET a.customer=customer, a.warehouse=warehouse;
+			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
+			INTO tblWarehouseDeliver SELECT warehouse, customer, deliver;
+			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
+			WITH DxDeliver as a ID=deliver;
+		}
+		WITH DeliverDetail ID=orderDetail SET main=deliver;
+		WITH DxDeliver as a ID=deliver SET a.rows=a.rows+1;
+	}
+	LOG 'AutoWarehouseDeliver' SUBJECT 'end';
+};
+
+QUERY GetDeliver (
+	deliver ID,
+)
+RETURNS main (
+	# [DeliverMain],
+	staff ID,								-- 发运人
+	rows SMALLINT DEFAULT 0,				-- 行数
+	pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
+	deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
+)
+RETURNS detail (
+	# [DeliverDetail],
+	item ID,
+	product ID,
+	deliverShould DEC(12,2),
+	pickDone DEC(12,2),
+	deliverDone DEC(12,2),
+	returnDone DEC(12,2),
+) {
+	INTO main SELECT a.id, a.no
+		, a.customer, a.warehouse
+		, b.staff , b.rows, b.pickRows, b.deliverTime
+		FROM DeliverMain as a
+			LEFT JOIN DxDeliver as b ON a.id=b.id
+		WHERE a.id=deliver;
+	INTO detail SELECT a.id,
+		a.main,			-- DeliverMain id
+		b.item, b.product,
+		c.deliverShould, c.pickDone, c.deliverDone, c.returnDone
+		FROM DeliverDetail as a 
+			JOIN OrderDetail as b ON a.id=b.id
+			LEFT JOIN DxOrderDetail as c ON a.id=c.id
+		WHERE a.main=deliver;
 };
