@@ -1,4 +1,4 @@
-BUS JkOrderBus ver 0.7 from 百灵威系统工程部/[jk-order]
+BUS JkOrderBus ver 0.9 from 百灵威系统工程部/[jk-order]
 ACCEPT order {
 	VAR mainId ID;
 	SET mainId = id;
@@ -15,7 +15,9 @@ ACCEPT deliver {
 	FOR detail {
 		VAR quantity DEC(12,2);
 		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
+		WITH IxPendingPickup ix=warehouse xi=id;
 	}
+	SCHEDULE AutoPick DELAY 2; -- 2分钟以后执行一次
 }
 ACCEPT [deliver-ext] {
 	FOR detail {

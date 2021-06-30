@@ -1,0 +1,23 @@
+ACT Piling (
+	deliver ID,
+) {
+	WITH DxDeliver ID=deliver SET staff=$user;
+};
+
+ACT DonePileup (
+	deliver ID,
+	-- 实际拣货数量。
+	ARR detail (
+		id ID,
+		quantity DEC(12,2),
+	)
+) {
+	VAR warehouse ID;
+	SET warehouse=a.warehouse FROM DeliverMain as a WHERE a.id=deliver;
+	WITH IxWarehouseDeliverMain IX=warehouse XI=deliver DEL;
+	BUS JkOrderBus.[done-deliver] SET id=deliver;
+	FOR detail {
+		WITH DxOrderDetail ID=id SET deliverDone=quantity;
+		BUS JkOrderBus.[done-deliver] INTO detail ADD id=id, value=quantity;
+	}
+};

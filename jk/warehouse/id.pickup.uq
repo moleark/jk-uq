@@ -31,6 +31,39 @@ IX IxPendingPickup (
 	xi OrderDetail,
 );
 
+ACT TrySchedule(p INT)
+{
+	LOG concat('TrySchedule ', p) SUBJECT 'test';
+};
+
+ACT TrySchedule1()
+{
+	LOG concat('TrySchedule1') SUBJECT 'test schedule';
+};
+
+ACT Picking (
+	pickup ID,
+) {
+	WITH DxPicking ID=pickup;
+	WITH Pickup ID=pickup SET picker=$user;
+};
+
+ACT Picked (
+	pickup ID,
+	-- 实际拣货数量。
+	ARR detail (
+		orderDetail ID,
+		quantity DEC(12,2),
+	)
+) {
+	WITH DxPicking ID=pickup DEL;
+	WITH Pickup ID=pickup SET finishTime=$date;
+	-- BUS JkOrderBus.[done-pickup];
+	FOR detail {
+		BUS JkOrderBus.[done-pickup] INTO detail ADD id=orderDetail, value=quantity;
+	}
+};
+
 -- 把当前所有待发货条目，生成发运单和拣货单
 ACT Pick(
 	warehouse ID,
@@ -81,4 +114,91 @@ RETURNS delivers (
 		WITH DxPicking ID=pickup;
 		INTO pickups SELECT pickup as id, pickupNo as no;
 	}
+};
+
+
+-- 把当前所有待发货条目，生成发运单和拣货单
+ACT AutoPick ver 0.1 ()
+{
+	-- 生成拣货单
+	VAR pickupMaxRows INT = 100;
+	TABLE tblWarehousePickup(key warehouse ID, pickup ID, rows INT);
+	WHILE 1=1 {
+		VAR warehouse ID, orderDetail ID;
+		SET warehouse=NULL;
+		SET warehouse=a.ix, orderDetail=a.xi
+			FROM IxPendingPickup as a
+			ORDER BY a.ix, a.xi
+			LIMIT 1;
+		IF warehouse IS NULL {
+			BREAK;
+		}
+		-- DELETE a FROM IxPendingPickup as a WHERE a.ix=warehouse AND a.xi=orderDetail;
+		-- 另外一种删除的语法
+		WITH IxPendingPickup IX=warehouse XI=orderDetail DEL;
+		VAR pickup ID, pickupNo CHAR(20), rows INT;
+		SET pickup=NULL;
+		SET pickup=a.pickup, rows=a.rows FROM tblWarehousePickup as a WHERE a.warehouse=warehouse;
+		IF rows>pickupMaxRows {
+			SET pickup=NULL;
+			DELETE a FROM tblWarehousePickup as a WHERE a.warehouse=warehouse;
+		}
+		IF pickup IS NULL {
+			SET pickupNo=NO(Pickup);
+			SET pickup=ID(Pickup new, pickupNo);
+			WITH Pickup as a ID=pickup SET a.warehouse=warehouse;
+			WITH DxPicking as a ID=pickup;
+			SET rows=1;
+			INTO tblWarehousePickup SELECT warehouse, pickup, rows;
+		}
+		VAR quantity DEC(12,2);
+		SET quantity=a.quantity FROM OrderDetail as a WHERE a.id=orderDetail;
+		WITH PickupDetail as a ID=orderDetail
+			SET a.main=pickup, a.orderDetail=orderDetail, a.quantity=quantity;
+	}
+};
+
+QUERY WarehousePickups(
+	-- warehouse ID,
+)
+RETURNS ret (
+	warehouse ID,
+	pickup ID,
+	no CHAR(20),
+	create TIMESTAMP,
+	picker ID,
+) {
+	INTO ret SELECT b.warehouse, b.id as pickup, b.no
+		, b.[$create] as create
+		, b.picker
+		FROM IxUserWarehouse as uw
+			JOIN Pickup as b ON uw.xi=b.warehouse
+			JOIN DxPicking as a ON a.id=b.id
+		WHERE uw.ix=$user;
+};
+
+QUERY GetPickup(
+	pickup ID,
+)
+RETURNS main (
+	# [Pickup],
+)
+RETURNS detail (
+	# [PickupDetail],
+	item ID,
+	product ID,
+	shouldQuantity DEC(12,2),
+) {
+	INTO main SELECT a.id, a.no
+		, a.warehouse, a.picker, a.startTime, a.finishTime
+		-- , a.[$create], a.[$owner]
+		FROM Pickup as a WHERE a.id=pickup;
+	INTO detail SELECT a.id,
+		a.main,			-- Pickup id
+		a.orderDetail,
+		b.quantity,
+		b.item, b.product,
+		b.quantity as shouldQuantity
+		FROM PickupDetail as a JOIN OrderDetail as b ON a.orderDetail=b.id
+		WHERE a.main=pickup;
 };
