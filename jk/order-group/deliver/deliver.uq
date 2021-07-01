@@ -35,7 +35,7 @@ IX IxUserWarehouse (
 );
 
 IX IxPendingDeliver (
-	ixx Warehouse,	
+	ixx Warehouse,
 	ix,					-- customer
 	xi OrderDetail,
 );
@@ -85,10 +85,11 @@ RETURNS ret (
 	create TIMESTAMP,
 	rows SMALLINT,
 	pickRows SMALLINT,
+	staff ID,
 ) {
 	INTO ret SELECT uw.xi as warehouse
 		, b.id as deliverMain, b.no
-		, b.customer, b.[$create] as create, c.rows, c.pickRows
+		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
 		FROM IxUserWarehouse as uw
 			JOIN IxWarehouseDeliverMain as a ON uw.xi=a.ix
 			JOIN DeliverMain as b ON a.xi=b.id
