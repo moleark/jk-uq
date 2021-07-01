@@ -14,7 +14,12 @@ ACCEPT order {
 ACCEPT deliver {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
-	WITH OrderMain as a ID=id SET a.contact=contact;
+	
+	-- 目前出库是在订单明细层面，这样的话同一个订单3条明细，出库时候会修改 OrderMain 三次
+	WITH OrderMain as a ID=id SET a.contact=contact,
+		 a.consigneename = consigneename, a.consigneeUnit = consigneeUnit,
+		 a.consigneeMobile = consigneeMobile, a.consigneeTelphone = consigneeTelphone,
+		 a.consigneeAddress = consigneeAddress, a.consigneeEmail = consigneeEmail;
 	FOR detail {
 		VAR quantity DEC(12,2);
 		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
@@ -30,7 +35,11 @@ ACCEPT deliver {
 }
 ACCEPT [deliver-ext] {
 	FOR detail {
-		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery;
+		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery,
+		     a.expresslogistics = expresslogistics, a.coaquantity = coaquantity,
+             a.msdsquantity = msdsquantity, a.receiptquantity = receiptquantity,
+             a.purchasebillquantity = purchasebillquantity, a.showprice = showprice,
+             a.appointlot = appointlot, a.deliverynotes = deliverynotes, a.outboundreason = outboundreason;
 	}
 }
 ACCEPT [done-pickup] {
