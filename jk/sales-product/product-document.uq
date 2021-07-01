@@ -4,8 +4,13 @@ MAP ProductMSDSFile (
     fileName char(50),
 );
 
-
 MAP ProductSpecFile (
     key product ID ProductX,
+    fileName char(50),
+);
+
+MAP ProductUserManualFile (
+    key product ID ProductX,
+    key language ID Language,
     fileName char(50),
 );
