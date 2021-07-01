@@ -15,7 +15,7 @@ ACCEPT deliver {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
 	
-	-- 目前出库是在订单明细层面，这样的话同一个订单3条明细，出库时候会修改 OrderMain 三次
+	-- 可以考虑在此处接受到发货信息后，把相同的收货信息合并新增为一个contact Id，ordermian中保存此contact
 	WITH OrderMain as a ID=id SET a.contact=contact,
 		 a.consigneename = consigneename, a.consigneeUnit = consigneeUnit,
 		 a.consigneeMobile = consigneeMobile, a.consigneeTelphone = consigneeTelphone,
