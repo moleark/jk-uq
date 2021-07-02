@@ -41,29 +41,15 @@
 		"-- 通用些的发运字段，一般不会变化",
 		"id: id  -- order id",
 		"contact: id -- 发货地址id。",
-
-		"consigneeName: string             -- 收货人姓名",
-		"consigneeUnit: string             -- 收货单位",
-		"consigneeMobile: string           -- 收货人手机",
-		"consigneeTelphone: string         -- 收货人座机",
-		"consigneeEmail: string            -- 收货人Email",
-		"consigneeAddress: string          -- 收货人详细地址",
 		"detail: deliver-detail"
 	],
 	"deliver-detail-ext": [
 		"-- ext是对deliver的扩展，都是具体业务相关内容。变化可能性比较大",
 		"id: id  -- order detail id",
 		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1",
-		
-		"expressLogistics: id               -- 快递物流",
-		"coaquantity: number                -- 附带coa文件数量",
-		"msdsquantity: number               -- 附带msds文件数量",
-		"receiptquantity: number            -- 附带回执单数量",
-		"purchasebillquantity: number       -- 附带采购单数量",
-		"showprice: number                  -- 单据上是否显示价格",
+		"showprice: number                  -- 单据上是否显示价格, 需要则1",
 		"appointlot: string                 -- 指定Lot批次",
-		"deliverynotes: string              -- 发货备注",
-		"outboundreason: id                 -- 出库原因"
+		"displayOnly: string                -- 只需要在界面展示的信息以json格式存储"
 
 	],
 	"deliver-ext": [
