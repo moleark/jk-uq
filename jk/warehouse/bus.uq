@@ -22,10 +22,7 @@ ACCEPT deliver {
 ACCEPT [deliver-ext] {
 	FOR detail {
 		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery,
-             a.expresslogistics = expresslogistics, a.coaquantity = coaquantity,
-             a.msdsquantity = msdsquantity, a.receiptquantity = receiptquantity,
-             a.purchasebillquantity = purchasebillquantity, a.showprice = showprice,
-             a.appointlot = appointlot, a.deliverynotes = deliverynotes, a.outboundreason = outboundreason;
+             a.showprice = showprice, a.appointlot = appointlot, a.displayOnly = displayOnly;
 	}
 };
 

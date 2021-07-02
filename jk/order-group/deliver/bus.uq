@@ -15,11 +15,7 @@ ACCEPT deliver {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
 	
-	-- 可以考虑在此处接受到发货信息后，把相同的收货信息合并新增为一个contact Id，ordermian中保存此contact
-	WITH OrderMain as a ID=id SET a.contact=contact,
-		 a.consigneename = consigneename, a.consigneeUnit = consigneeUnit,
-		 a.consigneeMobile = consigneeMobile, a.consigneeTelphone = consigneeTelphone,
-		 a.consigneeAddress = consigneeAddress, a.consigneeEmail = consigneeEmail;
+	WITH OrderMain as a ID=id SET a.contact=contact;
 	FOR detail {
 		VAR quantity DEC(12,2);
 		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
@@ -36,10 +32,7 @@ ACCEPT deliver {
 ACCEPT [deliver-ext] {
 	FOR detail {
 		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery,
-		     a.expresslogistics = expresslogistics, a.coaquantity = coaquantity,
-             a.msdsquantity = msdsquantity, a.receiptquantity = receiptquantity,
-             a.purchasebillquantity = purchasebillquantity, a.showprice = showprice,
-             a.appointlot = appointlot, a.deliverynotes = deliverynotes, a.outboundreason = outboundreason;
+		     a.showprice = showprice, a.appointlot = appointlot, a.displayOnly = displayOnly;
 	}
 }
 ACCEPT [done-pickup] {

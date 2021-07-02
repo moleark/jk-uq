@@ -15,13 +15,7 @@ ID OrderDetail ver 0.1 (
 IDX OrderDetailX (
 	id,
 	needInsuredWhenDelivery TINYINT,
-	expressLogistics ID ExpressLogistics,
-	coaquantity int,
-	msdsquantity int,
-	receiptquantity int,
-	purchasebillquantity int,
-	showprice int,
-	appointlot CHAR(20),
-	deliverynotes CHAR(100),
-	outboundreason ID OutInBoundReason
+	showprice tinyint,
+	appointlot char(20),
+	displayOnly text
 );

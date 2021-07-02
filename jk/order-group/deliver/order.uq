@@ -2,13 +2,7 @@ ID OrderMain ver 0.3 (
 	id,
 	KEY no,
 	customer ID,
-	contact ID,
-	consigneeName char(20),
-	consigneeUnit char(50),
-	consigneeMobile char(20),
-	consigneeTelphone char(20),
-	consigneeAddress char(200),
-	consigneeEmail char(20)
+	contact ID
 );
 
 ID OrderDetail ver 0.1 (
@@ -25,13 +19,7 @@ ID OrderDetail ver 0.1 (
 IDX OrderDetailX (
 	id,
 	needInsuredWhenDelivery TINYINT,
-	expressLogistics ID ExpressLogistics,
-	coaquantity int,
-	msdsquantity int,
-	receiptquantity int,
-	purchasebillquantity int,
-	showprice int,
-	appointlot CHAR(20),
-	deliverynotes CHAR(100),
-	outboundreason ID OutInBoundReason
+	showprice tinyint,
+	appointlot char(20),
+	displayOnly text
 );
