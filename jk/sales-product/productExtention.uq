@@ -3,3 +3,9 @@ MAP ProductExtention (
     key product ID ProductX,
     content text,
 );
+
+-- 
+MAP ProductStandardSample (
+    key product ID ProductX,
+    content text,
+);

@@ -96,6 +96,17 @@ OPEN MAP ProductLegallyProhibited (
     reason char(200),
 );
 
+OPEN Map ProductDeliveryTime (
+    key product ID ProductX,
+    key salesRegion ID SalesRegion,
+    minValue int,
+    maxValue int,
+    unit char(10),
+    deliveryTimeDescription char(100),
+    isRestrict tinyint not null default 0,
+);
+
+
 MAP ProductCache (
     key product ID ProductX,
     key salesRegion ID SalesRegion,

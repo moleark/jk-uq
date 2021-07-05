@@ -1,0 +1,10 @@
+
+OPEN Map ProductEmbargo (
+    key product ID ProductX,
+    key salesRegion ID SalesRegion,
+    type char(10) not null,     --  
+    packDescription char(50), 
+    beginDate date not null,
+    endDate date,
+    isValid smallint not null default 1,
+);

@@ -5,3 +5,48 @@ OPEN TUID JNKRestrict (
     unique(no),
     stamp(create, update)
 );
+
+
+ID Statute (
+    id,
+    name    char(100),
+);
+
+ID ChemicalControlled (
+    id,
+    chemical ID Chemical,
+    -- 其他特征？
+);
+
+ID HazardClass (
+    id,
+    statute ID Statute,     -- 
+    no  char(10),
+    description char(100),
+);
+
+IDX ChemicalControlledHazardClass (
+    ix,     -- ChemicalControlled
+    xi,     -- HazardClass
+);
+
+ID buziPhase (
+    id,
+    name char(10),
+);
+
+ID license (
+    id,
+    name   char(100),
+);
+
+IDX buziPhaseLicense (
+    ix,
+    xi,
+);
+
+
+---------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------
