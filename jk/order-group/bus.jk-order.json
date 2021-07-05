@@ -47,9 +47,9 @@
 		"-- ext是对deliver的扩展，都是具体业务相关内容。变化可能性比较大",
 		"id: id  -- order detail id",
 		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1",
-		"showprice: number                  -- 单据上是否显示价格, 需要则1",
-		"appointlot: string                 -- 指定Lot批次",
-		"displayOnly: string                -- 只需要在界面展示的信息以json格式存储"
+		"showPrice: number                  -- 单据上是否显示价格, 需要则1",
+		"lotNumber: string                  -- 指定Lot批次",
+		"json: string                       -- 只需要在界面展示的信息以json格式存储"
 
 	],
 	"deliver-ext": [

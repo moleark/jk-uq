@@ -19,7 +19,7 @@ ID OrderDetail ver 0.1 (
 IDX OrderDetailX (
 	id,
 	needInsuredWhenDelivery TINYINT,
-	showprice tinyint,
-	appointlot char(20),
-	displayOnly text
+	showPrice tinyint,
+	lotNumber char(20),
+	json text
 );
