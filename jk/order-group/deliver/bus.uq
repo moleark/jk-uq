@@ -14,6 +14,7 @@ ACCEPT order {
 ACCEPT deliver {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
+	
 	WITH OrderMain as a ID=id SET a.contact=contact;
 	FOR detail {
 		VAR quantity DEC(12,2);
@@ -30,7 +31,8 @@ ACCEPT deliver {
 }
 ACCEPT [deliver-ext] {
 	FOR detail {
-		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery;
+		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery = needInsuredWhenDelivery,
+		     a.showprice = showprice, a.appointlot = appointlot, a.displayOnly = displayOnly;
 	}
 }
 ACCEPT [done-pickup] {

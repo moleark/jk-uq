@@ -2,7 +2,7 @@ ID OrderMain ver 0.3 (
 	id,
 	KEY no,
 	customer ID,
-	contact ID,
+	contact ID
 );
 
 ID OrderDetail ver 0.1 (
@@ -19,5 +19,7 @@ ID OrderDetail ver 0.1 (
 IDX OrderDetailX (
 	id,
 	needInsuredWhenDelivery TINYINT,
-	expressLogistics ID ExpressLogistics
+	showprice tinyint,
+	appointlot char(20),
+	displayOnly text
 );

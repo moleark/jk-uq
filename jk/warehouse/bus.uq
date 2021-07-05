@@ -21,7 +21,8 @@ ACCEPT deliver {
 }
 ACCEPT [deliver-ext] {
 	FOR detail {
-		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery=needInsuredWhenDelivery;
+		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery = needInsuredWhenDelivery,
+             a.showprice = showprice, a.appointlot = appointlot, a.displayOnly = displayOnly;
 	}
 };
 
