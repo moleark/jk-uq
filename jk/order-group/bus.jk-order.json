@@ -50,7 +50,6 @@
 		"showPrice: number                  -- 单据上是否显示价格, 需要则1",
 		"lotNumber: string                  -- 指定Lot批次",
 		"json: string                       -- 只需要在界面展示的信息以json格式存储"
-
 	],
 	"deliver-ext": [
 		"-- 这个bus消息必须在deliver消息之前发。是附加消息，可能根据业务的形态发生变化",
