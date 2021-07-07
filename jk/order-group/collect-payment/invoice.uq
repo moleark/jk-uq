@@ -1,0 +1,53 @@
+QUERY PendingInvoice(
+)
+PAGE (
+	customer ID asc,
+	sumAmount DEC(12,2),
+) {
+	PAGE SELECT b.id as customer, b.sumAmount
+		FROM DxCustomerInvoice as b
+        WHERE b.id > $pageStart
+        ORDER BY b.id ASC
+        LIMIT $pageSize;
+};
+
+QUERY CustomerPendingInvoice(
+	customer ID,
+)
+RETURNS ret (
+	orderDetail ID,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+	invoice DEC(12,2),					-- 应开票
+	invoiceReturn DEC(12,2),			-- 应退票
+	invoiceDone DEC(12,2),				-- 已开票
+) {
+	INTO ret SELECT b.id as orderDetail
+		, b.item, b.product, b.quantity, b.amount, b.price
+		, c.invoice, c.invoiceReturn, c.invoiceDone
+		FROM IxCustomerPendingInvoice as a
+			JOIN OrderDetail as b on a.xi=b.id
+			JOIN DxOrderDetail as c on b.id=c.id
+		WHERE a.ix=customer;
+};
+
+ACT DoneInvoice ver 0.2 (
+	customer ID,
+	ARR detail (
+		orderDetail ID,
+		amount DEC(12,2),
+	)
+) {
+	BUS JkOrderBus.[done-invoice] SET id=null;
+	FOR detail {
+		IF amount IS NULL CONTINUE;
+		WITH DxOrderDetail as a ID=orderDetail
+			SET a.invoiceDone=amount;
+		WITH IxCustomerPendingInvoice IX=customer XI=orderDetail DEL;
+		BUS JkOrderBus.[done-invoice] INTO detail 
+			ADD id=orderDetail, value=amount;
+	}
+};

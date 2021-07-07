@@ -70,7 +70,7 @@ RETURNS ret (
 		-- , customer
 		, count(b.xi) as rowCount
 		FROM IxUserWarehouse as a
-			JOIN IxPendingDeliver as b on a.xi=b.ixx
+			LEFT JOIN IxPendingDeliver as b on a.xi=b.ixx
 		WHERE a.ix=$user
 		GROUP BY b.ixx as warehouse; -- , b.ix as customer;
 };
@@ -91,7 +91,7 @@ RETURNS ret (
 		, b.id as deliverMain, b.no
 		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
 		FROM IxUserWarehouse as uw
-			JOIN IxWarehouseDeliverMain as a ON uw.xi=a.ix
+			LEFT JOIN IxWarehouseDeliverMain as a ON uw.xi=a.ix
 			JOIN DeliverMain as b ON a.xi=b.id
 			LEFT JOIN DxDeliver as c ON b.id=c.id
 		WHERE uw.ix=$user;
@@ -120,29 +120,6 @@ RETURNS ret (
 			JOIN DxOrderDetail as c on b.id=c.id
 			-- JOIN IxUserWarehouse as d on d.ix=$user AND d.xi=a.ixx
 		WHERE a.ixx=warehouse AND a.ix=customer;
-};
-
-ACT DoneDeliver ver 0.2 (
-	warehouse ID,
-	customer ID,
-	ARR detail (
-		orderDetail ID,
-		quantity DEC(12,2),
-	)
-) {
-	-- 操作权限检查
-	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=warehouse) {
-		RETURN;
-	}
-	BUS JkOrderBus.[done-deliver] SET warehouse=warehouse;
-	FOR detail {
-		IF quantity IS NULL CONTINUE;
-		WITH DxOrderDetail as a ID=orderDetail
-			SET a.deliverDone=quantity;
-		WITH IxPendingDeliver IXX=warehouse IX=customer XI=orderDetail DEL;
-		BUS JkOrderBus.[done-deliver] INTO detail 
-			ADD id=orderDetail, value=quantity;
-	}
 };
 
 ACT AutoWarehouseDeliver()

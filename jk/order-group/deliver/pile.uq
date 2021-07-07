@@ -21,3 +21,29 @@ ACT DonePileup (
 		BUS JkOrderBus.[done-deliver] INTO detail ADD id=id, value=quantity;
 	}
 };
+
+/*
+ACT DoneDeliver ver 0.2 (
+	warehouse ID,
+	customer ID,
+	ARR detail (
+		orderDetail ID,
+		quantity DEC(12,2),
+	)
+) {
+	-- 操作权限检查
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=warehouse) {
+		RETURN;
+	}
+	BUS JkOrderBus.[done-deliver] SET warehouse=warehouse;
+	FOR detail {
+		IF quantity IS NULL CONTINUE;
+		WITH DxOrderDetail as a ID=orderDetail
+			SET a.deliverDone=quantity;
+		WITH IxPendingDeliver IXX=warehouse IX=customer XI=orderDetail DEL;
+		BUS JkOrderBus.[done-deliver] INTO detail 
+			ADD id=orderDetail, value=quantity;
+	}
+};
+*/
+

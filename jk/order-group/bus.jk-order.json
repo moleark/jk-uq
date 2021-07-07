@@ -46,7 +46,10 @@
 	"deliver-detail-ext": [
 		"-- ext是对deliver的扩展，都是具体业务相关内容。变化可能性比较大",
 		"id: id  -- order detail id",
-		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1"
+		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1",
+		"showPrice: number                  -- 单据上是否显示价格, 需要则1",
+		"lotNumber: string                  -- 指定Lot批次",
+		"json: string                       -- 只需要在界面展示的信息以json格式存储"
 	],
 	"deliver-ext": [
 		"-- 这个bus消息必须在deliver消息之前发。是附加消息，可能根据业务的形态发生变化",
@@ -74,7 +77,7 @@
 	],
 	"return": [
 		"id: id",
-		"order-id: id -- ?? 可以没有",
+		"-- order-id: id -- ?? 可以没有 应该是直接没有",
 		"detail: return-detail"
 	],
 	"done-return-deliver": [
