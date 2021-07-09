@@ -20,7 +20,7 @@ PAGE (
             inner join tv_productx as p on p.id = pk.owner
             inner join tv_pricex pr on pr.$unit = p.$unit and pr.product = p.id and pr.pack = pk.id and pr.salesRegion = `_salesRegion`
                 and pr.discountinued = 0 and pr.expiredate > NOW()
-    WHERE   1=1 AND p.`$unit`=`_$unit` and p.brand in (18, 71, 75, 1560, 1565, 3187)
+    WHERE   1=1 AND p.`$unit`=`_$unit` and p.brand in (18, 71, 75, 1560, 1565, 3187, 3190)
             and 
                 (p.descriptionc like concat('%', `_keyWord`, '%') or p.origin = `_keyWord`)
             and pk.id > `_$pagestart`
@@ -49,7 +49,7 @@ returns ret (
             join ProductX as p on p.id = pk.owner
             join PriceX as pr on pr.product = p.id and pr.pack = pk.id and pr.salesRegion = salesRegion
                 and pr.discountinued = 0 and pr.expiredate > NOW()
-    where   pk.id = pack;  -- AND p.`$unit`=`_$unit` -- and p.brand in (18, 71, 75, 1560, 1565, 3187)
+    where   pk.id = pack;  -- AND p.`$unit`=`_$unit` -- and p.brand in (18, 71, 75, 1560, 1565, 3187, 3190)
     /*
     /-mysql
     INSERT  INTO `_$page` (`id`, `product`, `origin`, `description`, `descriptionc`, `imageurl`, `radiox`, `radioy`, `unit`, `retail`)
@@ -58,7 +58,7 @@ returns ret (
             inner join tv_productx as p on p.id = pk.owner
             inner join tv_pricex pr on pr.$unit = p.$unit and pr.product = p.id and pr.pack = pk.id and pr.salesRegion = `_salesRegion`
                 and pr.discountinued = 0 and pr.expiredate > NOW()
-    WHERE   pk.id = pack AND p.`$unit`=`_$unit` and p.brand in (18, 71, 75, 1560, 1565, 3187)
+    WHERE   pk.id = pack AND p.`$unit`=`_$unit` and p.brand in (18, 71, 75, 1560, 1565, 3187, 3190)
 
     -- 测试服务器上的brand是 in (2, 4, 8, 1562, 1564)
     -/
