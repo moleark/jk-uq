@@ -1,0 +1,56 @@
+QUERY PendingReceive(
+)
+PAGE (
+	customer ID ASC,
+	sumAmount DEC(12,2),
+) {
+	PAGE SELECT b.id as customer, b.sumAmount
+		FROM DxCustomerReceive as b
+        WHERE b.id > $pageStart
+        ORDER BY b.id ASC
+        LIMIT $pageSize;
+};
+
+QUERY CustomerPendingReceive(
+	customer ID,
+)
+RETURNS ret (
+	orderDetail ID,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+	receive DEC(12,2),					-- 应收款
+	receiveReturn DEC(12,2),			-- 应退款
+	receiveDone DEC(12,2),				-- 已收款
+) {
+	INTO ret SELECT b.id as orderDetail
+		, b.item, b.product, b.quantity, b.amount, b.price
+		, c.receive, c.receiveReturn, c.receiveDone
+		FROM IxCustomerPendingReceive as a
+			JOIN OrderDetail as b on a.xi=b.id
+			JOIN DxOrderDetail as c on b.id=c.id
+		WHERE a.ix=customer;
+};
+
+ACT DoneReceive ver 0.2 (
+	customer ID,
+	ARR detail (
+		orderDetail ID,
+		amount DEC(12,2),
+	)
+) {
+	BUS JkOrderBus.[done-receive] SET id=null;
+	FOR detail {
+		IF amount IS NULL CONTINUE;
+		WITH DxOrderDetail as a ID=orderDetail
+			SET a.receiveDone=amount;
+		WITH IxCustomerPendingReceive IX=customer XI=orderDetail DEL;
+        WITH DxCustomerReceive ID=customer SET sumAmount -= amount;
+		BUS JkOrderBus.[done-receive] INTO detail 
+			ADD id=orderDetail, value=amount;
+	}
+    WITH DxCustomerReceive as a ID=customer DEL WHERE a.sumAmount = 0;
+};
+
