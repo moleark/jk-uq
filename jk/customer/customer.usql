@@ -63,6 +63,18 @@ OPEN MAP CustomerSetting ver 0.1 (
     invoiceInfo ID InvoiceInfo,
 );
 
+-- Customer的默认值设置表
+OPEN MAP CustomerSettingAlter (
+    key customer ID customer,
+    key type ID CustomerSettingType,
+    contentId bigint
+);
+
+OPEN TUID CustomerSettingType (
+    id,
+    main description char(20),
+);
+
 OPEN TUID Contact (
     id,
     main name char(100) not null,
