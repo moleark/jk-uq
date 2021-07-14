@@ -22,12 +22,13 @@ RETURNS ret (
 	amount DEC(12,2),
 	price DEC(12,2),
 	invoice DEC(12,2),					-- 应开票
-	invoiceReturn DEC(12,2),			-- 应退票
 	invoiceDone DEC(12,2),				-- 已开票
+	invoiceReturn DEC(12,2),			-- 应退票
+	invoiceReturnDone DEC(12,2),		-- 已退票
 ) {
 	INTO ret SELECT b.id as orderDetail
 		, b.item, b.product, b.quantity, b.amount, b.price
-		, c.invoice, c.invoiceReturn, c.invoiceDone
+		, c.invoice, c.invoiceDone, c.invoiceReturn, c.invoiceReturnDone
 		FROM IxCustomerPendingInvoice as a
 			JOIN OrderDetail as b on a.xi=b.id
 			JOIN DxOrderDetail as c on b.id=c.id
@@ -41,13 +42,18 @@ ACT DoneInvoice ver 0.2 (
 		amount DEC(12,2),
 	)
 ) {
-	BUS JkOrderBus.[done-invoice] SET id=null;
+	BUS JkOrderBus.[invoice-done] SET id=null;
 	FOR detail {
 		IF amount IS NULL CONTINUE;
-		WITH DxOrderDetail as a ID=orderDetail
-			SET a.invoiceDone=amount;
+		IF amount>0 {
+			WITH DxOrderDetail as a ID=orderDetail SET a.invoiceDone=amount;
+		}
+		ELSE {
+			WITH DxOrderDetail as a ID=orderDetail SET a.invoiceReturnDone=-amount;
+		}
 		WITH IxCustomerPendingInvoice IX=customer XI=orderDetail DEL;
-		BUS JkOrderBus.[done-invoice] INTO detail 
+        WITH DxCustomerInvoice ID=customer SET sumAmount -= amount;
+		BUS JkOrderBus.[invoice-done] INTO detail 
 			ADD id=orderDetail, value=amount;
 	}
 };

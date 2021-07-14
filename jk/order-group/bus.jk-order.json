@@ -26,7 +26,7 @@
 		"-- price不需要, 在order detail id 里面可以获得"
 	],
 	"note": [
-		{ "name": "id", "type": "id" },
+		"id: id",
 		"detail: note-detail"
 	],
 	"note-detail": [
@@ -56,37 +56,47 @@
 		"id: id  -- order id",
 		"detail: deliver-detail-ext"
 	],
-	"done-deliver": [
+	"deliver-done": [
 		"note",
 		"warehouse: id"
 	],
-	"done-pickup": [
+	"pickup-done": [
 		"detail: note-detail"
 	],
 	"receive": [
 		"note"
 	],
-	"done-receive": [
+	"receive-done": [
 		"note"
 	],
 	"invoice": [
 		"note"
 	],
-	"done-invoice": [
+	"invoice-done": [
 		"note"
 	],
 	"return": [
+		"-- 下发退货指令", 
 		"id: id",
 		"-- order-id: id -- ?? 可以没有 应该是直接没有",
 		"detail: return-detail"
 	],
-	"done-return-deliver": [
+	"receive-return": [
 		"note"
 	],
-	"done-return-receive": [
+	"invoice-return": [
 		"note"
 	],
-	"done-return-invoice": [
+	"return-accept-done": [
+		"-- 退货接收",
+		"note"
+	],
+	"-- receive-return-done": [
+		"-- receive-done 出现负值，就是return receive",
+		"note"
+	],
+	"-- invoice-return-done": [
+		"-- invoice-done 出现负值，就是return invoice",
 		"note"
 	],
 	"order-binding": [

@@ -25,10 +25,10 @@ ID OrderDetail ver 0.5 GLOBAL (
 
 ID ReturnMain GLOBAL (
 	id,
-	orderMain ID,
+	-- orderMain ID, 去掉，可能是针对不同订单，一次退货
 );
 
-ID ReturnDetail GLOBAL (
+ID ReturnDetail ver 0.1 GLOBAL (
 	id,
 	main ID ReturnMain,
 	orderDetail ID,
@@ -36,165 +36,25 @@ ID ReturnDetail GLOBAL (
 	amount DEC(12,2),
 );
 
-IDX DxOrderDetail (
+IDX DxOrderDetail ver 0.1 (
 	id,									-- order detail
-	deliver DEC(12,2),					-- 请发
+	deliver DEC(12,2),					-- 应发
 	deliverDone DEC(12,2),				-- 已发
-	receive DEC(12,2),					-- 请收
+	deliverReturn DEC(12,2) SUM,		-- 应退货
+	deliverReturnDone DEC(12,2) SUM,	-- 已退货
+	receive DEC(12,2),					-- 应收
 	receiveDone DEC(12,2),				-- 已收
-	invoice DEC(12,2),					-- 请开票
+	receiveReturn DEC(12,2) SUM,		-- 应退款
+	receiveReturnDone DEC(12,2) SUM,	-- 已退款
+	invoice DEC(12,2),					-- 应开票
 	invoiceDone DEC(12,2),				-- 已开票
+	invoiceReturn DEC(12,2) SUM,		-- 应退票
+	invoiceReturnDone DEC(12,2) SUM,	-- 已退票
 );
 
-IDX DxReturnDetail (
+IDX DxReturnDetail ver 0.1 (
 	id,									-- return detail
-	orderDetail id,						-- 对应的order detail
-	deliver DEC(12,2) SUM,				-- 请退数量
-	deliverDone DEC(12,2) SUM,			-- 已退数量
-	receive DEC(12,2) SUM,				-- 请退款金额
-	receiveDone DEC(12,2) SUM,			-- 已退款金额
-	invoice DEC(12,2) SUM,				-- 请收回票金额
-	invoiceDone DEC(12,2) SUM,			-- 已收回票金额
+	deliverReturnDone DEC(12,2) SUM,	-- 已退数量
+	-- receiveDone DEC(12,2) SUM,			-- 已退款金额
+	-- invoiceDone DEC(12,2) SUM,			-- 已收回票金额
 );
-
--- 网上直接付款。这个应该走url通道，由网上支付公司来调用？
--- 或者收款走手工，然后由收款人调用这个Action
-ACTION OrderPaid (
-	id ID OrderMain,
-	amount DEC(12,2),
-) 
-RETURNS ret (
-	ok TINYINT,			-- 0: succeed, 1: over amount, 2: short amount
-) {
-	VAR sumAmount DEC(12,2), ok TINYINT;
-	SET sumAmount=a.sumAmount FROM OrderMain as a WHERE a.id=id;
-	IF amount=sumAmount {
-		SET ok = 0;
-		BUS JkOrderBus.deliver SET id=id;
-		FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
-			OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse 
-			FROM OrderDetail as a WHERE a.main=id)
-		{
-			WITH DxOrderDetail as a ID = detailId
-				SET a.deliver=quantity					-- 请发
-					, a.receive=amount
-					, a.receiveDone=amount;
-			BUS JkOrderBus.deliver INTO detail 
-				ADD id=detailId, warehouse=warehouse;
-			BUS JkOrderBus.invoice INTO detail 
-				ADD id=detailId, value=amount;
-		}
-	}
-	ELSEIF amount<sumAmount {
-		SET ok = 2;
-	}
-	ELSE {
-		SET ok = 1;
-	}
-	INTO ret SELECT ok;
-};
-
--- 客服确认订单
-ACTION OrderConfirm (
-	id ID OrderMain,
-) {
-	BUS JkOrderBus.[deliver-ext] SET id=id;
-	BUS JkOrderBus.deliver SET id=id, contact=null;
-	FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
-		OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse 
-		FROM OrderDetail as a WHERE a.main=id)
-	{
-		WITH DxOrderDetail as a ID = detailId
-			SET a.deliver=quantity;					-- 请发
-		BUS JkOrderBus.[deliver-ext] INTO detail 
-			ADD id=detailId, needInsuredWhenDelivery=1;
-		BUS JkOrderBus.deliver INTO detail 
-			ADD id=detailId, warehouse=warehouse;
-	}
-};
-
--- 保存退货单
-ACTION SaveOrderReturn (
-	# [ReturnMain],
-	ARR detail (
-		# ReturnDetail,
-	),
-)
-RETURNS ret (
-	id ID,				-- 退货单id
-) {
-	-- 可以做退货复核检查。所有退货总金额，不能超过订单
-	-- 如果复核错误，返回0。退货单不能保存
-	VAR mainId ID, checkOk TINYINT;
-	SET mainId = 0;
-	SET checkOk = 1;
-	IF checkOk = 1 {
-		SET mainId=ID(ReturnMain new);
-		WITH ReturnMain ID=mainId;
-		BUS JkOrderBus.return SET id=mainId, [order-id]=orderMain;
-		FOR detail {
-			VAR detailId ID;
-			SET detailId=ID(ReturnDetail new);
-			WITH ReturnDetail ID=detailId SET main=mainId
-				, quantity=quantity, amount=amount;
-			BUS JkOrderBus.return INTO detail 
-				ADD id = detailId
-					, [order-detail-id] = orderDetail
-					, quantity = quantity
-					, amount = amount;
-		}
-	}
-	INTO ret SELECT mainId as id;
-};
-
--- 保存订单，为了mock数据，直接发order bus，同时发deliver
-ACTION SaveOrder (
-	# [OrderMain],
-	ARR detail (
-		# OrderDetail,
-	),
-)
-RETURNS ret (
-	id ID,				-- 退货单id
-) {
-	-- 复核数量，单价。
-	-- 如果复核错误，返回0。订单单不能保存
-	VAR mainId ID, checkOk TINYINT;
-	SET mainId = 0;
-	SET checkOk = 1;
-	IF checkOk = 1 {
-		VAR orderNo CHAR(20);
-		SET orderNo = NO(OrderMain);
-		SET mainId=ID(OrderMain new, orderNo);
-		WITH OrderMain ID=mainId SET customer=customer
-			, sumQuanity=sumQuanity 	-- 各行数量和
-			, sumAmount=sumAmount		-- 各行金额和
-			, couponNo=couponNo
-			, sheetId=sheetId
-    		, shippingContact=shippingContact;
-		BUS JkOrderBus.order SET id=mainId, no=orderNo, customer=customer;
-		BUS JkOrderBus.[deliver-ext] SET id=mainId;
-		BUS JkOrderBus.deliver SET id=mainId, contact=contact;
-		FOR detail {
-			VAR detailId ID;
-			SET detailId=ID(OrderDetail new);
-			WITH OrderDetail ID=detailId SET main=mainId
-				, item=item, product=product
-				, warehouse=warehouse
-				, quantity=quantity, amount=amount, price=price;
-			WITH DxOrderDetail ID=detailId SET deliver=quantity;
-			BUS JkOrderBus.order INTO detail 
-				ADD id = detailId
-					, item = item
-					, product = product
-					, quantity = quantity
-					, amount = amount
-					, price = price;
-			BUS JkOrderBus.[deliver-ext] INTO detail 
-				ADD id = detailId, needInsuredWhenDelivery = 0;
-			BUS JkOrderBus.deliver INTO detail 
-				ADD id = detailId, warehouse = warehouse;
-		}
-	}
-	INTO ret SELECT mainId as id;
-};
