@@ -43,6 +43,7 @@ RETURNS tallys(
 			WITH TallyDetail as a ID=orderDetail
 				SET a.main=tally, a.orderDetail=orderDetail, a.quantity=quantity;
 		}
+		-- 要考虑去重复同一个订单明细可能会对应多个货位？ WITH... 的写法会不会自动处理？
 	}
 	INTO tallys SELECT tally as id, tallyNo as no;
 };
