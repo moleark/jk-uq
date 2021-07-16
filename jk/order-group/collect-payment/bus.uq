@@ -22,6 +22,16 @@ ACCEPT receive {
 		WITH DxCustomerReceive ID=customer SET sumAmount+=value;
 	}
 }
+ACCEPT [receive-return] {
+	FOR detail {
+		VAR customer ID;
+		SET customer=b.customer 
+			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
+			WHERE a.id=id;
+		WITH DxOrderDetail as a ID=id SET a.receiveReturn += value;
+		WITH DxCustomerReceive ID=customer SET sumAmount -= value;
+	}
+}
 ACCEPT invoice {
 	FOR detail {
 		VAR customer ID;
@@ -33,19 +43,14 @@ ACCEPT invoice {
 		WITH DxCustomerInvoice ID=customer SET sumAmount+=value;
 	}
 }
-ACCEPT [return] {
+ACCEPT [invoice-return] {
 	FOR detail {
 		VAR customer ID;
 		SET customer=b.customer 
 			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
-			WHERE a.id=[order-detail-id];
-		WITH ReturnDetail as a ID=id SET a.main=id
-			, a.orderDetail=[order-detail-id]
-			, a.quantity=quantity
-			, a.amount=amount;
-		WITH DxOrderDetail as a ID=[order-detail-id] SET a.receiveReturn += amount
-			, a.invoiceReturn += amount;
-		WITH DxCustomerReceive ID=customer SET sumAmount -= amount;
-		WITH DxCustomerInvoice ID=customer SET sumAmount -= amount;
+			WHERE a.id=id;
+		WITH DxOrderDetail as a ID=id SET a.invoiceReturn += value;
+		WITH DxCustomerInvoice ID=customer SET sumAmount -= value;
 	}
-};
+}
+;

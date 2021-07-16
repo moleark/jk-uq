@@ -16,7 +16,7 @@ ID DeliverDetail (
 	main ID DeliverMain,	-- DeliverMain id	
 );
 
-IDX DxDeliver (
+IDX DxDeliverMain (
 	id,										-- deliver main id
 	staff ID,								-- 发运人
 	rows SMALLINT DEFAULT 0,				-- 行数
@@ -36,28 +36,13 @@ IX IxUserWarehouse (
 
 IX IxPendingDeliver (
 	ixx Warehouse,
-	ix,					-- customer
+	ix,									-- customer
 	xi OrderDetail,
 );
 
 IX IxCustomerPendingReturn (
-	ix,				 -- Customer
+	ix,				 					-- Customer
 	xi OrderDetail,
-);
-
-IDX DxOrderDetail (
-	id,									-- order detail id
-	deliverShould DEC(12,2),			-- 请发, 一个订单分仓，有可能跟订单上不一样
-	pickDone DEC(12,2) DEFAULT -1,		-- 已捡
-	deliverDone DEC(12,2),				-- 已发
-	returnDone DEC(12,2),				-- 已退货
-);
-
-IDX DxReturnDetail (
-	id,									-- return detail
-	orderDetail id,						-- 对应的order detail
-	quantity DEC(12,2) SUM,				-- 请退货数量
-	quantityDone DEC(12,2) SUM,			-- 已退货数量
 );
 
 QUERY WarehousePendingDeliver(
@@ -93,7 +78,7 @@ RETURNS ret (
 		FROM IxUserWarehouse as uw
 			LEFT JOIN IxWarehouseDeliverMain as a ON uw.xi=a.ix
 			JOIN DeliverMain as b ON a.xi=b.id
-			LEFT JOIN DxDeliver as c ON b.id=c.id
+			LEFT JOIN DxDeliverMain as c ON b.id=c.id
 		WHERE uw.ix=$user;
 };
 
@@ -151,10 +136,10 @@ ACT AutoWarehouseDeliver()
 			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
 			INTO tblWarehouseDeliver SELECT warehouse, customer, deliver;
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
-			WITH DxDeliver as a ID=deliver;
+			WITH DxDeliverMain as a ID=deliver;
 		}
 		WITH DeliverDetail ID=orderDetail SET main=deliver;
-		WITH DxDeliver as a ID=deliver SET a.rows=a.rows+1;
+		WITH DxDeliverMain as a ID=deliver SET a.rows=a.rows+1;
 	}
 	LOG 'AutoWarehouseDeliver' SUBJECT 'end';
 };
@@ -182,7 +167,7 @@ RETURNS detail (
 		, a.customer, a.warehouse
 		, b.staff , b.rows, b.pickRows, b.deliverTime
 		FROM DeliverMain as a
-			LEFT JOIN DxDeliver as b ON a.id=b.id
+			LEFT JOIN DxDeliverMain as b ON a.id=b.id
 		WHERE a.id=deliver;
 	INTO detail SELECT a.id,
 		a.main,			-- DeliverMain id

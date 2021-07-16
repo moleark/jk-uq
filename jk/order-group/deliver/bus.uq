@@ -35,12 +35,12 @@ ACCEPT [deliver-ext] {
 		     a.showPrice = showPrice, a.lotNumber = lotNumber, a.json = json;
 	}
 }
-ACCEPT [done-pickup] {
+ACCEPT [pickup-done] {
 	FOR detail {
 		VAR main INT;
 		SET main=a.main FROM DeliverDetail as a WHERE a.id=id;
 		WITH DxOrderDetail as a ID=id SET a.pickDone=value;
-		WITH DxDeliver as a ID=main SET a.pickRows=a.pickRows+1;
+		WITH DxDeliverMain as a ID=main SET a.pickRows=a.pickRows+1;
 	}
 }
 ACCEPT [return] {
@@ -54,7 +54,6 @@ ACCEPT [return] {
 			, returnDone=IFNULL(a.returnDone, 0)
 			FROM DxOrderDetail as a WHERE a.id=[order-detail-id];
 		SET warehouse=a.warehouse FROM OrderDetail as a WHERE a.id=[order-detail-id];
-		WITH DxReturnDetail as a ID=id SET a.orderDetail=[order-detail-id], a.quantity=quantity;
 		-- 做return相关操作
 		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customer AND xi=id) {
 			SET retQuantity = quantity;
@@ -68,7 +67,7 @@ ACCEPT [return] {
 			WITH IxCustomerPendingReturn ix=customer xi=id;
 			SET retQuantity = 0;
 		}
-		Bus JkOrderBus.[done-return-deliver] INTO detail
-			ADD id=id, value=retQuantity;
+		-- Bus JkOrderBus.[done-return-deliver] INTO detail
+		--	ADD id=id, value=retQuantity;
 	}
 };

@@ -13,7 +13,7 @@ ID OrderDetail ver 0.1 (
 	amount DEC(12,2),
 	price DEC(12,2),
 );
-
+/*
 ID ReturnDetail (
 	id,
 	main ID ReturnMain,
@@ -21,3 +21,4 @@ ID ReturnDetail (
 	quantity DEC(12,2),
 	amount DEC(12,2),
 );
+*/

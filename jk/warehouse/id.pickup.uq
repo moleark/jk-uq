@@ -58,9 +58,9 @@ ACT Picked (
 ) {
 	WITH DxPicking ID=pickup DEL;
 	WITH Pickup ID=pickup SET finishTime=$date;
-	-- BUS JkOrderBus.[done-pickup];
+	-- BUS JkOrderBus.[pickup-done];
 	FOR detail {
-		BUS JkOrderBus.[done-pickup] INTO detail ADD id=orderDetail, value=quantity;
+		BUS JkOrderBus.[pickup-done] INTO detail ADD id=orderDetail, value=quantity;
 	}
 };
 

@@ -26,7 +26,7 @@
 		"-- price不需要, 在order detail id 里面可以获得"
 	],
 	"note": [
-		{ "name": "id", "type": "id" },
+		"id: id",
 		"detail: note-detail"
 	],
 	"note-detail": [
