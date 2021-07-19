@@ -108,10 +108,10 @@ RETURNS ret (
 };
 
 -- 保存退货单
-ACTION SaveOrderReturn (
-	# [ReturnMain],
+ACTION SaveOrderReturn ver 0.1 (
 	ARR detail (
-		# ReturnDetail,
+		orderDetail ID,
+		quantity DEC(12,2),
 	),
 )
 RETURNS ret (
@@ -129,11 +129,12 @@ RETURNS ret (
 		BUS JkOrderBus.[receive-return] SET id=0;       -- 无主表
 		BUS JkOrderBus.[invoice-return] SET id=0;       -- 无主表
 		FOR detail {
-			VAR detailId ID;
+			VAR detailId ID, amount DEC(12,2);
+			SET amount=a.price*quantity FROM OrderDetail as a WHERE a.id=orderDetail;
 			SET detailId=ID(ReturnDetail new);
-			WITH ReturnDetail ID=detailId SET main=mainId
+			WITH ReturnDetail ID=detailId SET main=mainId, orderDetail=orderDetail
 				, quantity=quantity, amount=amount;
-			WITH DxOrderDetail ID=detailId SET deliverReturn+=quantity
+			WITH DxOrderDetail ID=orderDetail SET deliverReturn+=quantity
 				, receiveReturn+=amount, invoiceReturn+=amount;
 			BUS JkOrderBus.return INTO detail 
 				ADD id = detailId

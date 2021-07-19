@@ -5,7 +5,7 @@ QUERY GetCustomerReturnable ver 0.1 (
     customer ID,
 )
 PAGE (
-    id ID ASC,
+    id ID DESC,
     # OrderDetail,
     # DxOrderDetail,
 ) {
@@ -22,7 +22,29 @@ PAGE (
         FROM IxCustomerReturnable as a
             JOIN OrderDetail as b ON a.xi=b.id
             JOIN DxOrderDetail as c ON b.id=c.id
-        WHERE a.ixx=customer AND a.ix>=unix_timestamp()-3600*24*returnableDays AND b.id>$pageStart
-        ORDER BY a.xi ASC
+        WHERE a.ixx=customer AND a.ix>=unix_timestamp()-3600*24*returnableDays AND b.id<$pageStart
+        ORDER BY a.xi DESC
         LIMIT $pageSize;
+};
+
+QUERY GetCustomerOrderReturn (
+    customer ID,
+    order ID,
+)
+RETURNS main (
+    # OrderMain,
+)
+RETURNS detail (
+    # OrderDetail,
+    # DxOrderDetail,
+) {
+    VAR returnableDays INT = 60;
+    INTO main SELECT #a
+        FROM OrderMain as a
+        WHERE a.customer=customer;
+    INTO detail SELECT #a, #b
+        FROM OrderDetail as a
+            JOIN DxOrderDetail as b ON a.id=b.id
+        WHERE a.main=order
+        ORDER BY a.id;
 };

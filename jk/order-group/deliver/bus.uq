@@ -45,27 +45,23 @@ ACCEPT [return] {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;
 	FOR detail {
-		VAR deliverShould DEC(12,2), deliverDone DEC(12,2), returnDone DEC(12,2), retQuantity DEC(12,2)
+		VAR deliverShould DEC(12,2), deliverReturn DEC(12,2), deliverDone DEC(12,2)
+			, returnDone DEC(12,2), retQuantity DEC(12,2)
 			, warehouse ID;
-		SET deliverShould=IFNULL(a.deliverShould, 0)
-			, deliverDone=IFNULL(a.deliverDone, 0)
-			, returnDone=IFNULL(a.returnDone, 0)
+		SET deliverShould=a.deliverShould
+			, deliverDone=a.deliverDone
+			, deliverReturn=a.deliverReturn
+			, returnDone=a.returnDone
 			FROM DxOrderDetail as a WHERE a.id=[order-detail-id];
 		SET warehouse=a.warehouse FROM OrderDetail as a WHERE a.id=[order-detail-id];
+		SET retQuantity = quantity;
+		WITH DxOrderDetail ID=id SET deliverReturn=retQuantity;
 		-- 做return相关操作
-		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customer AND xi=id) {
-			SET retQuantity = quantity;
-			WITH DxOrderDetail ID=id SET returnDone=retQuantity;
-			IF deliverShould - deliverDone - returnDone - retQuantity <= 0 {
-				WITH IxPendingDeliver IXX=warehouse IX=customer XI=id DEL;
-				WITH DxReturnDetail as a ID=id SET a.quantityDone=retQuantity;
+		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customer AND xi=[order-detail-id]) {
+			IF deliverShould - deliverReturn - retQuantity <= 0 {
+				WITH IxPendingDeliver IXX=warehouse IX=customer XI=[order-detail-id] 
+					DEL WHERE deliverShould - deliverReturn - retQuantity <= 0;
 			}
 		}
-		ELSE {
-			WITH IxCustomerPendingReturn ix=customer xi=id;
-			SET retQuantity = 0;
-		}
-		-- Bus JkOrderBus.[done-return-deliver] INTO detail
-		--	ADD id=id, value=retQuantity;
 	}
 };
