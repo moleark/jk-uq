@@ -40,11 +40,6 @@ IX IxPendingDeliver (
 	xi OrderDetail,
 );
 
-IX IxCustomerPendingReturn (
-	ix,				 					-- Customer
-	xi OrderDetail,
-);
-
 QUERY WarehousePendingDeliver(
 )
 RETURNS ret (

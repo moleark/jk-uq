@@ -24,21 +24,13 @@ IDX OrderDetailX (
 	json text
 );
 
-ID ReturnDetail (
-	id,
-	main ID ReturnMain,
-	orderDetail ID,
-	quantity DEC(12,2),
-	amount DEC(12,2),
-);
-
 IDX DxOrderDetail (
-	id,									-- order detail id
-	deliverShould DEC(12,2),			-- 应发, 一个订单分仓，有可能跟订单上不一样
-	deliverReturn DEC(12,2) SUM,		-- 应退货
-	returnDone DEC(12,2) SUM,			-- 已退货
-	pickDone DEC(12,2) DEFAULT -1,		-- 已捡
-	deliverDone DEC(12,2),				-- 已发
+	id,										-- order detail id
+	deliverShould DEC(12,2) DEFAULT 0,		-- 应发, 一个订单分仓，有可能跟订单上不一样
+	deliverReturn DEC(12,2) SUM,			-- 应退货
+	returnDone DEC(12,2) SUM,				-- 已退货
+	pickDone DEC(12,2) DEFAULT 0,			-- 已捡
+	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
 );
 
 IDX DxReturnDetail (
