@@ -1,0 +1,23 @@
+QUERY [PriceXquery] ver 0.2 (
+	[product] id productx,
+	[pack] of product.packx,
+	[salesRegion] id salesregion)
+returns ret(
+	[product] id productx,
+	[pack] of product.packx,
+	[salesRegion] id salesregion,
+	[expireDate] datetime(0),
+	[discountinued] tinyint,
+	[retail] dec(12,2))
+{
+	into ret select a.[product],
+		a.[pack],
+		a.[salesRegion],a.[expireDate],
+		a.[discountinued],
+		a.[retail] 
+	from [PriceX] as a 
+	where a.[product]=[product] 
+		and ([pack] is null or a.[pack]=[pack]) 
+		and ([salesRegion] is null or a.[salesRegion]=[salesRegion]) 
+	order by a.[pack],a.[salesRegion];
+};

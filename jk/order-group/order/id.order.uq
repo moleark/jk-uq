@@ -36,6 +36,12 @@ ID ReturnDetail ver 0.1 GLOBAL (
 	amount DEC(12,2),
 );
 
+IDX DxOrderMain (
+	id,
+	state TINYINT,						-- 0:初始，1:完成, 2:处理中 -1: 取消
+	-- bus: order-cancel
+);
+
 IDX DxOrderDetail ver 0.1 (
 	id,									-- order detail
 	deliver DEC(12,2),					-- 应发
