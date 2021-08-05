@@ -1,0 +1,16 @@
+{
+    "--1": "财务应收相关的bus",
+    "orderPayed": [
+        { "name": "order", "type": "id" },
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "id" }
+    ],
+   "innerOrderPaid": [
+        { "name": "orderItemId", "type": "string" },
+        { "name": "orderId", "type": "string" },
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "id" },
+        { "name": "action", "type": "string" },
+        { "name": "createDate", "type": "number" }
+    ]
+}

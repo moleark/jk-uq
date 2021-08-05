@@ -9,15 +9,17 @@ ACCEPT [deliver-done] {
 		VAR amount DEC(12,2), quantity DEC(12,2), price DEC(12,2), receiveDone DEC(12,2), invoiceDone DEC(12,2)
             , realAmount DEC(12,2), shortAmount DEC(12,2)
             , customer ID;
+        VAR returnDetail ID;
         SET quantity=a.quantity, price=a.price, amount=a.amount FROM OrderDetail as a WHERE a.id=id;
         SET receiveDone=a.receiveDone, invoiceDone=a.invoiceDone FROM DxOrderDetail as a WHERE a.id=id;
         SET customer=b.customer FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id WHERE a.id=id;
+        SET returnDetail=a.id FROM ReturnDetail as a WHERE a.orderDetail=id;
         if value > quantity {
             -- ??? 错误 ??? something wrong
             -- 发送退货信息，发货服务器没有收到，直接发货了。就会出现这样的情况。
             -- 怎么处理？有待细想。等同于已经发货了之后的退货。
             LOG 'error in JkOrderBus.deliver-done: value cannot bigger than quanity';
-        }
+        }        
 		WITH DxOrderDetail ID=id SET deliverDone=value, deliverTime=$date;
         WITH IxCustomerReturnable IXX=customer IX=unix_timestamp($date) XI=id;
 		SET realAmount = value * price;
@@ -40,7 +42,7 @@ ACCEPT [deliver-done] {
             IF value<quantity {
                 -- 如果发货短缺，则退票
                 BUS JkOrderBus.[invoice-return] INTO detail ADD id = id, value = shortAmount;
-                WITH DxOrderDetail ID=id SET receiveReturn+=shortAmount;
+                -- WITH DxReturnDetail ID=returnDetail SET receiveReturn+=shortAmount;
             }
         }
         ELSE {
@@ -62,7 +64,7 @@ ACCEPT [invoice-done] {
 }
 ACCEPT [return-accept-done] {
 	FOR detail {
-		WITH DxOrderDetail ID=id SET deliverReturnDone+=value;
+		-- WITH DxOrderDetail ID=id SET deliverReturnDone+=value;
 	}
 }
 ;

@@ -1,0 +1,125 @@
+ID OrderMainEx (
+    id,                             -- 就是OrderMain的id
+    KEY orderId CHAR(20),           -- 对应Ex系统的orderId
+    seller CHAR(50),
+    salesman ID,
+    salesRegion ID,
+    customer ID,
+    buyerAccount ID,
+    organization ID,
+    currency ID,
+    promotionId CHAR(20),
+    createDate TIMESTAMP,
+);
+
+ID OrderDetailEx (
+    id,                             -- 就是OrderDetail的id
+    KEY orderItemId CHAR(20),       -- 对应Ex系统的orderItemId
+    brand ID,                       -- 品牌id，应该在product里面带
+    -- product ID,                  -- OrderDetail 有这个字段
+    -- pack ID,                     -- OrderDetail 有这个字段
+    -- quantity DEC(12,2),          -- OrderDetail 有这个字段
+    -- price  DEC(12,2),            -- OrderDetail 有这个字段
+    retail DEC(12,2),
+    retailCurrency ID,
+    bottomPrice DEC(12,2),
+    bottomPriceCurrency ID,
+    costPrice DEC(12,2),
+    costPriceCurrency ID,
+    mark CHAR(10),
+    tradeType CHAR(10),
+    taxRate DEC(6,2),
+    createDate TIMESTAMP,
+);
+
+BUS BusOrderChangedEx FROM 百灵威系统工程部/orderChanged
+ACCEPT orderChanged {
+	VAR mainIdEx ID, detailIdEx ID;
+    SET mainIdEx=a.id FROM OrderMainEx as a WHERE a.orderId=orderId;
+    IF mainIdEx IS NULL {
+        SET mainIdEx=ID(OrderMain new, orderId);
+    }    
+    WITH OrderMain ID=mainIdEx SET customer=customer
+        -- , no=orderId
+	    , shippingContact=null
+	    -- , sumQuanity=null
+	    , sumAmount=null
+	    , couponNo=promotionId
+	    , sheetId=null;
+    WITH OrderMainEx ID=mainIdEx SET seller=seller
+        , orderId=orderId
+        , salesman=salesman
+        , salesRegion=salesRegion
+        , customer=customer
+        , buyerAccount=buyerAccount
+        , organization=organization
+        , currency=currency
+        , promotionId=promotionId
+        , createDate=from_unixtime(createDate);
+
+    SET detailIdEx=a.id FROM OrderDetailEx as a WHERE a.orderItemId=orderItemId;
+    IF detailIdEx IS NULL {
+        SET detailIdEx=ID(OrderDetail new);
+    }    
+    WITH OrderDetail ID=detailIdEx SET main=mainIdEx
+	    , warehouse=null
+	    , item=pack
+	    , product=product
+	    , quantity=quantity
+	    , price=price
+	    , amount=quantity*price;
+    WITH OrderDetailEx ID=detailIdEx SET brand=brand
+        , orderItemId=orderItemId
+        , retail=retail
+        , retailCurrency=retailCurrency
+        , bottomPrice=bottomPrice
+        , bottomPriceCurrency=bottomPriceCurrency
+        , costPrice=costPrice
+        , costPriceCurrency=costPriceCurrency
+        , mark=mark
+        , tradeType=tradeType
+        , taxRate=taxRate
+        , createDate=from_unixtime(createDate);
+
+    BUS JkOrderBus.order SET id=mainIdEx, no=orderId, customer=customer;
+    -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
+    -- BUS JkOrderBus.deliver SET id=mainId, contact=contact;
+    WITH DxOrderDetail ID=detailIdEx SET deliver=quantity;
+    BUS JkOrderBus.order INTO detail 
+        ADD id = detailIdEx
+                , item = pack
+                , product = product
+                , quantity = quantity
+                , price = price
+                , amount = quantity*price;
+    -- BUS JkOrderBus.[deliver-ext] INTO detail 
+    --    ADD id = detailId, needInsuredWhenDelivery = 0;
+    -- BUS JkOrderBus.deliver INTO detail 
+    --    ADD id = detailId, warehouse = warehouse;
+};
+
+BUS BusAdapterEx FROM 百灵威系统工程部/Adapter
+ACCEPT deliveryConfirm {
+/*
+    { "name": "outBoundItemId", "type": "string" },
+    { "name": "outBoundId", "type": "string" },
+    { "name": "warehouseName", "type": "string" },
+    { "name": "logisticsCompanyId", "type": "number" },
+    { "name": "logisticsNumber", "type": "string" },
+    { "name": "deliveryGoodsTime", "type": "string" },
+    { "name": "deliveryAddress", "type": "string" },
+    { "name": "saleOrderId", "type": "string" },
+    { "name": "saleOrderItemId", "type": "string" },
+    { "name": "packageId", "type": "string" },
+    { "name": "quantity", "type": "number" },
+    { "name": "operatorId", "type": "string" },
+    { "name": "operatorName", "type": "string" },
+    { "name": "operatorPhone", "type": "string" },
+    { "name": "customerId", "type": "string" }
+*/
+};
+
+BUS BusFiReceivable FROM 百灵威系统工程部/FiReceivable
+ACCEPT innerOrderPaid {
+
+};
