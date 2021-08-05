@@ -75,14 +75,14 @@ RETURNS ret (
 		SET orderNo = NO(OrderMain);
 		SET mainId=ID(OrderMain new, orderNo);
 		WITH OrderMain ID=mainId SET customer=customer
-			, sumQuanity=sumQuanity 	-- 各行数量和
+--			, sumQuanity=sumQuanity 	-- 各行数量和
 			, sumAmount=sumAmount		-- 各行金额和
 			, couponNo=couponNo
 			, sheetId=sheetId
     		, shippingContact=shippingContact;
 		BUS JkOrderBus.order SET id=mainId, no=orderNo, customer=customer;
 		BUS JkOrderBus.[deliver-ext] SET id=mainId;
-		BUS JkOrderBus.deliver SET id=mainId, contact=contact;
+		BUS JkOrderBus.deliver SET id=mainId, contact=shippingContact;
 		FOR detail {
 			VAR detailId ID;
 			SET detailId=ID(OrderDetail new);
@@ -134,8 +134,8 @@ RETURNS ret (
 			SET detailId=ID(ReturnDetail new);
 			WITH ReturnDetail ID=detailId SET main=mainId, orderDetail=orderDetail
 				, quantity=quantity, amount=amount;
-			WITH DxOrderDetail ID=orderDetail SET deliverReturn+=quantity
-				, receiveReturn+=amount, invoiceReturn+=amount;
+			WITH DxReturnDetail ID=detailId SET deliverReturn=quantity
+				, receiveReturn=amount, invoiceReturn=amount;
 			BUS JkOrderBus.return INTO detail 
 				ADD id = detailId
 					, [order-detail-id] = orderDetail

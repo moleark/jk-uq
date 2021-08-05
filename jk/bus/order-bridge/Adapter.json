@@ -1,0 +1,38 @@
+{
+    "--": "对接用bus",
+    "orderAudit": [
+        { "name": "saleOrderId", "type": "string" },
+        { "name": "saleOrderItemId", "type": "string" },
+        { "name": "packageId", "type": "string" },
+        { "name": "quantity", "type": "number" },
+        { "name": "customerId", "type": "string" },
+        { "name": "result", "type": "string" },
+        { "name": "reason", "type": "string" }
+    ],
+    "deliveryConfirm": [
+        { "name": "outBoundItemId", "type": "string" },
+        { "name": "outBoundId", "type": "string" },
+        { "name": "warehouseName", "type": "string" },
+        { "name": "logisticsCompanyId", "type": "number" },
+        { "name": "logisticsNumber", "type": "string" },
+        { "name": "deliveryGoodsTime", "type": "string" },
+        { "name": "deliveryAddress", "type": "string" },
+        { "name": "saleOrderId", "type": "string" },
+        { "name": "saleOrderItemId", "type": "string" },
+        { "name": "packageId", "type": "string" },
+        { "name": "quantity", "type": "number" },
+        { "name": "operatorId", "type": "string" },
+        { "name": "operatorName", "type": "string" },
+        { "name": "operatorPhone", "type": "string" },
+        { "name": "customerId", "type": "string" }
+    ],
+    "outProductChanged": [
+        { "name": "customerUnitOnPlatformId", "type": "string" },
+        { "name": "packageId", "type": "string" },
+        { "name": "salesPrice", "type": "number" },
+        { "name": "salesPriceCurrency", "type": "string" }, 
+        { "name": "stock", "type": "number" },   
+        { "name": "isDelete", "type": "number" },
+        { "name": "lastUpdatedTime", "type": "string" }
+    ]
+}

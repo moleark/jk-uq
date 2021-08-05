@@ -1,3 +1,4 @@
+/*
 ID OrderMain ver 0.5 GLOBAL (
 	id,
 	KEY no,
@@ -8,6 +9,10 @@ ID OrderMain ver 0.5 GLOBAL (
 	couponNo CHAR(16),
 	sheetId ID,
     shippingContact ID Contact,
+
+	-- 额外添加的字段
+	-- ...
+
 	INDEX customer_id(customer, id) UNIQUE,
 	INDEX sheetId(sheetId) UNIQUE,
 );
@@ -74,3 +79,4 @@ IX IxCustomerReturnable (
 	xi,					-- orderDetail
 	INDEX ix(ix),
 );
+*/
