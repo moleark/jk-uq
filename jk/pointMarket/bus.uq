@@ -205,11 +205,12 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
         if not exists (select 1 from OrderBack as w where w.orderItemId = orderItemId){
             var pid ID;
             PENDING SOrderPaymentPending + ( orderId:orderId, orderItemId:orderItemId, amount:amount, currency:currency, 
-                action:action) to pid;
+                action:action, createDate: from_unixtime(createDate)) to pid;
         }
 
         var pointYear int; --年度取值为最新的总积分年度
         var totalPoint int, customer ID Customer,price dec(12, 2), quantity int;
+
         set totalPoint = a.totalPoint, price = a.price, quantity = a.quantity, customer = a.customer, pointYear = year(a.createDate)
         from    OrderBack as a
         where   a.orderItemId = orderItemId;

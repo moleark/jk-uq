@@ -7,8 +7,6 @@ MAP orderTransportation(
     transTime datetime,
 );
 
-BUS orderDelivered from [百灵威系统工程部]/[Adapter]
-ACCEPT deliveryConfirm {
 /*
     outBoundItemId string,
     outBoundId string,
@@ -26,6 +24,9 @@ ACCEPT deliveryConfirm {
     operatorPhone string,
     customerId string,
 */
+/*
+BUS orderDelivered from [百灵威系统工程部]/[Adapter]
+ACCEPT deliveryConfirm {
 -- 原来代码
     var orderid bigint, row int;
 
@@ -55,3 +56,4 @@ ACCEPT deliveryConfirm {
 
 -- 新增，转发 jk-order-bus/deliver-done
 };
+*/

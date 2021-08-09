@@ -32,7 +32,7 @@ ID OrderDetailEx (
     createDate TIMESTAMP,
 );
 
-BUS BusOrderChangedEx FROM 百灵威系统工程部/orderChanged
+BUS BusOrderChangedEx ver 0.6 FROM 百灵威系统工程部/orderChanged
 ACCEPT orderChanged {
 	VAR mainIdEx ID, detailIdEx ID;
     SET mainIdEx=a.id FROM OrderMainEx as a WHERE a.orderId=orderId;
@@ -98,7 +98,7 @@ ACCEPT orderChanged {
     --    ADD id = detailId, warehouse = warehouse;
 };
 
-BUS BusAdapterEx FROM 百灵威系统工程部/Adapter
+BUS BusAdapterEx ver 0.2 FROM 百灵威系统工程部/Adapter
 ACCEPT deliveryConfirm {
 /*
     { "name": "outBoundItemId", "type": "string" },
@@ -117,9 +117,41 @@ ACCEPT deliveryConfirm {
     { "name": "operatorPhone", "type": "string" },
     { "name": "customerId", "type": "string" }
 */
+    VAR mainId ID, detailId ID;
+    SET mainId=a.id FROM OrderMainEx as a WHERE a.orderId=saleOrderId;
+    SET detailId=a.id FROM OrderDetailEx as a WHERE a.orderItemId=saleOrderItemId;
+    IF mainId IS NULL OR detailId IS NULL {
+        LOG 'mainId IS NULL OR detailId IS NULL' SUBJECT 'BUS deliveryConfirm';
+        RETURN;
+    }
+	BUS JkOrderBus.[deliver-done] SET id=mainId;
+	-- FOR detail {
+		-- WITH DxOrderDetail ID=detailId SET deliverDone=quantity;
+		BUS JkOrderBus.[deliver-done] INTO detail ADD id=detailId, value=quantity;
+	-- }
+    -- 直接本地UQ处理
+    BUS JkOrderBus.[deliver-done] LOCAL;
 };
 
-BUS BusFiReceivable FROM 百灵威系统工程部/FiReceivable
+BUS BusFiReceivable ver 0.6 FROM 百灵威系统工程部/FiReceivable
 ACCEPT innerOrderPaid {
-
+/*
+    { "name": "orderItemId", "type": "string" },
+    { "name": "orderId", "type": "string" },
+    { "name": "amount", "type": "number" },
+    { "name": "currency", "type": "id" },
+    { "name": "action", "type": "string" },
+    { "name": "createDate", "type": "number" }
+*/
+    VAR mainId ID, detailId ID;
+    SET mainId=a.id FROM OrderMainEx as a WHERE a.orderId=orderId;
+    SET detailId=a.id FROM OrderDetailEx as a WHERE a.orderItemId=orderItemId;
+    IF mainId IS NULL OR detailId IS NULL {
+        LOG 'mainId IS NULL OR detailId IS NULL' SUBJECT 'BUS FiReceivable.innerOrderPaid';
+        RETURN;
+    }
+	BUS JkOrderBus.[receive-done] SET id=mainId;
+	BUS JkOrderBus.[receive-done] INTO detail ADD id=detailId, value=amount;
+    -- 直接本地UQ处理
+    BUS JkOrderBus.[receive-done] LOCAL;
 };
