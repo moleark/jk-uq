@@ -31,6 +31,6 @@ BOOK OrderBook (
     mark char(5),
     createDate bigint,
     index idx_customer(customer),  
-    index idx_order(orderId),  
+    index idx_orderid(orderId),  
     index idx_product(product, pack),  
 );
