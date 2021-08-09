@@ -109,19 +109,19 @@ BUS webUserBus.getCuByWu as q into tb {
     if (now() > '2020-09-01' and now() < '2020-10-01') 
         set pointMultiple = 4
     if(point > 0){
-        bus couponBus.creditsUsedByWebUser set orderId = $sheet_no, webUser = webUser, amount = amount, currency = currency
+        bus cmB.creditsUsedByWebUser set orderId = $sheet_no, webUser = webUser, amount = amount, currency = currency
         , point = point, coupon = coupon;
         foreach orderItems {
-            bus couponBus.creditsUsedByWebUser into orderItems add row = $row, point = quantity * price * pointMultiple;
+            bus cmB.creditsUsedByWebUser into orderItems add row = $row, point = quantity * price * pointMultiple;
         }
     }
 
     if (customerid > 0) {
         if(point > 0){
-            bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+            bus cmB.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
             foreach orderItems {
-                bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
+                bus cmB.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
             }
         }
     }
@@ -162,10 +162,10 @@ STATE Matching {
                 set pointMultiple = 2;
                 if (now() > '2020-09-01' and now() < '2020-10-01') 
                     set pointMultiple = 4;
-                bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+                bus cmB.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
                 foreach orderItems {
-                    bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
+                    bus cmB.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
                 }
             }
         }
