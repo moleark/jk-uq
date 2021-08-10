@@ -114,6 +114,7 @@ BUS pointProductBus from [百灵威系统工程部]/pointShop
 
 BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
     ACCEPT orderChanged(
+            orderMainId, orderDetailId,
             orderId, orderItemId, seller, salesman, salesRegion, customer, buyerAccount, organization, brand, product, pack, quantity, price,
             currency as pricecurrency, retail, retailCurrency, bottomPrice, bottomPriceCurrency, costPrice, costPriceCurrency, mark, tradeType, taxRate, promotionId, createDate
         )
