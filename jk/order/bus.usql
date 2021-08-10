@@ -1,8 +1,6 @@
 BUS orderBus from 百灵威系统工程部/order;
 BUS webUserBus from 百灵威系统工程部/WebUser;
-BUS couponBus from 百灵威系统工程部/coupon;
-
-BUS cmB from [百灵威系统工程部]/coupon
+BUS couponBus from 百灵威系统工程部/coupon
     ACCEPT creditsInnerMatched {
         if ( not webUser is null ) {
             bus couponBus.creditsUsedByWebUser set orderId = orderId, webUser = webUser, amount = amount, currency = currency
