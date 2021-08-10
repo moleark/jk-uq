@@ -249,6 +249,7 @@ MAP WebUserCredits (
     createDate date,
     expiredDate date,
 ) ON ADD{
+    
     bus couponDrawedBus.creditsDrawedByWebUser set webUser = webUser, coupon = credits, createDate = createDate, expiredDate = expiredDate;
 };
 
