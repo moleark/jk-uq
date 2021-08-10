@@ -1,5 +1,7 @@
 {
     "orderChanged": [
+        "id: id",
+        "detailId: id",
         { "name": "orderId", "type": "string" },
         { "name": "orderItemId", "type": "string" },
         { "name": "seller", "type": "string" },
