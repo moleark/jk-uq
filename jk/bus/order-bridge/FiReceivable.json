@@ -6,7 +6,9 @@
         { "name": "currency", "type": "id" }
     ],
    "innerOrderPaid": [
+        "orderDetailId:id",
         { "name": "orderItemId", "type": "string" },
+        "orderMainId:id",
         { "name": "orderId", "type": "string" },
         { "name": "amount", "type": "number" },
         { "name": "currency", "type": "id" },

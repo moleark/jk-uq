@@ -17,6 +17,8 @@
         { "name": "logisticsNumber", "type": "string" },
         { "name": "deliveryGoodsTime", "type": "string" },
         { "name": "deliveryAddress", "type": "string" },
+        "orderMainId:id",
+        "orderDetailId:id",
         { "name": "saleOrderId", "type": "string" },
         { "name": "saleOrderItemId", "type": "string" },
         { "name": "packageId", "type": "string" },
