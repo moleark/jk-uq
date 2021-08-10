@@ -1,7 +1,3 @@
-BUS pointShopBus from [百灵威系统工程部]/pointShop;
-BUS ps2Bus from [百灵威系统工程部]/pointShop2;
-BUS webUserBus from [百灵威系统工程部]/webUser;
-bus couponDrawedBus from 百灵威系统工程部/coupon;
 bus commonBus from 百灵威系统工程部/common;
 
 /*
@@ -24,6 +20,24 @@ BUS pointBus from [百灵威系统工程部]/pointShop
         if( not webUserid is null ){
             book PointBook at (webUserid, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint,
             tempPoint = 0;
+        }
+    }
+    /*
+    * 在joint中发送bus，此处接收，用于将积分可兑换产品从老系统同步到tonva
+    * 2020/11/10, 此bus作废不再使用
+    */
+    ACCEPT pointProductBus {
+        var pointProductLibId int;
+        set pointProductLibId = pointProduct from PointProductSource where sourceId = pack and type = 'self';
+        if (pointProductLibId is null) {
+            TUID pointProductLib into pointProductLibId set description = description, descriptionC = descriptionC,
+                grade = grade, point = point, startDate = from_unixtime(startDate), endDate = from_unixtime(endDate), imageUrl = imageUrl,
+                isValid = isValid; 
+            BOOK PointProductSource at(pointProductLibId, pack) set type = 'self';
+        } else {
+            TUID pointProductLib id(pointProductLibId) set description = description, descriptionC = descriptionC,
+                grade = grade, point = point, startDate = from_unixtime(startDate), endDate = from_unixtime(endDate), imageUrl = imageUrl,
+                isValid = isValid; 
         }
     };
 
@@ -55,7 +69,7 @@ bus couponBus from 百灵威系统工程部/coupon
         }
     };
 
-BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
+BUS webUserBus from [百灵威系统工程部]/WebUser
     ACCEPT WebUserAuditPass
     {
         -- 审核后Customer的积分导入到webuser
@@ -70,14 +84,14 @@ BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
         }
 
         -- 把webuser领用的积分券导入内部
-        bus couponDrawedBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
+        bus couponBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
         foreach (
             var credits int, createDate date, expiredDate date 
             of select a.credits, a.createDate, a.expiredDate
             from WebUserCredits as a 
             where a.webUser = webUser and a.expiredDate > now()
         ) {
-            bus couponDrawedBus.creditsDrawedByCustomer into coupons add coupon = credits, 
+            bus couponBus.creditsDrawedByCustomer into coupons add coupon = credits, 
                 createDate = createDate, expiredDate = expiredDate;
         }
 
@@ -92,29 +106,9 @@ BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
         }
     };
 
-/*
- * 在joint中发送bus，此处接收，用于将积分可兑换产品从老系统同步到tonva
- * 2020/11/10, 此bus作废不再使用
-*/
-BUS pointProductBus from [百灵威系统工程部]/pointShop
-    ACCEPT pointProductBus {
-        var pointProductLibId int;
-        set pointProductLibId = pointProduct from PointProductSource where sourceId = pack and type = 'self';
-        if (pointProductLibId is null) {
-            TUID pointProductLib into pointProductLibId set description = description, descriptionC = descriptionC,
-                grade = grade, point = point, startDate = from_unixtime(startDate), endDate = from_unixtime(endDate), imageUrl = imageUrl,
-                isValid = isValid; 
-            BOOK PointProductSource at(pointProductLibId, pack) set type = 'self';
-        } else {
-            TUID pointProductLib id(pointProductLibId) set description = description, descriptionC = descriptionC,
-                grade = grade, point = point, startDate = from_unixtime(startDate), endDate = from_unixtime(endDate), imageUrl = imageUrl,
-                isValid = isValid; 
-        }
-    };   
-
 BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
     ACCEPT orderChanged(
-            orderId, orderItemId, seller, salesman, salesRegion, customer, buyerAccount, organization, brand, product, pack, quantity, price,
+            orderMainId, orderDetailId, orderId, orderItemId, seller, salesman, salesRegion, customer, buyerAccount, organization, brand, product, pack, quantity, price,
             currency as pricecurrency, retail, retailCurrency, bottomPrice, bottomPriceCurrency, costPrice, costPriceCurrency, mark, tradeType, taxRate, promotionId, createDate
         )
         BUS ps2Bus.getPointMultiple as q into tb {
@@ -240,10 +234,8 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
         book PointBookByCustomer at (customer, pointYear) set point += realPoint;
     };
 
-    BUS pointInitializationBus from [百灵威系统工程部]/pointShop2
+    BUS ps2Bus from [百灵威系统工程部]/pointShop2
     ACCEPT pointInitialization {
-        
-        
         --订单积分
         if(source=5){
             

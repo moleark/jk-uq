@@ -26,7 +26,7 @@ TUID PointProductLib (
     var source char(8), sourceId char(50);
     set source = type, sourceId = sourceId from PointProductSource where pointProduct = id; 
     if (not source is null) {
-        bus pointProductBus.pointProductBusOut set pack = id, source = source, sourceId = sourceId,
+        bus pointBus.pointProductBusOut set pack = id, source = source, sourceId = sourceId,
             point = point, startDate = unix_timestamp(startDate), endDate = unix_timestamp(endDate), imageUrl = imageUrl;
     }
 };
@@ -41,7 +41,7 @@ MAP PointProductSource (
     set point = point, startDate = startDate, endDate = endDate, imageUrl = imageUrl
     from    PointProductLib
     where   id = pointProduct; 
-    bus pointProductBus.pointProductBusOut set pack = pointProduct, source = type, sourceId = sourceId,
+    bus pointBus.pointProductBusOut set pack = pointProduct, source = type, sourceId = sourceId,
         point = point, startDate = unix_timestamp(startDate), endDate = unix_timestamp(endDate), imageUrl = imageUrl;
 };
 
@@ -174,12 +174,12 @@ Action submit {
     }
 
     if (customer > 0) {
-        bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
+        bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
             shippingContact = shippingContact, amount = amount;
         var source char(8), sourceId int;
         foreach exchangeItems {
             set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
-            bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
+            bus pointBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
                 quantity = quantity, point = point, subAmount = subAmount;
         }
         STATE TO Shipping;
@@ -198,12 +198,12 @@ STATE Matching {
                 set customerid = customer;
             }
 
-            bus pointShopBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customerid,
+            bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customerid,
                 shippingContact = shippingContact, amount = amount;
             var source char(8), sourceId int;
             foreach exchangeItems {
                 set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
-                bus pointShopBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
+                bus pointBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
                     quantity = quantity, point = point, subAmount = subAmount;
             }
         STATE TO Shipping;
@@ -249,7 +249,7 @@ MAP WebUserCredits (
     createDate date,
     expiredDate date,
 ) ON ADD{
-    bus couponDrawedBus.creditsDrawedByWebUser set webUser = webUser, coupon = credits, createDate = createDate, expiredDate = expiredDate;
+    bus couponBus.creditsDrawedByWebUser set webUser = webUser, coupon = credits, createDate = createDate, expiredDate = expiredDate;
 };
 
 MAP WebUserCreditsUsed (
