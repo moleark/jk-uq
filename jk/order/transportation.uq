@@ -7,7 +7,7 @@ MAP orderTransportation(
     transTime datetime,
 );
 
-BUS orderDelivered from [百灵威系统工程部]/[Adapter]
+BUS orderDelivered ver 0.01 from [百灵威系统工程部]/[Adapter]
     ACCEPT deliveryConfirm {
         var orderid bigint, row int;
 
