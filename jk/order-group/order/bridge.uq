@@ -1,4 +1,4 @@
-ID OrderMainEx (
+ID OrderMainEx GLOBAL (
     id,                             -- 就是OrderMain的id
     KEY orderId CHAR(20),           -- 对应Ex系统的orderId
     seller CHAR(50),
@@ -12,7 +12,7 @@ ID OrderMainEx (
     createDate TIMESTAMP,
 );
 
-ID OrderDetailEx (
+ID OrderDetailEx GLOBAL (
     id,                             -- 就是OrderDetail的id
     KEY orderItemId CHAR(20),       -- 对应Ex系统的orderItemId
     brand ID,                       -- 品牌id，应该在product里面带
