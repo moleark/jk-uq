@@ -34,19 +34,15 @@ ID OrderDetailEx GLOBAL (
 
 BUS BusOrderChangedEx ver 0.6 FROM 百灵威系统工程部/orderChanged
 ACCEPT orderChanged {
-	VAR mainIdEx ID, detailIdEx ID;
-    SET mainIdEx=a.id FROM OrderMainEx as a WHERE a.orderId=orderId;
-    IF mainIdEx IS NULL {
-        SET mainIdEx=ID(OrderMain new, orderId);
-    }    
-    WITH OrderMain ID=mainIdEx SET customer=customer
+
+    WITH OrderMain ID=orderMainId SET customer=customer
         -- , no=orderId
 	    , shippingContact=null
 	    -- , sumQuanity=null
 	    , sumAmount=null
 	    , couponNo=promotionId
 	    , sheetId=null;
-    WITH OrderMainEx ID=mainIdEx SET seller=seller
+    WITH OrderMainEx ID=orderMainId SET seller=seller
         , orderId=orderId
         , salesman=salesman
         , salesRegion=salesRegion
@@ -57,18 +53,14 @@ ACCEPT orderChanged {
         , promotionId=promotionId
         , createDate=from_unixtime(createDate);
 
-    SET detailIdEx=a.id FROM OrderDetailEx as a WHERE a.orderItemId=orderItemId;
-    IF detailIdEx IS NULL {
-        SET detailIdEx=ID(OrderDetail new);
-    }    
-    WITH OrderDetail ID=detailIdEx SET main=mainIdEx
+    WITH OrderDetail ID=orderDetailId SET main=orderMainId
 	    , warehouse=null
 	    , item=pack
 	    , product=product
 	    , quantity=quantity
 	    , price=price
 	    , amount=quantity*price;
-    WITH OrderDetailEx ID=detailIdEx SET brand=brand
+    WITH OrderDetailEx ID=orderDetailId SET brand=brand
         , orderItemId=orderItemId
         , retail=retail
         , retailCurrency=retailCurrency
@@ -81,12 +73,12 @@ ACCEPT orderChanged {
         , taxRate=taxRate
         , createDate=from_unixtime(createDate);
 
-    BUS JkOrderBus.order SET id=mainIdEx, no=orderId, customer=customer;
+    BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer;
     -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
     -- BUS JkOrderBus.deliver SET id=mainId, contact=contact;
-    WITH DxOrderDetail ID=detailIdEx SET deliver=quantity;
+    WITH DxOrderDetail ID=orderDetailId SET deliver=quantity;
     BUS JkOrderBus.order INTO detail 
-        ADD id = detailIdEx
+        ADD id = orderDetailId
                 , item = pack
                 , product = product
                 , quantity = quantity
