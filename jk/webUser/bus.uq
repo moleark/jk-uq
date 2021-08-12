@@ -1,33 +1,25 @@
-BUS webUserBus from [百灵威系统工程部]/WebUser;
 
 /*
  * creditsDrawedByCustomer: 积分券被Customer领用后触发，接收方：
  * 1. joint, 将领用记录写入到内部的dbs.dbo.tonvaCreditsDrawed表中，用于给内部系统订单额外积分
 */
-BUS creditsDrawedByCustomerBus from [百灵威系统工程部]/coupon;
 
-BUS webUserBusQuery from [百灵威系统工程部]/WebUser
+BUS webUserBus from [百灵威系统工程部]/WebUser
     QUERY getCustomerByWebUser {
         var customer id;
         set customer = w.customer from WebUserCustomer as w where w.WebUser = webUser and w.priority = 1;
         into BUS select customer;
-    };
-
-BUS webUserBusGetCuByWu from [百灵威系统工程部]/WebUser
+    }
     QUERY getCuByWu {
         var customer id;
         set customer = w.customer from WebUserCustomer as w where w.WebUser = webUser and w.priority = 1;
         into BUS select customer;
-    };
-
-BUS webUserBusQuerys from [百灵威系统工程部]/WebUser
+    }
     QUERY getWebUserByCustomer {
         var webUser ID [$user];
         set webUser = w.webUser from WebUserCustomer as w where w.customer = customer and w.priority = 1 order by webuser limit 1;
         into BUS select webUser;
-    };
-
-BUS webUserBusGetWuByCu from [百灵威系统工程部]/WebUser
+    }
     QUERY getWuByCu {
         var webUser ID [$user];
         set webUser = w.webUser from WebUserCustomer as w where w.customer = customer and w.priority = 1 order by webuser limit 1;
@@ -42,7 +34,7 @@ BUS orderBus from [百灵威系统工程部]/order
     };
 
 
-BUS couponBus from [百灵威系统工程部]/coupon
+BUS creditsDrawedByCustomerBus from [百灵威系统工程部]/coupon
     ACCEPT creditsDrawedByWebUser {
         var customer ID Customer;
         set customer = wc.customer from WebUserCustomer as wc where wc.webUser = webUser and wc.priority = 1;

@@ -103,12 +103,12 @@ ACTION MatchingOrderPoint(
         delete t from WebUserCredits as t where t.webUser = _webuser and t.credits = couponId;
         book WebUserCreditsUsed at (_webuser, couponId, _orderId ) set  usedDate = now();
         book PointBook at (_webuser, pointYear) set tempPoint += point;
-        bus pointShopBus.couponUsed
+        bus pointBus.couponUsed
             set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency, point = point, coupon = couponId;
     }
     
     delete t from PointShopOrder as t  where t.orderId = _orderId and  t.orderMaker = _customer;
-    bus pointShopBus.creditsOrderMatched
+    bus pointBus.creditsOrderMatched
         set orderId = _orderId, webUser = _webuser, customer = _customer, amount = amount, currency = currency
         , point = point, coupon = couponId;
 
@@ -139,7 +139,7 @@ BUS orderBus from [百灵威系统工程部]/order
             }
             
             if(type = 1 or type = 3){
-                bus pointShopBus.couponUsed
+                bus pointBus.couponUsed
                     set orderId = no, webUser = webUser, customer = customerId, amount = amount, currency = currency, point = point, coupon = coupon;
             }
         }
@@ -196,7 +196,7 @@ ACTION AddPlatformOrderPoint(
     }
 
     book PointBook at (customer, pointYear) set tempPoint += point;
-    bus pointShopBus.couponUsed
+    bus pointBus.couponUsed
         set orderId = innerOrderId, webUser = $user, customer = orderMaker, amount = amount, currency = currency, point = point, coupon = couponId;
 
     set result = 1;

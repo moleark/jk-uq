@@ -68,7 +68,9 @@ PAGE (
 };
 
  
-/** 搜索员工名称*/
+/** 搜索员工名称
+ * 删除，不再使用， ligsh， 20210721
+*/
 QUERY SearchEmployeeByid(
     _id ID [$user]
 )
