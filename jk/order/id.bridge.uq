@@ -11,7 +11,7 @@ ID OrderMainEx GLOBAL (
 
 ID OrderDetailEx GLOBAL (
     id,                             -- 就是OrderDetail的id
-    KEY orderItemId CHAR(20),       -- 对应Ex系统的orderItemId
+    KEY orderItemId CHAR(50),       -- 对应Ex系统的orderItemId
     brand ID,                       -- 品牌id，应该在product里面带
     -- product ID,                  -- OrderDetail 有这个字段
     -- pack ID,                     -- OrderDetail 有这个字段
