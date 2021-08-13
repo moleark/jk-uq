@@ -1,0 +1,48 @@
+ID DeliverDetailEx GLOBAL (
+    id,
+    key deliverItemId,
+    warehouseName char(20),
+    addressString char(100),
+);
+
+BUS BusAdapterEx ver 0.1 FROM 百灵威系统工程部/Adapter
+ACCEPT deliveryConfirm {
+/*
+    { "name": "outBoundItemId", "type": "string" },
+    { "name": "outBoundId", "type": "string" },
+    { "name": "warehouseName", "type": "string" },
+    { "name": "logisticsCompanyId", "type": "number" },
+    { "name": "logisticsNumber", "type": "string" },
+    { "name": "deliveryGoodsTime", "type": "string" },
+    { "name": "deliveryAddress", "type": "string" },
+    { "name": "orderMainId", "type": "id" },
+    { "name": "orderDetailId", "type": "id" },
+    { "name": "saleOrderId", "type": "string" },
+    { "name": "saleOrderItemId", "type": "string" },
+    { "name": "packageId", "type": "string" },
+    { "name": "quantity", "type": "number" },
+    { "name": "operatorId", "type": "string" },
+    { "name": "operatorName", "type": "string" },
+    { "name": "operatorPhone", "type": "string" },
+    { "name": "customerId", "type": "string" }
+*/
+    VAR resultId ID;
+    SET resultId=a.id FROM DeliverDetailEx as a WHERE a.no=outBoundItemId;
+    if resultId IS NULL {
+        set resultId=ID(DeliverDetailEx new, outBoundItemId);
+    }
+    WITH DeliverDetailEx ID = resultId set deliverItemId=outBoundItemId
+        , warehouseName=warehouse
+        , addressString=deliveryAddress;
+
+    /*
+    DeliverMain/DeliverDetail 的ID好像也应该是从bus中传过来
+    WITH DeliverMain ID = set no=outBoundId
+        , customer = customerId;
+    WITH DxDeliverMain ID = set carrier=logisticsCompanyId
+        , waybillNumber = logisticsNumber
+        , deliverTime = from_unixtime(deliveryGoodsTime);
+
+    WITH DeliverDetail ID = resultId set deliverDone=quantity;
+    */
+};

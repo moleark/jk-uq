@@ -7,13 +7,20 @@ ID DeliverMain (
 	id,
 	KEY no,
 	customer ID,
+    contact ID,
 	warehouse ID,
 	sys(create),
 );
 
+/*
+ 1.
+*/
 ID DeliverDetail (
-	id,						-- orderDetail
+	id,						-- DeliverDetail
 	main ID DeliverMain,	-- DeliverMain id	
+	orderDetail ID,			-- orderDetail
+	deliverShould DEC(12,2) DEFAULT 0,		-- 应发
+	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
 );
 
 IDX DxDeliverMain (
@@ -21,6 +28,8 @@ IDX DxDeliverMain (
 	staff ID,								-- 发运人
 	rows SMALLINT DEFAULT 0,				-- 行数
 	pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
+    carrier ID,                             -- 承运方
+    waybillNumber char(50),                 -- 运单号
 	deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
 );
 
@@ -102,6 +111,14 @@ RETURNS ret (
 		WHERE a.ixx=warehouse AND a.ix=customer;
 };
 
+/*
+ 1. DeliverDetail设置单独主键（不再把orderDetail作为其主键），增加orderDetail + quantity;
+ 2. AutoWarehouseDeliver可能不定时运行，改成手动运行，表示是一次截单；
+ 3. 截单后，形成：
+    3.1 发货单（运单、收货回执），按照客户 + 收货地址区分，明细是：orderDetail + quantity;
+    3.2 拣货单，明细是 orderDetail + quantity + 货位；
+    3.3 理货单，明细是：orderDetail + quantity + 托盘号；
+*/
 ACT AutoWarehouseDeliver()
 {
 	-- 生成发运单
