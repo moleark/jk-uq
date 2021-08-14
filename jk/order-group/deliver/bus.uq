@@ -11,6 +11,13 @@ ACCEPT order {
 				, a.quantity=quantity, a.amount=amount, a.price=price;
 	}
 }
+/*
+ 1. bus deliver的detail里面有 orderDetail + quantity;
+ 2. 此处接收deliver后， orderDetail和quantity都写入IxPendingDeliver（IxPendingDeliver中要添加quantity);
+ 3. OrderDetail中有一个warehouse是什么意思？好像OrderMain/OrderDetail应该只作为order中对应表的本地备份；
+ 4. DxOrderDetail不明白是干什么；
+ 5. AutoWarehouseDeliver 考虑改成手动“截单”，截单后生成“发运单”和“拣货单”、“理货单”
+*/
 ACCEPT deliver {
 	VAR customer ID;
 	SET customer = a.customer FROM OrderMain as a WHERE a.id=id;

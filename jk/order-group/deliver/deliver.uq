@@ -3,17 +3,13 @@ ID Warehouse (
 	KEY name CHAR(20),
 );
 
-ID DeliverMain (
+ID DeliverMain GLOBAL(
 	id,
 	KEY no,
 	customer ID,
+    contact ID,
 	warehouse ID,
 	sys(create),
-);
-
-ID DeliverDetail (
-	id,						-- orderDetail
-	main ID DeliverMain,	-- DeliverMain id	
 );
 
 IDX DxDeliverMain (
@@ -21,7 +17,21 @@ IDX DxDeliverMain (
 	staff ID,								-- 发运人
 	rows SMALLINT DEFAULT 0,				-- 行数
 	pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
+    carrier ID,                             -- 承运方
+    waybillNumber char(50),                 -- 运单号
 	deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
+);
+
+/*
+*/
+ID DeliverDetail GLOBAL(
+	id,						-- orderDetail
+	main ID DeliverMain,	-- DeliverMain id	
+);
+
+IDX DXDeliverDetail (
+    id,
+	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
 );
 
 IX IxWarehouseDeliverMain (
@@ -102,6 +112,14 @@ RETURNS ret (
 		WHERE a.ixx=warehouse AND a.ix=customer;
 };
 
+/*
+ 1. DeliverDetail设置单独主键（不再把orderDetail作为其主键），增加orderDetail + quantity;
+ 2. AutoWarehouseDeliver可能不定时运行，改成手动运行，表示是一次截单；
+ 3. 截单后，形成：
+    3.1 发货单（运单、收货回执），按照客户 + 收货地址区分，明细是：orderDetail + quantity;
+    3.2 拣货单，明细是 orderDetail + quantity + 货位；
+    3.3 理货单，明细是：orderDetail + quantity + 托盘号；
+*/
 ACT AutoWarehouseDeliver()
 {
 	-- 生成发运单
@@ -159,7 +177,7 @@ RETURNS detail (
 	returnDone DEC(12,2),
 ) {
 	INTO main SELECT a.id, a.no
-		, a.customer, a.warehouse
+		, a.customer, a.contact, a.warehouse
 		, b.staff , b.rows, b.pickRows, b.deliverTime
 		FROM DeliverMain as a
 			LEFT JOIN DxDeliverMain as b ON a.id=b.id
