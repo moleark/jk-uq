@@ -3,24 +3,13 @@ ID Warehouse (
 	KEY name CHAR(20),
 );
 
-ID DeliverMain (
+ID DeliverMain GLOBAL(
 	id,
 	KEY no,
 	customer ID,
     contact ID,
 	warehouse ID,
 	sys(create),
-);
-
-/*
- 1.
-*/
-ID DeliverDetail (
-	id,						-- DeliverDetail
-	main ID DeliverMain,	-- DeliverMain id	
-	orderDetail ID,			-- orderDetail
-	deliverShould DEC(12,2) DEFAULT 0,		-- 应发
-	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
 );
 
 IDX DxDeliverMain (
@@ -31,6 +20,18 @@ IDX DxDeliverMain (
     carrier ID,                             -- 承运方
     waybillNumber char(50),                 -- 运单号
 	deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
+);
+
+/*
+*/
+ID DeliverDetail GLOBAL(
+	id,						-- orderDetail
+	main ID DeliverMain,	-- DeliverMain id	
+);
+
+IDX DXDeliverDetail (
+    id,
+	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
 );
 
 IX IxWarehouseDeliverMain (
@@ -176,7 +177,7 @@ RETURNS detail (
 	returnDone DEC(12,2),
 ) {
 	INTO main SELECT a.id, a.no
-		, a.customer, a.warehouse
+		, a.customer, a.contact, a.warehouse
 		, b.staff , b.rows, b.pickRows, b.deliverTime
 		FROM DeliverMain as a
 			LEFT JOIN DxDeliverMain as b ON a.id=b.id
