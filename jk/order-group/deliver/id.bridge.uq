@@ -39,6 +39,6 @@ ACCEPT deliveryConfirm {
         , warehouseName=warehouseName
         , addressString = deliveryAddress;
 
-    WITH DeliverDetail ID = deliverItemId set main=deliverId;
-    WITH DxDeliverDetail ID = deliverItemId set deliverDone=quantity;
+    WITH DeliverDetail ID = orderDetailId set main=deliverId;
+    WITH DxDeliverDetail ID = orderDetailId set deliverDone=quantity;
 };

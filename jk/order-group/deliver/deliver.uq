@@ -29,7 +29,7 @@ ID DeliverDetail GLOBAL(
 	main ID DeliverMain,	-- DeliverMain id	
 );
 
-IDX DXDeliverDetail (
+IDX DxDeliverDetail (
     id,
 	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
 );
