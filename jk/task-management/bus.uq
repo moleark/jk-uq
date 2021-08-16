@@ -1,9 +1,7 @@
 BUS agentBus from 百灵威系统工程部/agent;
 BUS webUserBus from [百灵威系统工程部]/WebUser;
 BUS pointBus ver 0.4 from [百灵威系统工程部]/point;
-BUS salesTaskBus ver 0.4 from [百灵威系统工程部]/SalesTask;
-
-BUS salesTaskBusGetBindedSales from [百灵威系统工程部]/SalesTask
+BUS salesTaskBus ver 0.4 from [百灵威系统工程部]/SalesTask
     QUERY getBindedSales {
         var salesOrEasyBuzi id, type char(20), dSuperior id, iSuperior id; 
         set salesOrEasyBuzi = c.sales from CustomerNowSalesBOOK as c where c.customer = customer;
@@ -16,11 +14,33 @@ BUS salesTaskBusGetBindedSales from [百灵威系统工程部]/SalesTask
                 set iSuperior = r.parent from relation as r where r.children = dSuperior;
         }
         into bus select salesOrEasyBuzi, type, dSuperior, iSuperior;
-    };
-
-BUS stBusGetBrandDis from [百灵威系统工程部]/SalesTask
+    }
     QUERY getBrandBottomDiscount {
         var discount dec(12, 2); 
         set discount = c.discount from BottomDiscount as c where c.brand = brand;
         into bus select discount;
+    }
+    ACCEPT assistAchievement (
+       sales, salesAmount, amount, receivableAmount, withdrawalAmount 
+    ){
+        BOOK SalesAchievementBook at( sales ) set Level = 1, oneSaleVolume = salesAmount, oneAchievement = amount
+            , totalReceivableAmount = receivableAmount, waitWithdrawal = withdrawalAmount;
+    }
+    ACCEPT assistAchievementHistory (
+       sales, webuser, orderNo, salesAmount, amount
+    ){
+        History AchievementHistory set sales = sales, webuser = webuser, orderNo = orderNo
+            , price = salesAmount, agentprices = salesAmount, types = 1, amount = amount;
+    }
+    --获取老系统回款数据
+    ACCEPT orderpayment (
+        orderNo, paymentAmount, state
+    ){
+        var  sales ID [$user], order ID;
+        set  order = a.order, sales = a.sales
+        from    AchievementHistory as a
+        where   a.types=1 and a.ordertype='coupon' and a.orderno=orderNo;
+
+        var pid ID;
+        PENDING OrderPaymentPending + (sales:sales, order:order, orderNo:orderNo, paymentAmount:paymentAmount, state:state) to pid;
     };
