@@ -1,0 +1,128 @@
+/* 截单表 */
+ID CutOffMain (
+	id,
+	KEY no,
+	warehouse ID,
+	cutter ID,
+	sys(create)
+);
+
+/* 查询待截单数据 */
+QUERY GetReadyCutOffList(
+    warehouse ID
+)
+RETURNS list (
+    id ID,
+    orderDetail ID,
+    quantity int,
+	item ID,
+	product ID,
+	shouldQuantity DEC(12,2),
+) {
+	INTO list SELECT a.id,
+		a.orderDetail,
+		b.quantity,
+		b.item, b.product,
+		b.quantity as shouldQuantity,
+        b.contact, a.ix
+		FROM IxPendingDeliver as a 
+             JOIN OrderDetail as b ON a.orderDetail = b.id
+             JOIN IxUserWarehouse as c on c.ix = $user AND c.xi = a.ixx
+        ORDER BY a.ixx, a.ix, a.contact, a.xi;
+};
+
+
+/* 截单操作
+*  下一步要完善考虑根据不同业务类型的截单：例如：客户订单接单、河北质检截单...
+*/
+ACT CutOff(
+    warehouse ID
+)
+RETURNS cutOff (
+	id ID,
+	no CHAR(20),			-- 截单号
+)
+{
+    -- 1、操作权限检查
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix = $user AND xi = warehouse) {
+		RETURN;
+	}
+
+    -- 2、生成截单号
+    VAR cutOffMain ID, cutOffMainNo CHAR(20);
+	SET cutOffMainNo = NO(CutOffMain);
+	SET cutOffMain = ID(CutOffMain new, cutOffMainNo);
+	WITH CutOffMain as a ID = cutOffMain SET a.no = cutOffMainNo, a.warehouse = warehouse, a.cutter = $user;
+
+    -- 3、生成发运单、临时理货号, 并删除已截单的数据
+    LOG 'CutOff' SUBJECT 'start';
+	TABLE tblCutOff(key warehouse ID, key customer ID, deliver ID);
+    VAR trayNumber = 0;
+
+	WHILE 1=1 {
+		VAR warehouse ID, customer ID, orderDetail ID;
+		SET warehouse = NULL;
+		SET warehouse = a.ixx, customer = a.ix,  orderDetail = a.xi
+			FROM IxPendingDeliver as a
+			ORDER BY a.ixx, a.ix, a.xi
+			LIMIT 1;
+		IF warehouse IS NULL {
+			BREAK;
+		}
+		DELETE a FROM IxPendingDeliver as a 
+			WHERE a.ixx = warehouse AND a.ix = customer AND a.xi = orderDetail;
+
+		VAR deliver ID, deliverNo CHAR(20);
+		SET deliver = NULL;
+		SET deliver = a.deliver FROM tblCutOff as a 
+			WHERE a.warehouse = warehouse AND a.customer = customer;
+
+		IF deliver IS NULL {
+            trayNumber += 1;
+			SET deliverNo = NO(DeliverMain);
+			SET deliver = ID(DeliverMain new, deliverNo);
+			WITH DeliverMain as a ID = deliver SET a.customer = customer, a.warehouse = warehouse, a.cutOffMain = cutOffMain, a.trayNumber = trayNumber;
+			WITH IxWarehouseDeliverMain IX = warehouse XI = deliver;
+			INTO tblCutOff SELECT warehouse, customer, deliver;
+			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
+			WITH DxDeliverMain as a ID = deliver;
+		}
+		WITH DeliverDetail ID = orderDetail SET main = deliver;
+		WITH DxDeliverMain as a ID = deliver SET a.rows = a.rows + 1;
+	}
+	LOG 'CutOff' SUBJECT 'end';
+
+    INTO cutOff SELECT cutOffMain as id, cutOffMainNo as no;
+};
+
+
+/* 根据截单号获取截单号详情
+*  cutOffMain  截单号Id
+*/
+QUERY GetCutOffMainDetailById(
+    cutOffMain ID
+)
+RETURNS list (
+    warehouse ID,
+	deliverMain ID,
+	no CHAR(20),
+	customer ID,
+	create TIMESTAMP,
+	rows SMALLINT,
+	pickRows SMALLINT,
+	staff ID,
+){
+    -- ? 查询数据待完善
+    INTO ret SELECT uw.xi as warehouse
+		, b.id as deliverMain, b.no
+		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
+		FROM IxUserWarehouse as uw
+			LEFT JOIN IxWarehouseDeliverMain as a ON uw.xi = a.ix
+			JOIN DeliverMain as b ON a.xi = b.id
+			LEFT JOIN DxDeliverMain as c ON b.id = c.id
+            JOIN CutOffMain as d ON b.cutOffMain = d.id
+		WHERE uw.ix=$user AND d.id = cutOffMain;
+};
+
+
+

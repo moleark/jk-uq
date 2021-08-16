@@ -33,8 +33,10 @@ ACCEPT deliver {
 			TUID [$User] ID (user) SET poke=1;
 		}
 	}
+	/* 20210816 z461 注释，此处操作改为手动触发进行
 	LOG 'JKOrder-deliver SCHEDULE' SUBJECT 'delay 1';
 	SCHEDULE AutoWarehouseDeliver DELAY 1; -- 1分钟以后执行一次
+	*/
 }
 ACCEPT [deliver-ext] {
 	FOR detail {
