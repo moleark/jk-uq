@@ -62,7 +62,7 @@ BUS webUserBus.getCuByWu as q into tb {
     	SET a.webUser = webUser, a.customer = webUser
             , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
             , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
-            , a.currency = currency, a.amount = amount,
+            , a.currency = currency, a.sumAmount = amount
             , a.sheetId=$id;
 	-- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
 	

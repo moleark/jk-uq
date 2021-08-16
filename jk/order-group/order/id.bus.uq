@@ -11,7 +11,7 @@ ACCEPT [deliver-done] {
             , customer ID, orderDetailId ID;
         VAR returnDetail ID;
         SET orderDetailId=id;
-        SET quantity=a.quantity, price=a.price, amount=a.amount FROM OrderDetail as a WHERE a.id=orderDetailId;
+        SET quantity=a.quantity, price=a.price, amount=a.quantity*a.price FROM OrderDetail as a WHERE a.id=orderDetailId;
         SET receiveDone=a.receiveDone, invoiceDone=a.invoiceDone FROM DxOrderDetail as a WHERE a.id=orderDetailId;
         SET customer=b.customer FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id WHERE a.id=orderDetailId;
         SET returnDetail=a.id FROM ReturnDetail as a WHERE a.orderDetail=orderDetailId;

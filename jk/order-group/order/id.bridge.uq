@@ -58,8 +58,7 @@ ACCEPT orderChanged {
 	    , item=pack
 	    , product=product
 	    , quantity=quantity
-	    , price=price
-	    , amount=quantity*price;
+	    , price=price;
     WITH OrderDetailEx ID=orderDetailId SET brand=brand
         , orderItemId=orderItemId
         , retail=retail
