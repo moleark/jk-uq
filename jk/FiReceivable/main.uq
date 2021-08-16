@@ -118,7 +118,7 @@ HISTORY WebUserDealOrderHistory (
 /*
  * 根据订单付款
 */
-ACTION PayOrder(receiver ID, payer char, amount dec(12, 2), currency ID, order ID, channel: char) {
+ACTION PayOrder(receiver ID, payer char, amount dec(12, 2), currency ID, order ID, channel char) {
 
     var ext TEXT;
     set ext = '{"order":' + order +'}';
