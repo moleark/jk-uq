@@ -59,7 +59,11 @@ BUS webUserBus.getCuByWu as q into tb {
 	BUS JkOrderBus.order SET id=mainId, customer=webUser;
 
 	WITH OrderMain as a ID mainId
-		SET a.customer = webUser, a.sheetId=$id, a.shippingContact = shippingContact;
+    	SET a.webUser = webUser, a.customer = webUser
+            , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
+            , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
+            , a.currency = currency, a.amount = amount,
+            , a.sheetId=$id;
 	-- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
 	
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
@@ -67,27 +71,13 @@ BUS webUserBus.getCuByWu as q into tb {
 
     var pid ID;
     pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: $id, amount: amount, currency: currency, date: now()) to pid;
-
     foreach orderItems {
-      	var detailId ID;
-        SET detailId = ID(OrderDetail new);
-        WITH OrderDetail as a ID detailId 
-			SET a.main = mainId
-				, a.product = product, a.item = pack
-				, a.price = price, a.quantity = quantity, a.amount = amount;
-		BUS JkOrderBus.order INTO [detail]
-			ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
         history OrderHistory
             set webUser = webUser, product = product, pack = pack, 
 				price = price, quantity = quantity, amount = subAmount, currency = currency,
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, 
 				packingFee = packingFee, proxyFreightFee = proxyFreightFee,
                 salesRegion = salesRegion;
-        
-        var itemId ID;
-        set itemId = ID(orderItems, id0, ?); -- row 值怎么写?
-        update orderItems set product = product, pack = pack, price = price, quantity = quantity
-        where  id = itemId;
     }
     
     var customerid int;
@@ -106,6 +96,14 @@ BUS webUserBus.getCuByWu as q into tb {
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
     foreach orderItems {
+      	var detailId ID;
+        SET detailId = ID(OrderDetail new);
+        WITH OrderDetail as a ID detailId 
+			SET a.main = mainId
+				, a.product = product, a.item = pack
+				, a.price = price, a.quantity = quantity;
+		BUS JkOrderBus.order INTO [detail]
+			ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
         bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
 
