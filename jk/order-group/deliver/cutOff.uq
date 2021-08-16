@@ -78,7 +78,7 @@ RETURNS cutOff (
 			WHERE a.warehouse = warehouse AND a.customer = customer;
 
 		IF deliver IS NULL {
-            trayNumber += 1;
+            SET trayNumber += 1;
 			SET deliverNo = NO(DeliverMain);
 			SET deliver = ID(DeliverMain new, deliverNo);
 			WITH DeliverMain as a ID = deliver SET a.customer = customer, a.warehouse = warehouse, a.cutOffMain = cutOffMain, a.trayNumber = trayNumber;
