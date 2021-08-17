@@ -101,6 +101,10 @@ BUS webUserBus.getCuByWu as q into tb {
             SET a.main = mainId
                 , a.product = product, a.item = pack
                 , a.price = price, a.quantity = quantity;
+
+        if(not coupon is NULL){ 
+            WITH IxOrderDetailCoupon ix = detailId xi = coupon;
+        }
         /*
         BUS JkOrderBus.order INTO [detail]
             ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
@@ -122,6 +126,9 @@ BUS webUserBus.getCuByWu as q into tb {
     }
 
     if (customerid > 0) {
+        if(not coupon is NULL){
+            WITH IxOrderMainCustomerCoupon ixx = mainId ix = customerid xi = coupon; 
+        } 
         if(point > 0){
             bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
@@ -166,6 +173,9 @@ STATE Matching {
                             add orderDetailId = detailId, product = product2, pack = pack2, quantity = quantity2, price = price2
                             , subAmount = quantity2 * price2;
                     }
+                if(not coupon is NULL){
+                    WITH IxOrderMainCustomerCoupon ixx = mainId ix = customerid xi = coupon; 
+                } 
                 /*
                 foreach orderItems {
                     bus orderBus.order into orderItems 

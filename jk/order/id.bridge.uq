@@ -68,6 +68,20 @@ ACCEPT orderChanged {
         , createDate=from_unixtime(createDate);
 
     WITH DxOrderDetail ID=orderDetailId SET deliver=quantity;
+
+    /*
+    -- 匹配coupon, 这个要使用bus QUERY，待写好提供方后再添加
+    var coupon ID;
+    set coupon = a.xi from IxOrderMainCustomerCoupon as a where a.ixx = orderMainId and a.ix = ifnull(960, customer);
+    if(coupon is NULL){
+        set coupon = 999;
+    }
+    if(not coupon is NULL){
+        WITH IxOrderMainCustomerCoupon ixx = orderMainId ix = customer xi = coupon; 
+        WITH IxOrderDetailCoupon ix = orderDetailId xi = coupon;
+    }
+    */
+
     /*
     -- 没有想好，暂时不发bus
     BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer;
