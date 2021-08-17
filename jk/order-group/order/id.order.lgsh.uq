@@ -30,17 +30,11 @@ ID OrderDetail ver 0.5 GLOBAL (
 	price DEC(12,2),                    -- 实际成交价
 );
 
-ENUM EnumFeeType (packing=11, refrigeration=12, freezing=13, proxyFreight=14);
-IX IxOrderMainFee (
-	ix,						-- orderMain
-	xi ENUM EnumFeeType,
-	fee DEC(12,2),
-);
-
-IX IxOrderDetailFee (
-	ix,						-- orderDetail
-	xi ENUM EnumFeeType,
-	fee DEC(12,2),
+ENUM EnumAmountDiff (packing=11, refrigeration=12, freezing=13, proxyFreight=14);
+IX IxOrderAmountDiff (
+	ix,						
+	xi ENUM EnumAmountDiff,
+	diff DEC(12, 2),
 );
 
 -- 订单或订单明细状态如何表达？
