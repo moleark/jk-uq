@@ -67,6 +67,21 @@ bus couponBus from 百灵威系统工程部/coupon
             history PointHistoryByCustomer 
                 set pointYear = pointYear, point = point, source = 1, comments = orderid, customer = customerId;
         }
+    }
+    QUERY getWebUserAllCredits {
+        -- var webUser ID WebUser;
+        -- set webUser = a.webUser from WebUserCustomer as a where a.customer = customer;
+        if(not webUser is NULL){
+            into bus select webUser;
+            foreach (var coupon ID, createDate date, expiredDate date
+                of select a.credits as coupon, a.createDate, a.expiredDate from WebUserCredits as a where a.webUser = webUser) {
+                into bus.creditsDrawed select coupon, createDate, expiredDate;
+            }
+            foreach (var coupon ID, saleOrder char(50), usedDate date
+                of select a.credits as coupon, a.saleOrder, a.usedDate from WebUserCreditsUsed as a where a.webUser = webUser) {
+                into bus.creditsUsed select coupon, saleOrder, usedDate;
+            }
+        }
     };
 
 BUS webUserBus from [百灵威系统工程部]/WebUser

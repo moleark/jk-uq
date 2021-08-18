@@ -102,7 +102,7 @@ OPEN MAP CustomerContractor (
     key contractor ID Customer,
 ) ON SAVE {
     if ($user > 0) {
-        bus webUserBus.CustomerContractor set customer = customer, contractor = contractor;
+        bus wBus.CustomerContractor set customer = customer, contractor = contractor;
     }
 };
 

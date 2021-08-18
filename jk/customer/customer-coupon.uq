@@ -1,0 +1,15 @@
+
+MAP CustomerCredits (
+    key customer ID Customer,     -- Customer编号，不是WebUser
+    key credits int not null,
+    creditsCode int not null,
+    createDate date,
+    expiredDate date,
+);
+
+MAP CustomerCreditsUsed (
+    key customer ID Customer,     -- Customer编号，不是WebUser
+    key credits int not null,
+    key saleOrderItem char(50),
+    usedDate date,
+);
