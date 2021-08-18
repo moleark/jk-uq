@@ -35,6 +35,7 @@
 	],
 	"deliver-detail": [
 		"id: id  -- order detail id",
+		"quantity: int  -- 同一个合同明细可能会分多次不同数量发送",
 		"warehouse: id"
 	],
 	"deliver": [
