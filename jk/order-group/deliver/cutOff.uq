@@ -59,7 +59,7 @@ RETURNS cutOff (
 
     -- 3、生成发运单、临时理货号, 并删除已截单的数据
     LOG 'CutOff' SUBJECT 'start';
-	TABLE tblCutOff(key warehouse ID, key customer ID, contact ID, quantity int, deliver ID);
+	TABLE tblCutOff(key warehouse ID, key customer ID, contact ID, deliver ID);
     VAR trayNumber = 0;
 
 	WHILE 1=1 {
@@ -88,7 +88,7 @@ RETURNS cutOff (
 		VAR deliver ID, deliverNo CHAR(20);
 		SET deliver=NULL;
 		SET deliver=a.deliver FROM tblCutOff as a 
-			WHERE a.warehouse=warehouse AND a.customer=customer AND a.contact=contact AND a.quantity=quantity;
+			WHERE a.warehouse=warehouse AND a.customer=customer AND a.contact=contact;
 
 		IF deliver IS NULL {
             SET trayNumber+=1;
@@ -97,7 +97,7 @@ RETURNS cutOff (
 			WITH DeliverMain as a ID=deliver SET a.customer=customer, 
                 a.contact=contact, a.warehouse=warehouse, a.cutOffMain=cutOffMain, a.trayNumber=trayNumber;
 			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
-			INTO tblCutOff SELECT warehouse, customer, deliver, contact, quantity;
+			INTO tblCutOff SELECT warehouse, customer, contact, deliver;
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
 			WITH DxDeliverMain as a ID=deliver;
 		}
