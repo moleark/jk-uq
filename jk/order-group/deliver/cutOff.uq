@@ -18,17 +18,20 @@ RETURNS list (
 	item ID,
 	product ID,
 	shouldQuantity DEC(12,2),
+    contact ID, customer ID
 ) {
 	INTO list SELECT a.id,
 		a.orderDetail,
 		b.quantity,
 		b.item, b.product,
-		b.quantity as shouldQuantity,
-        b.contact, a.ix
+		a.quantity as shouldQuantity,
+        d.contact, a.ix
 		FROM IxPendingDeliver as a 
-             JOIN OrderDetail as b ON a.orderDetail = b.id
-             JOIN IxUserWarehouse as c on c.ix = $user AND c.xi = a.ixx
-        ORDER BY a.ixx, a.ix, a.contact, a.xi;
+             JOIN OrderDetail as b ON a.orderDetail=b.id
+             JOIN IxUserWarehouse as c on c.ix=$user AND c.xi=a.ixx
+             JOIN OrderMain as d ON b.main=d.id
+        WHERE a.ixx=warehouse
+        ORDER BY a.ixx, a.ix, d.contact, a.xi;
 };
 
 
@@ -44,51 +47,62 @@ RETURNS cutOff (
 )
 {
     -- 1、操作权限检查
-	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix = $user AND xi = warehouse) {
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=warehouse) {
 		RETURN;
 	}
 
     -- 2、生成截单号
     VAR cutOffMain ID, cutOffMainNo CHAR(20);
-	SET cutOffMainNo = NO(CutOffMain);
-	SET cutOffMain = ID(CutOffMain new, cutOffMainNo);
-	WITH CutOffMain as a ID = cutOffMain SET a.no = cutOffMainNo, a.warehouse = warehouse, a.cutter = $user;
+	SET cutOffMainNo=NO(CutOffMain);
+	SET cutOffMain=ID(CutOffMain new, cutOffMainNo);
+	WITH CutOffMain as a ID=cutOffMain SET a.no=cutOffMainNo, a.warehouse=warehouse, a.cutter=$user;
 
     -- 3、生成发运单、临时理货号, 并删除已截单的数据
     LOG 'CutOff' SUBJECT 'start';
-	TABLE tblCutOff(key warehouse ID, key customer ID, deliver ID);
+	TABLE tblCutOff(key warehouse ID, key customer ID, contact ID, quantity int, deliver ID);
     VAR trayNumber = 0;
 
 	WHILE 1=1 {
-		VAR warehouse ID, customer ID, orderDetail ID;
-		SET warehouse = NULL;
-		SET warehouse = a.ixx, customer = a.ix,  orderDetail = a.xi
+        -- 循环获取 limit1数据
+		VAR warehouse ID, customer ID, contact ID, quantity int, orderDetail ID;
+		SET warehouse=NULL;
+		SET warehouse=a.ixx, customer=a.ix, contact=d.contact, quantity=a.xxi, orderDetail=a.xi,
 			FROM IxPendingDeliver as a
-			ORDER BY a.ixx, a.ix, a.xi
+                 JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
+                 JOIN OrderDetail as c ON c.id=a.xi
+                 JOIN OrderMain as d ON d.id=c.main
+            WHERE a.ixx=warehouse
+			ORDER BY a.ixx, a.ix, d.contact, a.xi
 			LIMIT 1;
 		IF warehouse IS NULL {
 			BREAK;
 		}
-		DELETE a FROM IxPendingDeliver as a 
-			WHERE a.ixx = warehouse AND a.ix = customer AND a.xi = orderDetail;
+        -- 从任务表中删除已获取到的当前数据
+		DELETE a FROM IxPendingDeliver as a
+                 JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
+                 JOIN OrderDetail as c ON c.id=a.xi
+                 JOIN OrderMain as d ON d.id=c.main
+			WHERE a.ixx=warehouse AND a.ix=customer AND d.contact=contact AND a.xi=orderDetail AND a.xxi=quantity;
 
+        -- 从临时表中查询是否存在，不存在则生成新发运单和临时理货号
 		VAR deliver ID, deliverNo CHAR(20);
-		SET deliver = NULL;
-		SET deliver = a.deliver FROM tblCutOff as a 
-			WHERE a.warehouse = warehouse AND a.customer = customer;
+		SET deliver=NULL;
+		SET deliver=a.deliver FROM tblCutOff as a 
+			WHERE a.warehouse=warehouse AND a.customer=customer AND a.contact=contact AND a.quantity=quantity;
 
 		IF deliver IS NULL {
-            SET trayNumber += 1;
-			SET deliverNo = NO(DeliverMain);
-			SET deliver = ID(DeliverMain new, deliverNo);
-			WITH DeliverMain as a ID = deliver SET a.customer = customer, a.warehouse = warehouse, a.cutOffMain = cutOffMain, a.trayNumber = trayNumber;
-			WITH IxWarehouseDeliverMain IX = warehouse XI = deliver;
-			INTO tblCutOff SELECT warehouse, customer, deliver;
+            SET trayNumber+=1;
+			SET deliverNo=NO(DeliverMain);
+			SET deliver=ID(DeliverMain new, deliverNo);
+			WITH DeliverMain as a ID=deliver SET a.customer=customer, 
+                a.contact=contact, a.warehouse=warehouse, a.cutOffMain=cutOffMain, a.trayNumber=trayNumber;
+			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
+			INTO tblCutOff SELECT warehouse, customer, deliver, contact, quantity;
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
-			WITH DxDeliverMain as a ID = deliver;
+			WITH DxDeliverMain as a ID=deliver;
 		}
-		WITH DeliverDetail ID = orderDetail SET main = deliver;
-		WITH DxDeliverMain as a ID = deliver SET a.rows = a.rows + 1;
+		WITH DeliverDetail ID=orderDetail quantity=quantity SET main=deliver;
+		WITH DxDeliverMain as a ID=deliver SET a.rows=a.rows + 1;
 	}
 	LOG 'CutOff' SUBJECT 'end';
 
