@@ -235,13 +235,6 @@ STATE CANCELED {
 
 };
 
-MAP CustomerCoupon (
-    key webUser ID WebUser,     -- WebUser编号，不是Customer
-    coupon int,
-    createDate date,
-    expiredDate date,
-);
-
 /*
  * 有关产品的浏览量/兑换量统计
 */
