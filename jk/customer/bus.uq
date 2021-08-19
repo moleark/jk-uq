@@ -1,7 +1,7 @@
 BUS wBus from [百灵威系统工程部]/WebUser
     ACCEPT WebUserAuditPass
     BUS cBus.getWebUserAllCredits as q into tb {
-        set webUser = webUser;
+        set q.webUser = webUser;
     } {
         if(not buyerAccount is null)
             book CustomerBuyerAccount at (customer, buyerAccount);
