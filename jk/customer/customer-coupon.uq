@@ -13,3 +13,96 @@ MAP CustomerCreditsUsed (
     key saleOrderItem char(50),
     usedDate date,
 );
+
+MAP CustomerCoupon(
+    key customer ID Customer,
+    key coupon int not null,
+    key couponType ID VIPCardType,
+    couponCode int not null,
+    createDate date,
+    expiredDate date,
+);
+
+MAP CustomerCouponUsed(
+    key customer ID Customer,
+    key coupon int not null,
+    usedDate date,
+);
+
+QUERY getMyExpiredCoupon(customer ID Customer)
+PAGE (
+    seq bigint asc,
+    id int,
+    code int,
+    types char(20),
+    createdate date, 
+    expireddate date 
+) {
+    /-mysql
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_getMyExpiredCoupon`;
+    CREATE TEMPORARY TABLE `_$page_getMyExpiredCoupon` ( 
+        `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+        `coupon` BIGINT NOT NULL, 
+        `createdate` date,
+        `expireddate` date) ENGINE=MyISAM;
+
+    insert into `_$page_getMyExpiredCoupon`(`coupon`, `createdate`, `expireddate`)
+    select  t.coupon, t.createdate, t.expireddate
+    from    (
+                select coupon, createdate, expireddate from tv_customercoupon
+                where   $unit = `_$unit` and customer = `_customer` and expireddate < now()
+                union
+                select credits, createdate, expireddate from tv_customercredits
+                where   webUser = `_customer` and expireddate < now()
+            ) as t
+    order by t.`expireddate` desc, t.coupon
+    limit 1200;
+
+    INSERT  INTO `_$page` (`id`, `code`, `types`, `createdate`, `expireddate`, `seq`)
+    SELECT  p.`coupon` as `id`, c.`code` as `code`, c.`types` AS `types`, p.`createdate` AS `createdate`, p.`expireddate` AS `expireddate`
+            , p.`id` as `seq`
+    from    `_$page_getMyExpiredCoupon` as p
+            inner join `salestask`.tv_coupon as c on p.coupon = c.id
+    where   1 = 1 and p.id > `_$pagestart`
+    limit   `_$pagesize`;
+    -/
+};
+
+QUERY getMyUsedCoupon(customer ID Customer)
+PAGE (
+    seq bigint asc,
+    id int,
+    code int,
+    types char(20),
+    useddate date 
+) {
+    /-mysql
+
+    DROP TEMPORARY TABLE IF EXISTS `_$page_getMyUsedCoupon`;
+    CREATE TEMPORARY TABLE `_$page_getMyUsedCoupon` ( 
+        `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+        `coupon` BIGINT NOT NULL, 
+        `useddate` date) ENGINE=MyISAM;
+
+    insert into `_$page_getMyUsedCoupon`(`coupon`, `useddate`)
+    select  t.coupon, t.useddate
+    from    (
+                select coupon, useddate from tv_customercouponused
+                where   webUser = `_customer`
+                union
+                select credits, useddate from tv_customercreditsused
+                where   webUser = `_customer`
+            ) as t
+    order by t.`useddate` desc, t.coupon
+    limit 1200;
+
+    INSERT  INTO `_$page` (`id`, `code`, `types`, `useddate`, `seq`)
+    SELECT  p.`coupon` as `id`, c.`code` as `code`, c.`types` AS `types`, p.`useddate` AS `useddate`
+            , p.`id` as `seq`
+    from    `_$page_getMyUsedCoupon` as p
+            inner join `salestask`.tv_coupon as c on p.coupon = c.id
+    where   1 = 1 and p.id > `_$pagestart`
+    limit   `_$pagesize`;
+    -/
+};

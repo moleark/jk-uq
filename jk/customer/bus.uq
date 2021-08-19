@@ -9,12 +9,21 @@ BUS wBus from [百灵威系统工程部]/WebUser
         foreach tb {
             bus cBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
             foreach tb.creditsDrawed {
-                book CustomerCredits at(customer, coupon) set createDate = createDate, expiredDate = expiredDate;
+                book CustomerCredits at(customer, coupon) set creditsCode = couponCode
+                    , createDate = createDate, expiredDate = expiredDate;
                 bus cBus.creditsDrawedByCustomer into coupons add coupon = coupon, 
                     createDate = createDate, expiredDate = expiredDate;
             }
             foreach tb.creditsUsed {
                 book CustomerCreditsUsed at(customer, coupon, saleOrder) set usedDate = usedDate;
+            }
+
+            foreach tb.couponDrawed {
+                book CustomerCoupon at(customer, coupon, couponType) set couponCode = couponCode
+                    , createDate = createDate, expiredDate = expiredDate;
+            } 
+            foreach tb.couponUsed {
+                book CustomerCouponUsed at(customer, coupon) set usedDate = usedDate;
             }
         }
     };
