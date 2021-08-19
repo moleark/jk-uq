@@ -1,5 +1,6 @@
 BUS orderBus from 百灵威系统工程部/order;
 BUS webUserBus from 百灵威系统工程部/WebUser;
+BUS pointOrderBus from 百灵威系统工程部/PointOrder;
 BUS couponBus from 百灵威系统工程部/coupon
     ACCEPT creditsInnerMatched {
         if ( not webUser is null ) {
