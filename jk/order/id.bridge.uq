@@ -33,7 +33,7 @@ ID OrderDetailEx GLOBAL (
 BUS oChangeBus ver 0.6 FROM 百灵威系统工程部/orderChanged
 ACCEPT orderChanged
 BUS couponBus.getMatchedCredits as q into tb {
-    set q.customer = customer;
+    set q.customer = customer; -- ifnull(endUser, customer);
     set q.orderItemId = orderItemId;
     set q.createDate = createDate;
 } {
@@ -74,20 +74,20 @@ BUS couponBus.getMatchedCredits as q into tb {
     WITH DxOrderDetail ID=orderDetailId SET deliver=quantity;
 
     -- 匹配coupon, 这个要使用bus QUERY，待写好提供方后再添加
-    var creditsId ID;
-    -- set creditsId = a.xi from IxOrderMainCustomerCoupon as a where a.ixx = orderMainId and a.ix = ifnull(960, customer);
-    set creditsId = a.xi from IxOrderMainCustomerCoupon as a where a.ixx = orderMainId and a.ix = customer;
+    var creditsId ID, endUserId ID;
+    set endUserId = customer;  -- ifnull(endUser, customer);
+    set creditsId = a.xi from IxOrderMainCustomerCoupon as a where a.ixx = orderMainId and a.ix = endUserId;
     if(creditsId is NULL) {
         foreach tb {
             set creditsId = credits;
         }
     }
     if(not creditsId is NULL) {
-        WITH IxOrderMainCustomerCoupon ixx = orderMainId ix = customer xi = creditsId; 
+        WITH IxOrderMainCustomerCoupon ixx = orderMainId ix = endUserId xi = creditsId; 
         WITH IxOrderDetailCoupon ix = orderDetailId xi = creditsId;
 
         bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
-            , orderMainId = orderMainId, orderMainNo = orderId, customer = customer
+            , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
             , product = product, item = pack, quantity = quantity, price = price, retail = retail
             , currency = currency, coupon = creditsId, promotion = promotionId, mark = mark
             , tradeType = tradeType, createDate = createDate;
