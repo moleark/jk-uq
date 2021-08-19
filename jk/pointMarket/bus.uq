@@ -51,8 +51,6 @@ bus couponBus from 百灵威系统工程部/coupon
     }{
         var pointYear int;
         set pointYear = YEAR(NOW());
-        delete a from WebUserCredits as a where a.webUser = webUser and a.credits = coupon;
-        book WebUserCreditsUsed at (webUser, coupon, orderId ) set  usedDate = now();
         book PointBook at (webUser, pointYear) set tempPoint += point;
         history PointHistory
             set webUser = webuser, pointYear = pointYear, source = 1, point = point, comments = orderid;
@@ -66,21 +64,6 @@ bus couponBus from 百灵威系统工程部/coupon
             book PointBookByCustomer at (customerId, pointYear) set totalpoint += point;
             history PointHistoryByCustomer 
                 set pointYear = pointYear, point = point, source = 1, comments = orderid, customer = customerId;
-        }
-    }
-    QUERY getWebUserAllCredits {
-        -- var webUser ID WebUser;
-        -- set webUser = a.webUser from WebUserCustomer as a where a.customer = customer;
-        if(not webUser is NULL){
-            into bus select webUser;
-            foreach (var coupon ID, createDate date, expiredDate date
-                of select a.credits as coupon, a.createDate, a.expiredDate from WebUserCredits as a where a.webUser = webUser) {
-                into bus.creditsDrawed select coupon, createDate, expiredDate;
-            }
-            foreach (var coupon ID, saleOrder char(50), usedDate date
-                of select a.credits as coupon, a.saleOrder, a.usedDate from WebUserCreditsUsed as a where a.webUser = webUser) {
-                into bus.creditsUsed select coupon, saleOrder, usedDate;
-            }
         }
     };
 
@@ -96,18 +79,6 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
             ) {
                 book PointBook at (webUser, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
             }
-        }
-
-        -- 把webuser领用的积分券导入内部
-        bus couponBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
-        foreach (
-            var credits int, createDate date, expiredDate date 
-            of select a.credits, a.createDate, a.expiredDate
-            from WebUserCredits as a 
-            where a.webUser = webUser and a.expiredDate > now()
-        ) {
-            bus couponBus.creditsDrawedByCustomer into coupons add coupon = credits, 
-                createDate = createDate, expiredDate = expiredDate;
         }
 
         -- 审核后webUser的签到积分导入到内部

@@ -1,3 +1,20 @@
+MAP WebUserCredits (
+    key webUser ID WebUser,     -- WebUser编号，不是Customer
+    key credits int not null,
+    creditsCode int not null,
+    createDate date,
+    expiredDate date,
+) ON ADD{
+    bus couponBus.creditsDrawedByWebUser set webUser = webUser, coupon = credits, createDate = createDate, expiredDate = expiredDate;
+};
+
+MAP WebUserCreditsUsed (
+    key webUser ID WebUser,     -- WebUser编号，不是Customer
+    key credits int not null,
+    key saleOrder char(50),
+    usedDate date,
+);
+
 QUERY getMyExpiredCoupon(webUser ID WebUser)
 PAGE (
     seq bigint asc,
@@ -22,7 +39,7 @@ PAGE (
                 select coupon, createdate, expireddate from tv_webusercoupon
                 where   $unit = `_$unit` and webUser = `_webUser` and expireddate < now()
                 union
-                select credits, createdate, expireddate from pointshop.tv_webusercredits
+                select credits, createdate, expireddate from tv_webusercredits
                 where   webUser = `_webUser` and expireddate < now()
             ) as t
     order by t.`expireddate` desc, t.coupon
@@ -60,7 +77,7 @@ PAGE (
                 select coupon, useddate from tv_webusercouponused
                 where   webUser = `_webUser`
                 union
-                select credits, useddate from pointshop.tv_webusercreditsused
+                select credits, useddate from tv_webusercreditsused
                 where   webUser = `_webUser`
             ) as t
     order by t.`useddate` desc, t.coupon

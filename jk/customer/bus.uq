@@ -7,8 +7,11 @@ BUS wBus from [百灵威系统工程部]/WebUser
             book CustomerBuyerAccount at (customer, buyerAccount);
         
         foreach tb {
+            bus cBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
             foreach tb.creditsDrawed {
                 book CustomerCredits at(customer, coupon) set createDate = createDate, expiredDate = expiredDate;
+                bus cBus.creditsDrawedByCustomer into coupons add coupon = coupon, 
+                    createDate = createDate, expiredDate = expiredDate;
             }
             foreach tb.creditsUsed {
                 book CustomerCreditsUsed at(customer, coupon, saleOrder) set usedDate = usedDate;

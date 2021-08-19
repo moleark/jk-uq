@@ -34,14 +34,33 @@ BUS orderBus from [百灵威系统工程部]/order
     };
 
 
-BUS creditsDrawedByCustomerBus from [百灵威系统工程部]/coupon
+BUS couponBus from [百灵威系统工程部]/coupon
     ACCEPT creditsDrawedByWebUser {
         var customer ID Customer;
         set customer = wc.customer from WebUserCustomer as wc where wc.webUser = webUser and wc.priority = 1;
         if ( not customer is null ) {
-            bus creditsDrawedByCustomerBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
-            bus creditsDrawedByCustomerBus.creditsDrawedByCustomer into coupons add coupon = coupon, 
+            bus couponBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
+            bus couponBus.creditsDrawedByCustomer into coupons add coupon = coupon, 
                 createDate = createDate, expiredDate = expiredDate;
+        }
+    }
+    ACCEPT creditsUsedByWebUser {
+        delete a from WebUserCredits as a where a.webUser = webUser and a.credits = coupon;
+        book WebUserCreditsUsed at (webUser, coupon, orderId ) set  usedDate = now();
+    }
+    QUERY getWebUserAllCredits {
+        -- var webUser ID WebUser;
+        -- set webUser = a.webUser from WebUserCustomer as a where a.customer = customer;
+        if(not webUser is NULL){
+            into bus select webUser;
+            foreach (var coupon ID, createDate date, expiredDate date
+                of select a.credits as coupon, a.createDate, a.expiredDate from WebUserCredits as a where a.webUser = webUser) {
+                into bus.creditsDrawed select coupon, createDate, expiredDate;
+            }
+            foreach (var coupon ID, saleOrder char(50), usedDate date
+                of select a.credits as coupon, a.saleOrder, a.usedDate from WebUserCreditsUsed as a where a.webUser = webUser) {
+                into bus.creditsUsed select coupon, saleOrder, usedDate;
+            }
         }
     };
 
