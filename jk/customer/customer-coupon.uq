@@ -54,7 +54,7 @@ PAGE (
                 where   $unit = `_$unit` and customer = `_customer` and expireddate < now()
                 union
                 select credits, createdate, expireddate from tv_customercredits
-                where   webUser = `_customer` and expireddate < now()
+                where   customer = `_customer` and expireddate < now()
             ) as t
     order by t.`expireddate` desc, t.coupon
     limit 1200;
@@ -89,10 +89,10 @@ PAGE (
     select  t.coupon, t.useddate
     from    (
                 select coupon, useddate from tv_customercouponused
-                where   webUser = `_customer`
+                where   customer = `_customer`
                 union
                 select credits, useddate from tv_customercreditsused
-                where   webUser = `_customer`
+                where   customer = `_customer`
             ) as t
     order by t.`useddate` desc, t.coupon
     limit 1200;
