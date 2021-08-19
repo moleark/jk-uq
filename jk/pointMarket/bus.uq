@@ -92,10 +92,10 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
         }
     };
 
-BUS orderChangedBus from [百灵威系统工程部]/[orderChanged]
+BUS orderChangedBus ver 0.1 from [百灵威系统工程部]/[orderChanged]
     ACCEPT orderChanged(
             orderMainId, orderDetailId, orderId, orderItemId, seller, salesman, salesRegion, customer, buyerAccount, organization, brand, product, pack, quantity, price,
-            currency as pricecurrency, retail, retailCurrency, bottomPrice, bottomPriceCurrency, costPrice, costPriceCurrency, mark, tradeType, taxRate, promotionId, createDate
+            currency as pricecurrency, retail, retailCurrency, bottomPrice, bottomPriceCurrency, costPrice, costPriceCurrency, endUser, mark, tradeType, taxRate, promotionId, createDate
         )
         BUS ps2Bus.getPointMultiple as q into tb {
             set q.createDate = createDate;

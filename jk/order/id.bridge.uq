@@ -30,10 +30,10 @@ ID OrderDetailEx GLOBAL (
     createDate TIMESTAMP,
 );
 
-BUS oChangeBus ver 0.6 FROM 百灵威系统工程部/orderChanged
+BUS oChangeBus ver 0.7 FROM 百灵威系统工程部/orderChanged
 ACCEPT orderChanged
 BUS couponBus.getMatchedCredits as q into tb {
-    set q.customer = customer; -- ifnull(endUser, customer);
+    set q.customer = ifnull(endUser, customer);
     set q.orderItemId = orderItemId;
     set q.createDate = createDate;
 } {
@@ -75,7 +75,7 @@ BUS couponBus.getMatchedCredits as q into tb {
 
     -- 匹配coupon, 这个要使用bus QUERY，待写好提供方后再添加
     var creditsId ID, endUserId ID;
-    set endUserId = customer;  -- ifnull(endUser, customer);
+    set endUserId = ifnull(endUser, customer);
     set creditsId = a.xi from IxOrderMainCustomerCoupon as a where a.ixx = orderMainId and a.ix = endUserId;
     if(creditsId is NULL) {
         foreach tb {
