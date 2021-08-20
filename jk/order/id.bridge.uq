@@ -38,11 +38,7 @@ BUS couponBus.getMatchedCredits as q into tb {
     set q.createDate = createDate;
 } {
     WITH OrderMain ID=orderMainId SET customer=customer
-        , no=orderId
-	    , shippingContact=null
-	    , sumAmount=null
-	    , couponNo=null
-	    , sheetId=null;
+        , no=orderId;
     WITH OrderMainEx ID=orderMainId SET seller=seller
         , salesman=salesman
         , salesRegion=salesRegion
@@ -52,7 +48,6 @@ BUS couponBus.getMatchedCredits as q into tb {
         , createDate=from_unixtime(createDate);
 
     WITH OrderDetail ID=orderDetailId SET main=orderMainId
-	    , warehouse=null
 	    , item=pack
 	    , product=product
 	    , quantity=quantity
