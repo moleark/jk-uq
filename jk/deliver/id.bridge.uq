@@ -41,4 +41,7 @@ ACCEPT deliveryConfirm {
 
     WITH DeliverDetail ID = orderDetailId set main=deliverId;
     WITH DxDeliverDetail ID = orderDetailId set deliverDone=quantity;
+
+    BUS JkOrderBus.[deliver-done] set id = deliverId;
+    BUS JkOrderBus.[deliver-done] into detail ADD id = orderDetailId, value = quantity; 
 };
