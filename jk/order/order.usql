@@ -67,7 +67,6 @@ BUS webUserBus.getCuByWu as q into tb {
     -- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
     
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
-    book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
 
     var pid ID;
     pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: $id, amount: amount, currency: currency, date: now()) to pid;
@@ -88,6 +87,9 @@ BUS webUserBus.getCuByWu as q into tb {
     set bustype = 2;
     if(customer > 0) {
         set bustype = 1;
+        WITH DxOrderMainState ID = mainId set state = EnumOrderState.delivering;
+    }else {
+        WITH DxOrderMainState ID = mainId set state = EnumOrderState.matching;
     }
     bus orderBus.order set type = bustype, orderMainId = mainId, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
         customer = customerid, buyerAccount = customer,
@@ -182,6 +184,7 @@ STATE Matching {
                         add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
                 */
+                WITH DxOrderMainState ID = mainId set state = EnumOrderState.delivering;
                 STATE TO END;
             }
 
