@@ -1,0 +1,15 @@
+ID OrderMain ver 0.3 (
+    id,
+    KEY no,
+    customer ID,
+);
+
+ID OrderDetail ver 0.1 (
+    id,
+    main ID OrderMain,
+    item ID,
+    product ID,
+    quantity DEC(12,2),
+    amount DEC(12,2),
+    price DEC(12,2),
+);
