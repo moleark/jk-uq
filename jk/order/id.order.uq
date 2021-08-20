@@ -49,7 +49,7 @@ IDX DxOrderDetail ver 0.1 (
 	deliverDone DEC(12,2),				-- 已发
 	deliverTime TIMESTAMP,				-- 发货时间
 	receive DEC(12,2),					-- 应收
-	receiveDone DEC(12,2),				-- 已收
+	receiveDone DEC(12,2) SUM,				-- 已收
 	receiveTime TIMESTAMP,				-- 收款时间
 	invoice DEC(12,2),					-- 应开票
 	invoiceDone DEC(12,2),				-- 已开票
