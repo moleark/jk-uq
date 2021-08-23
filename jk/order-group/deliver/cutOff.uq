@@ -24,7 +24,7 @@ RETURNS list (
 		a.orderDetail,
 		b.quantity,
 		b.item, b.product,
-		a.quantity as shouldQuantity,
+		b.quantity as shouldQuantity,
         d.contact, a.ix
 		FROM IxPendingDeliver as a 
              JOIN OrderDetail as b ON a.orderDetail=b.id
@@ -36,7 +36,7 @@ RETURNS list (
 
 
 /* 截单操作
-*  下一步要完善考虑根据不同业务类型的截单：例如：客户订单接单、河北质检截单...
+*  下一步要完善考虑根据不同业务类型的截单：例如：客户订单截单、河北质检截单...
 */
 ACT CutOff(
     warehouse ID
@@ -64,9 +64,9 @@ RETURNS cutOff (
 
 	WHILE 1=1 {
         -- 循环获取 limit1数据
-		VAR warehouse ID, customer ID, contact ID, quantity int, orderDetail ID;
+		VAR warehouse ID, customer ID, contact ID, orderDetail ID;
 		SET warehouse=NULL;
-		SET warehouse=a.ixx, customer=a.ix, contact=d.contact, quantity=a.xxi, orderDetail=a.xi,
+		SET warehouse=a.ixx, customer=a.ix, contact=d.contact, orderDetail=a.xi
 			FROM IxPendingDeliver as a
                  JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
                  JOIN OrderDetail as c ON c.id=a.xi
@@ -82,7 +82,7 @@ RETURNS cutOff (
                  JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
                  JOIN OrderDetail as c ON c.id=a.xi
                  JOIN OrderMain as d ON d.id=c.main
-			WHERE a.ixx=warehouse AND a.ix=customer AND d.contact=contact AND a.xi=orderDetail AND a.xxi=quantity;
+			WHERE a.ixx=warehouse AND a.ix=customer AND d.contact=contact AND a.xi=orderDetail;
 
         -- 从临时表中查询是否存在，不存在则生成新发运单和临时理货号
 		VAR deliver ID, deliverNo CHAR(20);
@@ -101,7 +101,7 @@ RETURNS cutOff (
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
 			WITH DxDeliverMain as a ID=deliver;
 		}
-		WITH DeliverDetail ID=orderDetail quantity=quantity SET main=deliver;
+		WITH DeliverDetail ID=orderDetail SET main=deliver;
 		WITH DxDeliverMain as a ID=deliver SET a.rows=a.rows + 1;
 	}
 	LOG 'CutOff' SUBJECT 'end';

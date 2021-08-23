@@ -28,7 +28,6 @@ IDX DxDeliverMain (
 */
 ID DeliverDetail GLOBAL(
 	id,						-- orderDetail
-	key quantity int,		-- quantity
 	main ID DeliverMain,	-- DeliverMain id	
 );
 
@@ -51,7 +50,6 @@ IX IxPendingDeliver (
 	ixx Warehouse,
 	ix,									-- customer
 	xi OrderDetail,
-	xxi 	-- quantity
 );
 
 QUERY WarehousePendingDeliver(

@@ -2,7 +2,7 @@ BUS JkOrderBus ver 1.3 from 百灵威系统工程部/[jk-order]
 ACCEPT order {
 	VAR mainId ID;
 	SET mainId = id;
-	WITH OrderMain as a ID=id SET a.no=no, a.customer=customer, a.currency = currency;
+	WITH OrderMain as a ID=id SET a.no=no, a.customer=customer;
 	FOR detail {
 		WITH OrderDetail as a 
 			ID = id
@@ -24,15 +24,11 @@ ACCEPT deliver {
 	
 	WITH OrderMain as a ID=id SET a.contact=contact;
 	FOR detail {
-		/* 20210818 z461 注释：bus deliver的detail增加了quantity
 		VAR quantity DEC(12,2);
 		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
 		SET quantity = a.quantity FROM OrderDetail as a WHERE a.id=id;
-		*/
-
-		WITH IxPendingDeliver ixx=warehouse ix=customer xi=id xxi=quantity;
-		-- WITH DxOrderDetail as a ID=id SET a.deliverShould=quantity;
-		WITH DxOrderDetail as a ID=id deliverShould=quantity;
+		WITH IxPendingDeliver ixx=warehouse ix=customer xi=id;
+		WITH DxOrderDetail as a ID=id SET a.deliverShould=quantity;
 		FOR (VAR user ID OF SELECT ix as user FROM IxUserWarehouse WHERE xi=warehouse) {
 			TUID [$User] ID (user) SET poke=1;
 		}
