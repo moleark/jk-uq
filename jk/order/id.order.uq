@@ -1,4 +1,4 @@
-ID OrderMain ver 0.5 GLOBAL (
+ID OrderMain ver 0.6 GLOBAL (
 	id,
 	KEY no,
     webUser ID,                         -- 下单user注册账号
@@ -16,11 +16,12 @@ ID OrderMain ver 0.5 GLOBAL (
 	couponNo CHAR(16),                  -- 优惠券
 
 	sheetId ID,
+    createDate TIMESTAMP,
 	INDEX customer_id(customer, id) UNIQUE,
 	INDEX sheetId(sheetId) UNIQUE,
 );
 
-ID OrderDetail ver 0.5 GLOBAL (
+ID OrderDetail ver 0.6 GLOBAL (
 	id,
 	main ID OrderMain,
 	warehouse ID,
@@ -28,6 +29,7 @@ ID OrderDetail ver 0.5 GLOBAL (
 	product ID,
 	quantity DEC(12,2),
 	price DEC(12,2),                    -- 实际成交价
+    createDate TIMESTAMP,
 );
 
 ENUM EnumFeeType (packing=11, refrigeration=12, freezing=13, proxyFreight=14);
