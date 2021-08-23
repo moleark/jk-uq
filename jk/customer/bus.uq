@@ -42,12 +42,10 @@ bus cBus from 百灵威系统工程部/coupon
             where t.customer = customer and t.expiredDate > now() 
                 and t.createDate >= date(dateadd(day, -7, from_unixtime(createDate))) 
                 and t.createDate <= date(from_unixtime(createDate))
-            order by t.createDate
+            order by t.createDate, t.credits
             limit 1;
         
         if (not credits is null) {
-            delete t from CustomerCredits as t where t.customer = customer and t.credits = credits;
-            book CustomerCreditsUsed at(customer, credits, orderItemId ) set usedDate = now();
             into bus select credits;
         }
     };

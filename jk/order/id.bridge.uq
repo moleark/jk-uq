@@ -81,6 +81,9 @@ BUS couponBus.getMatchedCredits as q into tb {
         WITH IxOrderMainCustomerCoupon ixx = orderMainId ix = endUserId xi = creditsId; 
         WITH IxOrderDetailCoupon ix = orderDetailId xi = creditsId;
 
+        bus couponBus.creditsUsedByCustomer set orderId = orderId, customer = endUserId, coupon = creditsId;
+        bus couponBus.creditsUsedByCustomer into orderItems add orderItemId = orderItemId;
+
         bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
             , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
             , product = product, item = pack, quantity = quantity, price = price, retail = retail
