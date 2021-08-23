@@ -10,7 +10,7 @@ ID DeliverMain GLOBAL(
     contact ID,
 	warehouse ID,
 	cutOffMain ID,
-	trayNumber int
+	trayNumber int,
 	sys(create),
 );
 
