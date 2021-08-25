@@ -11,11 +11,11 @@ ID CutOffMain (
 QUERY GetCutOffMainList(
 	warehouse ID
 )
-RETURNS ret (
+RETURNS list (
 	id ID,
 	no CHAR(20)
 ) {
-	INTO ret SELECT a.id, a.no
+	INTO list SELECT a.id, a.no
 		FROM CutOffMain AS a
 		WHERE a.warehouse=warehouse AND a.cutter=$user
 		ORDER BY a.id DESC;
@@ -25,14 +25,14 @@ RETURNS ret (
 QUERY GetReadyCutOffList(
     warehouse ID
 )
-RETURNS ret (
+RETURNS list (
     orderDetail ID,
 	product ID,
 	item ID,
 	shouldQuantity DEC(12,2),
     customer ID
 ) {
-	INTO ret SELECT a.xi as orderDetail,
+	INTO list SELECT a.xi as orderDetail,
 		b.product, b.item, b.quantity as shouldQuantity,
         a.ix as customer
 		FROM IxPendingDeliver as a
@@ -126,7 +126,7 @@ RETURNS main (
 QUERY GetCutOffMainDetailById(
     cutOffMain ID
 )
-RETURNS ret (
+RETURNS list (
     warehouse ID,
 	deliverMain ID,
 	no CHAR(20),
@@ -137,7 +137,7 @@ RETURNS ret (
 	staff ID,
 ){
     -- ? 查询数据待完善
-    INTO ret SELECT uw.xi as warehouse
+    INTO list SELECT uw.xi as warehouse
 		, b.id as deliverMain, b.no
 		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
 		FROM IxUserWarehouse as uw
