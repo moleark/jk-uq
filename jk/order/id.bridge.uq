@@ -12,6 +12,7 @@ ID OrderMainEx GLOBAL (
 ID OrderDetailEx GLOBAL (
     id,                             -- 就是OrderDetail的id
     KEY orderItemId CHAR(50),       -- 对应Ex系统的orderItemId
+    endUser ID,
     brand ID,                       -- 品牌id，应该在product里面带
     -- product ID,                  -- OrderDetail 有这个字段
     -- pack ID,                     -- OrderDetail 有这个字段
@@ -52,8 +53,10 @@ BUS couponBus.getMatchedCredits as q into tb {
 	    , product=product
 	    , quantity=quantity
 	    , price=price
+        , lotNumber = lotNumber
         , createDate = from_unixtime(createDate);
     WITH OrderDetailEx ID=orderDetailId SET orderItemId=orderItemId
+        , endUser = endUser
         , brand=brand
         , retail=retail
         , retailCurrency=retailCurrency

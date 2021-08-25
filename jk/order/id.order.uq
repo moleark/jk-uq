@@ -29,6 +29,7 @@ ID OrderDetail ver 0.6 GLOBAL (
 	product ID,
 	quantity DEC(12,2),
 	price DEC(12,2),                    -- 实际成交价
+    lotNumber char(50),
     createDate TIMESTAMP,
 );
 
