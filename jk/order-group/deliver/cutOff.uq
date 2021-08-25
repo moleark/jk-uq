@@ -11,28 +11,28 @@ ID CutOffMain (
 QUERY GetCutOffMainList(
 	warehouse ID
 )
-RETURNS list(
+RETURNS ret (
 	id ID,
-	no CHAR(20),			-- 截单号
-){
-	INTO list SELECT a.id, a.no
+	no CHAR(20)
+) {
+	INTO ret SELECT a.id, a.no
 		FROM CutOffMain AS a
 		WHERE a.warehouse=warehouse AND a.cutter=$user
 		ORDER BY a.id DESC;
-}
+};
 
 /* 查询待截单数据 */
 QUERY GetReadyCutOffList(
     warehouse ID
 )
-RETURNS list (
+RETURNS ret (
     orderDetail ID,
 	product ID,
 	item ID,
 	shouldQuantity DEC(12,2),
     customer ID
 ) {
-	INTO list SELECT a.xi as orderDetail,
+	INTO ret SELECT a.xi as orderDetail,
 		b.product, b.item, b.quantity as shouldQuantity,
         a.ix as customer
 		FROM IxPendingDeliver as a
