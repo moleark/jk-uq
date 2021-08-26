@@ -6,6 +6,9 @@ ID OrderMainEx GLOBAL (
     buyerAccount ID,
     organization ID,
     currency ID,
+    poNumber char(100),             -- 对应Termsa.CPONr
+    carrier ID,
+    commentsAboutDeliver   char(100),
     createDate TIMESTAMP,
 );
 
@@ -24,6 +27,7 @@ ID OrderDetailEx GLOBAL (
     bottomPriceCurrency ID,
     costPrice DEC(12,2),
     costPriceCurrency ID,
+    poItemNumber char(100), 
     mark CHAR(10),
     tradeType CHAR(10),
     taxRate DEC(6,2),
@@ -46,6 +50,9 @@ BUS couponBus.getMatchedCredits as q into tb {
         , buyerAccount=buyerAccount
         , organization=organization
         , currency=currency
+        , poNumber = poNumber
+        , carrier = carrier
+        , commentsAboutDeliver = commentsAboutDeliver
         , createDate=from_unixtime(createDate);
 
     WITH OrderDetail ID=orderDetailId SET main=orderMainId
@@ -65,6 +72,7 @@ BUS couponBus.getMatchedCredits as q into tb {
         , costPrice=costPrice
         , costPriceCurrency=costPriceCurrency
         , mark=mark
+        , poItemNumber = poItemNumber
         , tradeType=tradeType
         , taxRate=taxRate
         , promotionId=promotionId
