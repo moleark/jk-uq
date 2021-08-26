@@ -7,27 +7,36 @@ ID CutOffMain (
 	sys(create)
 );
 
+/* 查询已截单列表 */
+QUERY GetCutOffMainList(
+	warehouse ID
+)
+RETURNS list (
+	id ID,
+	no CHAR(20)
+) {
+	INTO list SELECT a.id, a.no
+		FROM CutOffMain AS a
+		WHERE a.warehouse=warehouse AND a.cutter=$user
+		ORDER BY a.id DESC;
+};
+
 /* 查询待截单数据 */
 QUERY GetReadyCutOffList(
     warehouse ID
 )
 RETURNS list (
-    id ID,
     orderDetail ID,
-    quantity int,
-	item ID,
 	product ID,
+	item ID,
 	shouldQuantity DEC(12,2),
-    contact ID, customer ID
+    customer ID
 ) {
-	INTO list SELECT a.id,
-		a.orderDetail,
-		b.quantity,
-		b.item, b.product,
-		b.quantity as shouldQuantity,
-        d.contact, a.ix
-		FROM IxPendingDeliver as a 
-             JOIN OrderDetail as b ON a.orderDetail=b.id
+	INTO list SELECT a.xi as orderDetail,
+		b.product, b.item, b.quantity as shouldQuantity,
+        a.ix as customer
+		FROM IxPendingDeliver as a
+             JOIN OrderDetail as b ON a.xi=b.id
              JOIN IxUserWarehouse as c on c.ix=$user AND c.xi=a.ixx
              JOIN OrderMain as d ON b.main=d.id
         WHERE a.ixx=warehouse
@@ -39,15 +48,15 @@ RETURNS list (
 *  下一步要完善考虑根据不同业务类型的截单：例如：客户订单截单、河北质检截单...
 */
 ACT CutOff(
-    warehouse ID
+    currentWarehouse ID
 )
-RETURNS cutOff (
+RETURNS main (
 	id ID,
 	no CHAR(20),			-- 截单号
 )
 {
     -- 1、操作权限检查
-	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=warehouse) {
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=currentWarehouse) {
 		RETURN;
 	}
 
@@ -55,12 +64,13 @@ RETURNS cutOff (
     VAR cutOffMain ID, cutOffMainNo CHAR(20);
 	SET cutOffMainNo=NO(CutOffMain);
 	SET cutOffMain=ID(CutOffMain new, cutOffMainNo);
-	WITH CutOffMain as a ID=cutOffMain SET a.no=cutOffMainNo, a.warehouse=warehouse, a.cutter=$user;
+	WITH CutOffMain as a ID=cutOffMain SET a.no=cutOffMainNo, a.warehouse=currentWarehouse, a.cutter=$user;
 
     -- 3、生成发运单、临时理货号, 并删除已截单的数据
     LOG 'CutOff' SUBJECT 'start';
-	TABLE tblCutOff(key warehouse ID, key customer ID, contact ID, deliver ID);
-    VAR trayNumber = 0;
+	TABLE tblCutOff(key warehouse ID, key customer ID, key contact ID, deliver ID);
+	VAR trayNumber int;
+    SET trayNumber=1;
 
 	WHILE 1=1 {
         -- 循环获取 limit1数据
@@ -71,7 +81,7 @@ RETURNS cutOff (
                  JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
                  JOIN OrderDetail as c ON c.id=a.xi
                  JOIN OrderMain as d ON d.id=c.main
-            WHERE a.ixx=warehouse
+            WHERE a.ixx=currentWarehouse
 			ORDER BY a.ixx, a.ix, d.contact, a.xi
 			LIMIT 1;
 		IF warehouse IS NULL {
@@ -91,7 +101,6 @@ RETURNS cutOff (
 			WHERE a.warehouse=warehouse AND a.customer=customer AND a.contact=contact;
 
 		IF deliver IS NULL {
-            SET trayNumber+=1;
 			SET deliverNo=NO(DeliverMain);
 			SET deliver=ID(DeliverMain new, deliverNo);
 			WITH DeliverMain as a ID=deliver SET a.customer=customer, 
@@ -100,13 +109,14 @@ RETURNS cutOff (
 			INTO tblCutOff SELECT warehouse, customer, contact, deliver;
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
 			WITH DxDeliverMain as a ID=deliver;
+			SET trayNumber=trayNumber+1;
 		}
 		WITH DeliverDetail ID=orderDetail SET main=deliver;
 		WITH DxDeliverMain as a ID=deliver SET a.rows=a.rows + 1;
 	}
 	LOG 'CutOff' SUBJECT 'end';
-
-    INTO cutOff SELECT cutOffMain as id, cutOffMainNo as no;
+	
+    INTO main SELECT cutOffMain as id, cutOffMainNo as no;
 };
 
 
@@ -127,7 +137,7 @@ RETURNS list (
 	staff ID,
 ){
     -- ? 查询数据待完善
-    INTO ret SELECT uw.xi as warehouse
+    INTO list SELECT uw.xi as warehouse
 		, b.id as deliverMain, b.no
 		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
 		FROM IxUserWarehouse as uw
