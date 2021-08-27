@@ -1,3 +1,34 @@
+-- 退票记录是否也保存在该表中？
+ID InvoiceMain (
+    id,
+    invoiceNr char(50),
+    organization ID,
+    customer ID,
+    /*
+    发票类型
+    币种
+    结算类型
+    作废
+    */
+    comments char(500),
+    invoicer ID,
+    createDate TIMESTAMP,
+);
+
+-- 开票/退票均记录在该表中，这个好像是DxOrderDetail.invoiceDone/invoiceReturnDone的history，也是DxInvoiceMain.leftAmount的history
+-- DxOrderDetail.invoice/invoiceReturn也要有History，记录何时收到的应开票和应退票
+ID InvoiceDetail (
+    id,     -- orderDetail
+    main ID InvoiceMain,
+    amount dec(18, 4),
+);
+
+IDX DxInvoiceMain (
+    id,
+    sumAmount DEC(18, 4),
+    leftAmount dec(18, 4), 
+);
+
 QUERY PendingInvoice(
 )
 PAGE (
@@ -28,10 +59,11 @@ RETURNS ret (
 ) {
 	INTO ret SELECT b.id as orderDetail
 		, b.item, b.product, b.quantity, b.amount, b.price
-		, c.invoice, c.invoiceDone, c.invoiceReturn, c.invoiceReturnDone
+		, c.invoice, c.invoiceDone, d.invoiceReturn, d.invoiceReturnDone
 		FROM IxCustomerPendingInvoice as a
 			JOIN OrderDetail as b on a.xi=b.id
 			JOIN DxOrderDetail as c on b.id=c.id
+			JOIN DxOrderDetailReturn as d on b.id=d.id
 		WHERE a.ix=customer;
 };
 
@@ -49,7 +81,7 @@ ACT DoneInvoice ver 0.2 (
 			WITH DxOrderDetail as a ID=orderDetail SET a.invoiceDone=amount;
 		}
 		ELSE {
-			WITH DxOrderDetail as a ID=orderDetail SET a.invoiceReturnDone=-amount;
+			WITH DxOrderDetailReturn as a ID=orderDetail SET a.invoiceReturnDone=-amount;
 		}
 		WITH IxCustomerPendingInvoice IX=customer XI=orderDetail DEL;
         WITH DxCustomerInvoice ID=customer SET sumAmount -= amount;

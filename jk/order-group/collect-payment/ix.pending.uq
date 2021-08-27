@@ -8,22 +8,40 @@ IX IxCustomerPendingInvoice (
 	xi OrderDetail,
 );
 
+-- 在该账上：
+-- 应开票 + 已退票 - 应退票 - 已开票 = 0，表示票平, > 0表示我欠客户的，< 0 表示客户欠我的；
+-- 应收款 + 已退款 - 应退款 - 已收款 = 0，表示款平, > 0表示客户欠我的，< 0 表示我欠客户的;
 IDX DxOrderDetail (
 	id,									-- order detail
-	receive DEC(12,2) DEFAULT 0,		-- 应收
-	receiveDone DEC(12,2) DEFAULT 0,	-- 已收
-	receiveReturn DEC(12,2) SUM,		-- 应退
-	receiveReturnDone DEC(12,2) SUM,	-- 已退
-	invoice DEC(12,2) DEFAULT 0,		-- 应开票
-	invoiceDone DEC(12,2) DEFAULT 0,	-- 已开票
-	invoiceReturn DEC(12,2) SUM,		-- 应退票
-	invoiceReturnDone DEC(12,2) SUM,	-- 已退票
+	receive DEC(12,2) DEFAULT 0,		-- 应收, 发货后增加；
+	receiveDone DEC(12,2) DEFAULT 0,	-- 已收，付款（关联）后增加
+	invoice DEC(12,2) DEFAULT 0,		-- 应开票，发货后增加
+	invoiceDone DEC(12,2) DEFAULT 0,	-- 已开票，开票后增加（退票后"不"减少，重开后接着增加，所以已开票可能大于应开票）
 );
 
+IDX DxOrderDetailReturn (
+	id,									-- order detail
+	receiveReturn DEC(12,2) SUM,		-- 应退款，发生退货后增加；
+	receiveReturnDone DEC(12,2) SUM,	-- 已退款，退款后增加；
+	invoiceReturn DEC(12,2) SUM,		-- 应退票，发生退货后增加；
+	invoiceReturnDone DEC(12,2) SUM,	-- 已退票，收到退票后增加；
+);
+
+-- 这个账的history记录在哪儿？也是DxInvoiceMain/DxReceiveMain?
 IDX DxReturnDetail (
 	id,									-- return detail
+	receive DEC(12,2) DEFAULT 0,		-- 应退款
 	receiveDone DEC(12,2) SUM,			-- 已退款金额
+	invoice DEC(12,2) DEFAULT 0,		-- 应退票
 	invoiceDone DEC(12,2) SUM,			-- 已收回票金额
+);
+
+-- 货票款的精确对应在该X中
+IX DxOrderDetailInvoiceReceive (
+	ixx,			-- orderDetail 
+	ix InvoiceMain,
+	xi ReceiveMain,
+    amount dec(18, 4),
 );
 
 IDX DxCustomerReceive (
