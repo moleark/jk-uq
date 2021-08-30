@@ -12,12 +12,16 @@ IDX DxOrderDetail (
 	id,									-- order detail
 	receive DEC(12,2) DEFAULT 0,		-- 应收
 	receiveDone DEC(12,2) DEFAULT 0,	-- 已收
-	receiveReturn DEC(12,2) SUM,		-- 应退
-	receiveReturnDone DEC(12,2) SUM,	-- 已退
 	invoice DEC(12,2) DEFAULT 0,		-- 应开票
 	invoiceDone DEC(12,2) DEFAULT 0,	-- 已开票
-	invoiceReturn DEC(12,2) SUM,		-- 应退票
-	invoiceReturnDone DEC(12,2) SUM,	-- 已退票
+);
+
+IDX DxOrderDetailReturn (
+	id,									-- order detail
+	receive DEC(12,2) SUM,		-- 应退
+	receiveDone DEC(12,2) SUM,	-- 已退
+	invoice DEC(12,2) SUM,		-- 应退票
+	invoiceDone DEC(12,2) SUM,	-- 已退票
 );
 
 IDX DxReturnDetail (
@@ -49,5 +53,5 @@ RETURNS ret (
 	INTO ret SELECT a.id as customer, b.sumAmount as receive, c.sumAmount as invoice
 		FROM tblCustomers as a
 			LEFT JOIN DxCustomerReceive as b ON a.id=b.id
-			LEFT JOIN DxCustomerInvoice as c ON a.id=c.id;		
+			LEFT JOIN DxCustomerInvoice as c ON a.id=c.id;
 };
