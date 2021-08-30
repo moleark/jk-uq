@@ -6,6 +6,7 @@
 		"id: id",
 		"customer: id",
 		"no: string",
+		"currency: id",
 		"detail: order-detail -- { name: detail, type: array, fields: order-detail }"
 	],
 	"order-detail": [
@@ -35,6 +36,7 @@
 	],
 	"deliver-detail": [
 		"id: id  -- order detail id",
+		"quantity: int  -- 同一个合同明细可能会分多次不同数量发送",
 		"warehouse: id"
 	],
 	"deliver": [

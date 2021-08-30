@@ -36,6 +36,13 @@ OPEN MAP OrganizationCustomer (
     index idx_customer,
 );
 
+-- Organization的默认发票信息表
+OPEN MAP OrganizationSetting ver 0.1(
+    key organization ID Organization,
+    invoiceType ID InvoiceType,
+    invoiceInfo ID InvoiceInfo,
+);
+
 OPEN MAP CustomerHandler (
     key customer ID Customer,
     key salesman ID Employee,
@@ -54,6 +61,18 @@ OPEN MAP CustomerSetting ver 0.1 (
     invoiceContact ID Contact,
     invoiceType ID InvoiceType,
     invoiceInfo ID InvoiceInfo,
+);
+
+-- Customer的默认值设置表
+OPEN MAP CustomerSettingAlter (
+    key customer ID customer,
+    key type ID CustomerSettingType,
+    contentId bigint
+);
+
+OPEN TUID CustomerSettingType (
+    id,
+    main description char(20),
 );
 
 OPEN TUID Contact (

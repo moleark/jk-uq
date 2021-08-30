@@ -59,7 +59,11 @@ BUS webUserBus.getCuByWu as q into tb {
 	BUS JkOrderBus.order SET id=mainId, customer=webUser;
 
 	WITH OrderMain as a ID mainId
-		SET a.customer = webUser, a.sheetId=$id, a.shippingContact = shippingContact;
+    	SET a.webUser = webUser, a.customer = webUser
+            , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
+            , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
+            , a.currency = currency, a.sumAmount = amount
+            , a.sheetId=$id;
 	-- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
 	
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
@@ -67,16 +71,7 @@ BUS webUserBus.getCuByWu as q into tb {
 
     var pid ID;
     pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: $id, amount: amount, currency: currency, date: now()) to pid;
-
     foreach orderItems {
-      	var detailId ID;
-        SET detailId = ID(OrderDetail new);
-        WITH OrderDetail as a ID detailId 
-			SET a.main = mainId
-				, a.product = product, a.item = pack
-				, a.price = price, a.quantity = quantity, a.amount = amount;
-		BUS JkOrderBus.order INTO [detail]
-			ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
         history OrderHistory
             set webUser = webUser, product = product, pack = pack, 
 				price = price, quantity = quantity, amount = subAmount, currency = currency,
@@ -87,7 +82,7 @@ BUS webUserBus.getCuByWu as q into tb {
     
     var customerid int;
     foreach tb {
-        set customerid = customer;
+        set customerid = customer;   -- 这个customer是bus query中返回的字段名称，不是order中的customer，其含义是webuser对应的CID
     }
 
     var bustype int;
@@ -95,15 +90,25 @@ BUS webUserBus.getCuByWu as q into tb {
     if(customer > 0) {
         set bustype = 1;
     }
-    bus orderBus.order set type = bustype, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
+    bus orderBus.order set type = bustype, orderMainId = mainId, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
         customer = customerid, buyerAccount = customer,
         shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
     foreach orderItems {
-        bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+      	var detailId ID;
+        SET detailId = ID(OrderDetail new);
+        WITH OrderDetail as a ID detailId 
+			SET a.main = mainId
+				, a.product = product, a.item = pack
+				, a.price = price, a.quantity = quantity;
+		BUS JkOrderBus.order INTO [detail]
+			ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
+        bus orderBus.order into orderItems 
+            add orderDetailId = detailId, product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
 
+    -- 下面这个发bus是非常复杂的代码，它应该有更好的解决方法
     var pointMultiple int;
     set pointMultiple = 2;
     if (now() > '2020-09-01' and now() < '2020-10-01') 
@@ -146,14 +151,26 @@ STATE Matching {
             }
             
             if (buyerAccount > 0) {
-                bus orderBus.order set type = 3, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
+                var mainId ID;
+                set mainId = a.id from OrderMain as a where a.sheetId = $id;
+                bus orderBus.order set type = 3, orderMainId = mainId, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
                     customer = customerid, buyerAccount = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,
                     amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
                     freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
+                foreach (var detailId id, product2 id, pack2 id, quantity2 int, price2 dec(12, 2)
+                    of select a.id as detailId, a.product as product2, a.item as pack2, a.quantity as quantity2, a.price as price2
+                    from OrderDetail as a where a.main = mainId){
+                        bus orderBus.order into orderItems 
+                            add orderDetailId = detailId, product = product2, pack = pack2, quantity = quantity2, price = price2
+                            , subAmount = quantity2 * price2;
+                    }
+                /*
                 foreach orderItems {
-                    bus orderBus.order into orderItems add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
+                    bus orderBus.order into orderItems 
+                        add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
+                */
                 STATE TO END;
             }
 

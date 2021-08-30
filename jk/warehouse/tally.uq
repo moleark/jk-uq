@@ -1,0 +1,83 @@
+ID TallyMain (
+	id,
+	KEY no,
+	warehouse ID,
+	tallyer ID,
+	startTime TIMESTAMP,
+	finishTime TIMESTAMP,
+	sys(create, owner),	
+);
+
+ID TallyDetail(
+    id,
+    main ID TallyMain,
+    orderDetail ID,
+	quantity DEC(12,2),
+);
+
+IDX DxTallyMain (
+	id,										-- TallyMain id
+);
+
+-- 以理货单为单位统一打印要记录任务
+
+-- 合并拣货单到理货单
+ACT mergeToTally(
+	warehouse ID,
+	ARR pickups (
+		pickup ID
+	)
+)
+RETURNS tallys(
+	id ID,
+    no char(20),
+){
+	VAR tally ID, tallyNo CHAR(20);
+	SET tallyNo = NO(TallyMain);
+	SET tally = ID(TallyMain new, tallyNo);
+	WITH TallyMain as a ID=tally SET a.no=tallyNo, a.warehouse=warehouse;
+
+	FOR pickups {
+		FOR(VAR orderDetail ID, quantity int
+			OF SELECT p.orderDetail, p.quantity FROM PickupDetail as p WHERE p.main = pickup){
+			WITH TallyDetail as a ID=orderDetail
+				SET a.main=tally, a.orderDetail=orderDetail, a.quantity=quantity;
+		}
+		-- 要考虑去重复同一个订单明细可能会对应多个货位？ WITH... 的写法会不会自动处理？
+	}
+	INTO tallys SELECT tally as id, tallyNo as no;
+};
+
+-- 查询库房理货单
+QUERY WarehouseTallys(
+	-- warehouse ID,
+)
+RETURNS ret (
+	warehouse ID,
+	tallymain ID,
+	no CHAR(20),
+	create TIMESTAMP,
+) {
+	INTO ret SELECT b.warehouse, b.id as tallymain, b.no
+		, b.[$create] as create
+		FROM IxUserWarehouse as a
+			LEFT JOIN TallyMain as b ON a.xi=b.warehouse
+			LEFT JOIN DxTallyMain as c ON b.id=c.id
+		WHERE a.ix=$user;
+};
+
+-- 理货完成
+ACT Tally (
+	tally ID,
+	-- 实际理货数量。
+	ARR detail (
+		orderDetail ID,
+		quantity DEC(12,2),
+	)
+) {
+	WITH DxTallyMain ID=tally DEL;
+	WITH TallyMain ID=tally SET finishTime=$date;
+	FOR detail {
+		-- 理货完成发bus，bus处理未添加
+	}
+};

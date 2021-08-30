@@ -27,3 +27,15 @@ QUERY getLotByLotnumber(
             join ProductX as p on p.id = l.product
     where   l.lotnumber = lotnumber and p.origin = origin and p.brand in (18, 71);
 };
+
+QUERY getProductLotNumber(
+    product ID ProductX,
+) returns ret (
+    id ID Lot,
+    product ID ProductX,
+    lotnumber char(50),
+){
+    into ret select l.id, l.product, l.lotnumber
+    from    Lot as l
+    where   l.product = product; 
+};

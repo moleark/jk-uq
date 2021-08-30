@@ -14,7 +14,7 @@ RETURNS ret (
 		SET ok = 0;
 		BUS JkOrderBus.deliver SET id=id;
 		FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
-			OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse 
+			OF SELECT a.id as detailId, a.quantity, a.quantity * a.price as amount, a.warehouse 
 			FROM OrderDetail as a WHERE a.main=id)
 		{
 			WITH DxOrderDetail as a ID = detailId
@@ -43,7 +43,7 @@ ACTION OrderConfirm (
 	BUS JkOrderBus.[deliver-ext] SET id=id;
 	BUS JkOrderBus.deliver SET id=id, contact=null;
 	FOR (VAR detailId ID, quantity DEC(12,2), amount DEC(12,2), warehouse ID 
-		OF SELECT a.id as detailId, a.quantity, a.amount, a.warehouse 
+		OF SELECT a.id as detailId, a.quantity, a.quantity * a.price as amount, a.warehouse 
 		FROM OrderDetail as a WHERE a.main=id)
 	{
 		WITH DxOrderDetail as a ID = detailId
@@ -89,14 +89,13 @@ RETURNS ret (
 			WITH OrderDetail ID=detailId SET main=mainId
 				, item=item, product=product
 				, warehouse=warehouse
-				, quantity=quantity, amount=amount, price=price;
+				, quantity=quantity, price=price;
 			WITH DxOrderDetail ID=detailId SET deliver=quantity;
 			BUS JkOrderBus.order INTO detail 
 				ADD id = detailId
 					, item = item
 					, product = product
 					, quantity = quantity
-					, amount = amount
 					, price = price;
 			BUS JkOrderBus.[deliver-ext] INTO detail 
 				ADD id = detailId, needInsuredWhenDelivery = 0;

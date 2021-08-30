@@ -11,6 +11,7 @@ OPEN TUID ProductCategory (
         name char(200),
     ),
     unique(no),
+    index idx_parent,
 );
 
 OPEN Map ProductProductCategory (

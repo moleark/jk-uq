@@ -1,3 +1,33 @@
+-- 退款凭证是否也保存在该表中？
+ID ReceiveMain (
+    id,
+    receiveNr char(50),
+    organization ID,
+    customer ID,
+    /*
+    付款日期，
+    付款方式,
+    回款类型,   -- 正常回款;预存款;质投免款;质投退款;事故免款;事故退款;无货退款;汇错退款等
+    作废，
+    */
+    comments char(500),
+    receiver ID,
+    createDate TIMESTAMP,
+);
+
+-- 收款/退款均记录在该表中，这个好像是DxOrderDetail.receiveDone/receiveReturnDone的history，也是DxReceiveMain.leftAmount的history
+ID ReceiveDetail (
+    id,					-- orderDetail
+    main ID ReceiveMain,
+    amount DEC(18,4),
+);
+
+IDX DxReceiveMain (
+    id,
+    sumAmount DEC(18, 4),
+    leftAmount dec(18, 4), 
+);
+
 QUERY PendingReceive(
 )
 PAGE (
@@ -28,10 +58,11 @@ RETURNS ret (
 ) {
 	INTO ret SELECT b.id as orderDetail
 		, b.item, b.product, b.quantity, b.amount, b.price
-		, c.receive, c.receiveDone, c.receiveReturn, c.receiveReturnDone
+		, c.receive, c.receiveDone, d.receiveReturn, d.receiveReturnDone
 		FROM IxCustomerPendingReceive as a
 			JOIN OrderDetail as b on a.xi=b.id
 			JOIN DxOrderDetail as c on b.id=c.id
+			JOIN DxOrderDetailReturn as d on b.id=d.id
 		WHERE a.ix=customer;
 };
 
@@ -49,7 +80,7 @@ ACT DoneReceive ver 0.2 (
 			WITH DxOrderDetail as a ID=orderDetail SET a.receiveDone=amount;
 		}
 		ELSE {
-			WITH DxOrderDetail as a ID=orderDetail SET a.receiveReturnDone=-amount;
+			WITH DxOrderDetailReturn as a ID=orderDetail SET a.receiveReturnDone=-amount;
 		}
 		WITH IxCustomerPendingReceive IX=customer XI=orderDetail DEL;
         WITH DxCustomerReceive ID=customer SET sumAmount -= amount;

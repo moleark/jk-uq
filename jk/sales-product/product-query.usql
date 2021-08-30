@@ -14,7 +14,7 @@ returns ret(
 QUERY GetProductPackByOrigin(origin char(50), salesRegion ID SalesRegion)
 returns ret(
     product ID ProductX,
-    pack ID ProductX.PackX,
+    pack OF product.PackX,
 ) {
     into ret select p.id as product, pk.id as pack 
     from ProductCache as pc
@@ -200,7 +200,7 @@ returns ret(
 QUERY GetProductPrices(product ID ProductX, salesRegion ID SalesRegion)
 returns ret (
     product ID ProductX,
-    pack ID ProductX.PackX,
+    pack OF product.PackX,
     salesRegion ID SalesRegion,
     retail dec(12, 2),
     expireDate datetime,

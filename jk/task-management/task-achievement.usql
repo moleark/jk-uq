@@ -36,7 +36,7 @@ BOOK SalesAchievementBook(
     threeAchievement dec(12, 2) not null default 0 , -- 二级团队销量提成
 
     totalOrderCount int not null default 0 , -- 订单数量
-    totalAchievement dec(12, 2) not null default 0 , -- 累计提成(应该等于oneAchievement + twoAchievement + threeAchievement)
+    totalAchievement dec(12, 2) not null default 0 , -- 累计提成(应该等于oneAchievement + twoAchievement + threeAchievement), 界面上没有使用该值，基本等于作废
     totalReceivableAmount dec(12, 2) not null default 0 , -- 累计到账金额(即已回款部分对应的总提成金额)
     totalaWithdrawal dec(12, 2) not null default 0 , -- 累计已提现金额
     waitWithdrawal dec(12, 2) not null default 0 , -- 等待提现的金额(即已申请提现但尚未发放的金额) 

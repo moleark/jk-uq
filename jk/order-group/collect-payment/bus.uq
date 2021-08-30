@@ -28,7 +28,7 @@ ACCEPT [receive-return] {
 		SET customer=b.customer 
 			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
 			WHERE a.id=id;
-		WITH DxOrderDetail as a ID=id SET a.receiveReturn += value;
+		WITH DxOrderDetailReturn as a ID=id SET a.receiveReturn += value;
 		WITH DxCustomerReceive ID=customer SET sumAmount -= value;
 	}
 }
@@ -49,7 +49,7 @@ ACCEPT [invoice-return] {
 		SET customer=b.customer 
 			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
 			WHERE a.id=id;
-		WITH DxOrderDetail as a ID=id SET a.invoiceReturn += value;
+		WITH DxOrderDetailReturn as a ID=id SET a.invoiceReturn += value;
 		WITH DxCustomerInvoice ID=customer SET sumAmount -= value;
 	}
 }
