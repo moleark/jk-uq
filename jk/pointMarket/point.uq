@@ -117,6 +117,26 @@ HISTORY PointHistoryByCustomer (
     row,                        --子表的第几行
 );
 
+-- 积分变化表(针对order订单明细),2021年8月27日，D72
+HISTORY PointHistoryByOrderDetail (
+    date,                                   --生成时间
+    orderDetailId ID orderDetail,           --订单明细ID
+    pointYear int,                          --积分年度
+    point int,                              --积分数(100 or -100)
+    type int,                               --1：积分，2：有效积分
+    comments char(1000) ,                   --备注
+);
+
+-- 积分订单明细表,2021年8月27日，D72
+BOOK PointBookByOrderDetail (
+    key orderDetailId ID orderDetail,       -- 订单明细ID
+    amountOfMoney  dec(12, 2),              -- 金额
+    point int not null default 0,           -- 有效积分
+    totalPoint int not null default 0,      -- 积分
+    multiple int not null default 1,        -- 积分倍数
+);
+
+
 -- 当前客户积分分布表（在某个积分段有多少人）
 BOOK PointDistributionBook (
     key pointStart int not null,
