@@ -160,21 +160,21 @@ ACT AutoWarehouseDeliver()
 };
 
 QUERY GetDeliver (
-	deliver ID,
+	deliver ID
 )
 RETURNS main (
-	# [DeliverMain],
+	--# [DeliverMain],
 	no varchar(20),
 	customer ID,
 	contact ID,
 	warehouse ID,
-	staff ID,								-- 发运人
-	rows SMALLINT DEFAULT 0,				-- 行数
-	pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
-	deliverTime TIMESTAMP DEFAULT NULL		-- 发运时间
+	staff ID,
+	rows SMALLINT DEFAULT 0,
+	pickRows SMALLINT DEFAULT 0,
+	deliverTime TIMESTAMP DEFAULT NULL
 )
 RETURNS detail (
-	# [DeliverDetail],
+	--# [DeliverDetail],
 	delivermain ID,
 	item ID,
 	product ID,
@@ -183,16 +183,16 @@ RETURNS detail (
 	deliverDone DEC(12,2),
 	returnDone DEC(12,2)
 ) {
-	INTO main SELECT a.id, a.no
-		, a.customer, a.contact, a.warehouse
-		, b.staff, b.rows, b.pickRows, b.deliverTime
+	INTO main SELECT --a.id, 
+		a.no, a.customer, a.contact, a.warehouse,
+		b.staff, b.rows, b.pickRows, b.deliverTime 
 		FROM DeliverMain as a
 			LEFT JOIN DxDeliverMain as b ON a.id=b.id
 		WHERE a.id=deliver;
-	INTO detail SELECT a.id,
+	INTO detail SELECT --a.id,
 		a.main as delivermain,			-- DeliverMain id
 		b.item, b.product,
-		c.deliverShould, c.pickDone, c.deliverDone, c.returnDone
+		c.deliverShould, c.pickDone, c.deliverDone, c.returnDone 
 		FROM DeliverDetail as a 
 			JOIN OrderDetail as b ON a.id=b.id
 			LEFT JOIN DxOrderDetail as c ON a.id=c.id
