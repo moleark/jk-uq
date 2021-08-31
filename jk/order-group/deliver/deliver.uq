@@ -163,7 +163,7 @@ QUERY GetDeliver (
 	deliver ID
 )
 RETURNS main (
-	--# [DeliverMain],
+	id ID,	--# [DeliverMain],
 	no varchar(20),
 	customer ID,
 	contact ID,
@@ -174,7 +174,7 @@ RETURNS main (
 	deliverTime TIMESTAMP DEFAULT NULL
 )
 RETURNS detail (
-	--# [DeliverDetail],
+	id ID,	--# [DeliverDetail],
 	delivermain ID,
 	item ID,
 	product ID,
@@ -183,13 +183,13 @@ RETURNS detail (
 	deliverDone DEC(12,2),
 	returnDone DEC(12,2)
 ) {
-	INTO main SELECT --a.id, 
+	INTO main SELECT a.id, 
 		a.no, a.customer, a.contact, a.warehouse,
 		b.staff, b.rows, b.pickRows, b.deliverTime 
 		FROM DeliverMain as a
 			LEFT JOIN DxDeliverMain as b ON a.id=b.id
 		WHERE a.id=deliver;
-	INTO detail SELECT --a.id,
+	INTO detail SELECT a.id,
 		a.main as delivermain,			-- DeliverMain id
 		b.item, b.product,
 		c.deliverShould, c.pickDone, c.deliverDone, c.returnDone 

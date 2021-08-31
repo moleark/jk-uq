@@ -156,7 +156,7 @@ QUERY GetCutOffMain(
     cutOffMain ID
 )
 RETURNS main (
-	# [CutOffMain],
+	id Id,
 	no varchar(20),
 	warehouse ID,
 	cutter ID,
@@ -174,7 +174,7 @@ RETURNS detail (
 	item ID,
 	product ID,
 	tallyShould DEC(12,2),
-	orderExt char(200)
+	content text
 ) {
 	INTO main SELECT a.id, a.no, a.warehouse, a.cutter, b.staff
 		FROM CutOffMain as a
@@ -183,7 +183,7 @@ RETURNS detail (
 
 	INTO detail SELECT b.id as delivermain, b.trayNumber,
 		b.contact, b.customer, f.carrier, f.waybillNumber, f.deliverTime,
-		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, g.json as orderExt
+		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, g.json as content
 		FROM CutOffMain as a
 			JOIN DeliverMain as b on a.id=b.cutOffMain
 			JOIN DeliverDetail as c on b.id=c.main
