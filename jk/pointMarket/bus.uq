@@ -92,6 +92,72 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
         }
     };
 
+BUS pointOrderBus from 百灵威系统工程部/PointOrder;
+    ACCEPT orderPointChanged(
+            orderDetailId, orderDetailNo, orderMainId, orderMainNo, customer, product,item, quantity, price, retail, currency, 
+            coupon, promotion, mark, tradeType,createDate
+        )
+
+        -- 订单积分条件的判定
+        -- 销售币种为RMB、国内正常销售业务，允许积分
+        if (currency=6 and tradeType='a' and mark <> 'PR'){
+
+            -- 获取积分倍数multiple
+            -- 订单关联积分券倍数
+            -- 订单关联市场活动倍数
+            
+            var multiple int;
+            set multiple=1
+
+            
+            -- 计算折扣,订单折扣小于等于品牌折扣方可积分，没有对应的品牌折扣，则折扣为1.
+            var brandDiscount dec(12, 2)，orderDiscount dec(12,2);
+            -- 品牌折扣
+            set brandDiscount = b.discount
+            from    tv_productx as a
+                    inner join BrandMinDiscount as b on a.brand=b.brand
+            where   a.id=product;
+            
+
+            var ltotalPoint int, diffPoint dec(12,2);
+            -- 订单折扣
+            set orderDiscount = 1 - retail/price;
+
+            -- 订单折扣大于品牌折扣、mark为C：0积分
+            if (ifnull(brandDiscount,1) < orderDiscount or mark = 'C'){
+                set ltotalPoint = 0;
+            } else {
+                set ltotalPoint = price * quantity * multiple
+            }
+
+            -- 获取订单积分记录
+            -- 计算积分差值
+            var rTotalPoint int;
+            set rTotalPoint = a.totalPoint
+            from    OrderBack as a
+            where   a.orderItemId = orderDetailNo;
+
+            set diffPoint = ltotalPoint - ifnull(rTotalPoint, 0);
+            --积分年度
+            set pointYear = year(createDate)
+            -- 积分差值非零值，记录本次积分
+            if (diffPoint<>0){
+                -- 1.积分记账，根据积分差值增减总值分
+                book PointBookByCustomer at (customer, pointYear) set totalpoint += diffPoint;
+ 
+                -- 2.积分历史记录，客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
+                history PointHistoryByCustomer 
+                    set pointYear = pointYear, point = diffPoint, source = 5, comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
+                
+                -- 3.订单积分记账，orderItemId、orderId、年度、金额、倍数、积分值，在orderback表基础上增加一个积分倍数字段。
+                book orderBack at(orderItemId) set orderId = orderDetailNo, customer = customer, 
+                    quantity = quantity, price = price,multiple=multiple
+                    currency = currency, retail = retail, retailCurrency = Currency, totalPoint = ltotalPoint,
+                    mark = mark, createDate = from_unixtime(createDate);
+            }
+        }
+
+
 
 BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
     ACCEPT innerOrderPaid {
