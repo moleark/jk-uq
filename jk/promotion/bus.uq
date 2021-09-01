@@ -49,4 +49,3 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
         }
         into bus select promotion,multiple;
     };
-

@@ -44,3 +44,10 @@ TUID PromotionStatus(
     description char(10),
     unique(description),
 );
+
+-- 品牌最低折扣表（低于此表中设置折扣的，不给积分）
+MAP BrandMinDiscount (
+    key brand ID Brand,
+    discount dec(12, 2),
+    isValid int,
+);
