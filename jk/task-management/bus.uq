@@ -44,3 +44,15 @@ BUS salesTaskBus ver 0.4 from [百灵威系统工程部]/SalesTask
         var pid ID;
         PENDING OrderPaymentPending + (sales:sales, order:order, orderNo:orderNo, paymentAmount:paymentAmount, state:state) to pid;
     };
+
+
+BUS ps2Bus from [百灵威系统工程部]/PointShop2
+    QUERY getCreditsMultiple {
+        var multiple int;
+        if exists(select 1 coupon where id = credits and types = 'creidts') {
+            set multiple = 2;
+        } else {
+            set multiple = 1;
+        }
+        into bus select 2;
+    };
