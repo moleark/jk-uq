@@ -1,18 +1,38 @@
--- 退票记录是否也保存在该表中？
+/*
+  1. 发票管理系统从接收order中发送的invoice bus开始，接收后将orderDetail记录在 “待开票”IxCustomerInvoicePending中，同时在DxOrderDetail中记录应开；
+  2. 财务开票后，删除待开记录，更新DxOrderDetail中invoiceDone账，并在InvoiceDetail中记录history，同时更新DxInvoiceMain的sumAmount和usedAmount；
+  3. 因退货而需要退票时，此处接收return bus，接收后，在DxOrderDetail中记录invoiceReturn账，可能还需要一个IxCustomerInvoiceReturnPending(待退票）；
+  4. 退票后作废的，发票作废时，发票上要退货的orderDetail，其InvoiceReturnDone增加，同一发票上其余不退货的orderdetail，其orderReturnDone也增加，因其
+        开票数据不平，所以需写入IxCustomerInvoicePending待开；同时，该发票的作废额增加，usedAmount减少；
+     退票后冲红的，在开具红字发票时，原发票对应的所有orderDetail的invoiceDone减少；原发票的redAmount增加，usedAmount减少；
+     作废或冲红后，退货的orderDetail不再开发票，同一发票上的其他orderDetail需要重开发票，此时各orderDetail的InvoiceDone增加；
+  5. 客户发票丢失重开的情况，另外记账，不影响此处的book和history；
+  6. 开票值和orderdetail货值不同的情况，如各种费用不单独开票，糅合在orderdetial中开票；
+  7. 发票上打印的内容需另外记录在InvoiceDetailRaw中；
+  8. 支持财务在财务软件中记账：借 贷    DxOrderDetailInvoiceReceive?
+  9. 催款是另外一套系统，与此无关
+*/
 ID InvoiceMain (
     id,
     invoiceNr char(50),
+    invoiceType ID, 
     organization ID,
     customer ID,
     /*
-    发票类型
-    币种
     结算类型
-    作废
     */
+    currency ID,
+    blueRed ENUM EnumBlueRed,
+    isValid tinyint,
     comments char(500),
     invoicer ID,
     createDate TIMESTAMP,
+);
+
+-- 红字发票对应的蓝字发票
+IX RedInvoiceMain (
+    ix,     -- InvoiceMain
+    xi,     -- InvoiceMain
 );
 
 -- 开票/退票均记录在该表中，这个好像是DxOrderDetail.invoiceDone/invoiceReturnDone的history，也是DxInvoiceMain.leftAmount的history
@@ -23,11 +43,24 @@ ID InvoiceDetail (
     amount dec(18, 4),
 );
 
+-- 发票的账
 IDX DxInvoiceMain (
     id,
-    sumAmount DEC(18, 4),
-    leftAmount dec(18, 4), 
+    sumAmount DEC(18, 4),       -- 票面金额
+    usedAmount dec(18, 4),      -- 被使用的金额，在与orderDetail明细关联时增加(开票时或转票时), 作废时减少;
+    redAmount dec(18, 4),       -- 被冲红的金额，在被冲红时增加, history是什么? 是RedInvoiceMain？
+    invalidAmount dec(18, 4),   -- 作废的金额，在发票作废时增加；history是什么？
+    leftAmount dec(18, 4),      -- 余额 = 票面金额 - 被使用的金额 - 被冲红的金额 - 作废的金额，余额为0，表示发票已经用完;
 );
+
+-- 记录发票原始内容（即发票打印的原始内容，用于冲红，开发票时写入） 
+ID InvoiceDetailRaw (
+    id,     -- orderDetail
+    main ID InvoiceMain,
+    amount dec(18, 4),
+);
+
+ENUM EnumBlueRed (blue = 1, red = -1);
 
 QUERY PendingInvoice(
 )
