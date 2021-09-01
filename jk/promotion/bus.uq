@@ -1,19 +1,52 @@
-BUS pointShop2BusGetPointMultiple from [百灵威系统工程部]/pointShop2
-    QUERY getPointMultiple {
-        var multiple int;  --倍数
-        set multiple=1;  --默认值
+BUS ps2Bus from [百灵威系统工程部]/PointShop2
+    QUERY getPromotionMultiple {
+        var multiple int;   --市场活动积分倍数
+        var no char(50);    --市场活动ID内部
+        var brandDiscount dec(12, 2); --品牌折扣值
+        var orderDiscount dec(12, 2); --订单折扣值
+        
+        
+        -- 获取品牌折扣
+        set brandDiscount = bd.discount
+        from BrandMinDiscount as bd
+        where id=brand;
 
-        --获取可用的积分有关的市场活动
-        var no char(50);
-        set no=p.no
-        from    Promotion as p
-        where   p.status=2
-                and (p.endDate is null or p.endDate > from_unixtime(createDate))
-                and p.type=14
-         order by p.id limit 1;
+        -- 订单折扣
+        set orderDiscount = 1 - price/retail
 
-        if(no='A08-20160422A'){   --常年市场活动
-            set multiple=1;
+        if (orderDiscount > brandDiscount) {
+            set multiple=0,promotion=0;
+        } else {
+
+
+            --获取可用的积分有关的市场活动
+            var no char(50);
+            set no = p.no,promotion = p.id 
+            from    Promotion as p
+                    join PromotionStatus as ps on p.status=ps.id
+                    join PromotionType as pt on p.type=pt.id
+            where   ps.no = 'E'
+                    and pt.no='A08'
+                    and (
+                            ps.startDate < from_unixtime(createDate) 
+                            and 
+                            (
+                                ps.endDate is null or p.endDate > from_unixtime(createDate)
+                            )
+                        )
+            order by p.id desc limit 1;
+            if (promotion is null) {
+                set multiple=0,promotion=0;
+            } else {
+                if (no = 'A08-20210831A'){      -- 根据客服市场活动调整
+                    set multiple = 3;
+                }
+                else {
+                    set multiple = 1;
+                }
+
+            }
         }
-        into BUS select multiple;
+        into bus select promotion,multiple;
     };
+

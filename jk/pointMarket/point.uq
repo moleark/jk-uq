@@ -121,7 +121,7 @@ HISTORY PointHistoryByCustomer (
 IDX DxOrderDetail (
     id, -- order detailId
     point int sum log,
-    totalPoint int,
+    totalPoint int sum,
     multiple int,
 );
 

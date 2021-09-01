@@ -49,10 +49,10 @@ BUS salesTaskBus ver 0.4 from [百灵威系统工程部]/SalesTask
 BUS ps2Bus from [百灵威系统工程部]/PointShop2
     QUERY getCreditsMultiple {
         var multiple int;
-        if exists(select 1 coupon where id = credits and types = 'creidts') {
+        if exists(select 1 from coupon where id = credits and types = 'credits') {
             set multiple = 2;
         } else {
             set multiple = 1;
         }
-        into bus select 2;
+        into bus select multiple;
     };
