@@ -36,7 +36,7 @@
 	],
 	"deliver-detail": [
 		"id: id  -- order detail id",
-		"quantity: int  -- 同一个合同明细可能会分多次不同数量发送",
+		"quantity: number  -- 同一个合同明细可能会分多次不同数量发送",
 		"warehouse: id"
 	],
 	"deliver": [
@@ -116,7 +116,8 @@
 	],
 	"order-bound-detail":[
 		"type: string  -- sales, person-client, 预定义的类型",
-		"id: id  -- 指定类型的id"
+		"id: id  -- 指定类型的id",
+		"id-type: string -- staff, customer, 如果没有值，id表示webUser"
 	],
 	"order-bound": [
 		"-- order id, coupon体系根据coupon，找到order的绑定人",

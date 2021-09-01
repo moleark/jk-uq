@@ -56,7 +56,7 @@ ACTION OrderConfirm (
 };
 
 -- 保存订单，为了mock数据，直接发order bus，同时发deliver
-ACTION SaveOrder (
+ACTION SaveOrder ver 0.1 (
 	# [OrderMain],
 	ARR detail (
 		# OrderDetail,
@@ -96,6 +96,7 @@ RETURNS ret (
 					, item = item
 					, product = product
 					, quantity = quantity
+					, amount = amount
 					, price = price;
 			BUS JkOrderBus.[deliver-ext] INTO detail 
 				ADD id = detailId, needInsuredWhenDelivery = 0;
