@@ -54,20 +54,19 @@ Action submit
 BUS webUserBus.getCuByWu as q into tb {
     set q.webUser = webUser;
 } {
-	var mainId ID;
-	SET mainId = ID(orderMain new, $sheet_no);
-	BUS JkOrderBus.order SET id=mainId, customer=webUser;
+    var mainId ID;
+    SET mainId = ID(orderMain new, $sheet_no);
+    -- BUS JkOrderBus.order SET id=mainId, customer=webUser;
 
-	WITH OrderMain as a ID mainId
-    	SET a.webUser = webUser, a.customer = webUser
+    WITH OrderMain as a ID mainId
+    SET a.webUser = webUser, a.customer = webUser
             , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
             , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
             , a.currency = currency, a.sumAmount = amount
-            , a.sheetId=$id;
-	-- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
-	
+            , a.sheetId=$id, a.createDate = now();
+    -- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
+    
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
-    book orderState at ($id) set 总金额 = amount, 已付金额 = 0;
 
     var pid ID;
     pending OrderReceivable + (buyerAccount: customer, webUser: webUser, order: $id, amount: amount, currency: currency, date: now()) to pid;
@@ -89,6 +88,9 @@ BUS webUserBus.getCuByWu as q into tb {
     set bustype = 2;
     if(customer > 0) {
         set bustype = 1;
+        WITH DxOrderMainState ID = mainId set state = EnumOrderState.delivering;
+    }else {
+        WITH DxOrderMainState ID = mainId set state = EnumOrderState.matching;
     }
     bus orderBus.order set type = bustype, orderMainId = mainId, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
         customer = customerid, buyerAccount = customer,
@@ -96,14 +98,20 @@ BUS webUserBus.getCuByWu as q into tb {
         amount = amount, currency = currency, coupon = coupon, couponOffsetAmount = couponOffsetAmount, couponRemitted = couponRemitted,
         freightFee = freightFee, freightFeeRemitted = freightFeeRemitted, point = point, comments = comments, salesRegion = salesRegion;
     foreach orderItems {
-      	var detailId ID;
+        var detailId ID;
         SET detailId = ID(OrderDetail new);
         WITH OrderDetail as a ID detailId 
-			SET a.main = mainId
-				, a.product = product, a.item = pack
-				, a.price = price, a.quantity = quantity;
-		BUS JkOrderBus.order INTO [detail]
-			ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
+            SET a.main = mainId
+                , a.product = product, a.item = pack
+                , a.price = price, a.quantity = quantity, a.createDate = now();
+
+        if(not coupon is NULL){ 
+            WITH IxOrderDetailCoupon ix = detailId xi = coupon;
+        }
+        /*
+        BUS JkOrderBus.order INTO [detail]
+            ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
+        */
         bus orderBus.order into orderItems 
             add orderDetailId = detailId, product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
@@ -122,6 +130,9 @@ BUS webUserBus.getCuByWu as q into tb {
     }
 
     if (customerid > 0) {
+        if(not coupon is NULL){
+            WITH IxOrderMainCustomerCoupon ixx = mainId ix = customerid xi = coupon; 
+        } 
         if(point > 0){
             bus cmB.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
@@ -165,12 +176,16 @@ STATE Matching {
                             add orderDetailId = detailId, product = product2, pack = pack2, quantity = quantity2, price = price2
                             , subAmount = quantity2 * price2;
                     }
+                if(not coupon is NULL){
+                    WITH IxOrderMainCustomerCoupon ixx = mainId ix = customerid xi = coupon; 
+                } 
                 /*
                 foreach orderItems {
                     bus orderBus.order into orderItems 
                         add product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
                 }
                 */
+                WITH DxOrderMainState ID = mainId set state = EnumOrderState.delivering;
                 STATE TO END;
             }
 

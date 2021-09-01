@@ -34,21 +34,6 @@ History WithdrawalsHistory (
     currency ID
 );
 
---获取老系统回款数据
-BUS orderpaymentBus ver 0.4 from [百灵威系统工程部]/SalesTask
-    ACCEPT orderpayment (
-        orderNo, paymentAmount, state
-    ){
-        var  sales ID [$user], order ID;
-        set  order = a.order, sales = a.sales
-        from    AchievementHistory as a
-        where   a.types=1 and a.ordertype='coupon' and a.orderno=orderNo;
-
-        var pid ID;
-        PENDING OrderPaymentPending + (sales:sales, order:order, orderNo:orderNo, paymentAmount:paymentAmount, state:state) to pid;
-    };
-
-
 -- 根据回款计算“已到账”金额
 ACTION ComputeBalance(){
 

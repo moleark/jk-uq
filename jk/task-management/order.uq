@@ -1,13 +1,13 @@
 BUS orderbus ver 0.4 from [百灵威系统工程部]/order
     ACCEPT order (
-        type, id as orderId, no, webuser, organization, customer as customerX, buyerAccount,
+        type, orderMainId, id as orderId, no, webuser, organization, customer as customerX, buyerAccount,
         shippingContact, invoiceContact, invoiceType, invoiceInfo,
         freightFee, freightFeeRemitted,
         amount, currency,
         coupon, couponOffsetAmount, couponRemitted, point, comments, salesRegion as salesRegionX
     )
     arr orderItems (
-        product, pack, quantity, price, subAmount
+        orderDetailId, product, pack, quantity, price, subAmount
     )
     BUS pointBus.getRetailPrice into tb {
         set customer = 0;
@@ -132,25 +132,6 @@ BUS psb ver 0.4 from [百灵威系统工程部]/coupon
             }
         }
     };
-
- 
-BUS assistAchievementbus ver 0.4 from [百灵威系统工程部]/salestask
-    ACCEPT assistAchievement (
-       sales, salesAmount, amount, receivableAmount, withdrawalAmount 
-    ){
-        BOOK SalesAchievementBook at( sales ) set Level = 1, oneSaleVolume = salesAmount, oneAchievement = amount
-            , totalReceivableAmount = receivableAmount, waitWithdrawal = withdrawalAmount;
-    };
-  
-BUS assistAchievementHistorybus ver 0.4 from [百灵威系统工程部]/salestask
-    ACCEPT assistAchievementHistory (
-       sales, webuser, orderNo, salesAmount, amount
-    ){
-        History AchievementHistory set sales = sales, webuser = webuser, orderNo = orderNo
-            , price = salesAmount, agentprices = salesAmount, types = 1, amount = amount;
-    };
-
-
 
 /**
 优惠码使用后:
