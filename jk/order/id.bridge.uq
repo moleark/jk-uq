@@ -99,7 +99,7 @@ BUS couponBus.getMatchedCredits as q into tb {
 
     bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
         , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
-        , product = product, item = pack, quantity = quantity, price = price, retail = retail
+        , brand = brand, product = product, item = pack, quantity = quantity, price = price, retail = retail
         , currency = currency, coupon = creditsId, promotion = promotionId, mark = mark
         , tradeType = tradeType, createDate = createDate;
 

@@ -92,6 +92,19 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
         }
     };
 
+BUS JkOrderBus from 百灵威系统工程部/[jk-order]
+ACCEPT order {
+	VAR mainId ID;
+	SET mainId = id;
+	WITH OrderMain as a ID=id SET a.no=no;
+	FOR detail {
+		WITH OrderDetail as a 
+			ID = id
+			SET a.main=mainId;
+	}
+};
+
+
 BUS poBus from 百灵威系统工程部/PointOrder
     ACCEPT orderPointChanged
         BUS ps2Bus.getCreditsMultiple as a into cm {
@@ -101,12 +114,8 @@ BUS poBus from 百灵威系统工程部/PointOrder
             set a.brand = brand, a.price = price, a.retail = retail, a.createDate = createDate;
         }
     {   
-        /*
-        (
-            orderDetailId, orderDetailNo, orderMainId, orderMainNo, customer, product,item, quantity, price, retail, currency, 
-            coupon, promotion, mark, tradeType,createDate
-        )
-        */
+        -- 保存订单信息
+        WITH OrderDetail as a id=orderDetailId set a.endUser=customer, a.createDate=from_unixtime(createDate);
         -- 订单积分条件的判定
         -- 销售币种为RMB、国内正常销售业务，允许积分
         if (currency=6 and tradeType='a' and mark <> 'PR'){
@@ -174,6 +183,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
     };
 
 
+
 BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
     ACCEPT innerOrderPaid {
         /*
@@ -218,43 +228,43 @@ BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
         book PointBookByCustomer at (customer, pointYear) set point += realPoint;
     };
 
-    BUS ps2Bus from [百灵威系统工程部]/pointShop2
-    ACCEPT pointInitialization {
-        --订单积分
-        if(source=5){
-            
-            book orderBack at(orderItemId) set orderId = orderId, customer = customer, 
-                brand = brand, product = product, pack = pack, quantity = quantity, price = price,
-                currency = currency, retail = retail, retailCurrency = retailCurrency, totalPoint += mscore,
-                mark = mark, createDate = createDate;
+BUS ps2Bus from [百灵威系统工程部]/pointShop2
+ACCEPT pointInitialization {
+    --订单积分
+    if(source=5){
+        
+        book orderBack at(orderItemId) set orderId = orderId, customer = customer, 
+            brand = brand, product = product, pack = pack, quantity = quantity, price = price,
+            currency = currency, retail = retail, retailCurrency = retailCurrency, totalPoint += mscore,
+            mark = mark, createDate = createDate;
 
-            --总积分
-            book PointBookByCustomer at (customer, pointYear) set totalpoint += mscore;
-            history PointHistoryByCustomer 
-                set pointYear = pointYear, point = mscore, source = 5, comments = comments, customer = customer;
+        --总积分
+        book PointBookByCustomer at (customer, pointYear) set totalpoint += mscore;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = mscore, source = 5, comments = comments, customer = customer;
 
-            --有效积分
-            if(isvalid=1){
-                book PointBookByCustomer at (customer, pointYear) set point += mscore;
-            }
-
-        }else if(source=2){  --签到积分
-
-            book PointBookByCustomer at (customer, pointYear) set point += mscore, totalpoint += mscore;
-            history PointHistoryByCustomer 
-                set pointYear = pointYear, point = mscore, source = 2, comments = comments, customer = customer; 
-
-        }else if(source=3){  --积分兑换
-
-            book PointBookByCustomer at (customer, pointYear) set usedPoint += mscore;
-            history PointHistoryByCustomer 
-                set pointYear = pointYear, point = (0-mscore), source = 3, comments = comments, customer = customer; 
-
-        }
-        /*
+        --有效积分
         if(isvalid=1){
-            if exists (select 1 from PointBookByCustomer as e where e.customer=customer and e.pointYear=pointYear){
-                book PointBookByCustomer at (customer, pointYear) set point += mscore;
-            }
-        }*/
-    };
+            book PointBookByCustomer at (customer, pointYear) set point += mscore;
+        }
+
+    }else if(source=2){  --签到积分
+
+        book PointBookByCustomer at (customer, pointYear) set point += mscore, totalpoint += mscore;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = mscore, source = 2, comments = comments, customer = customer; 
+
+    }else if(source=3){  --积分兑换
+
+        book PointBookByCustomer at (customer, pointYear) set usedPoint += mscore;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = (0-mscore), source = 3, comments = comments, customer = customer; 
+
+    }
+    /*
+    if(isvalid=1){
+        if exists (select 1 from PointBookByCustomer as e where e.customer=customer and e.pointYear=pointYear){
+            book PointBookByCustomer at (customer, pointYear) set point += mscore;
+        }
+    }*/
+};

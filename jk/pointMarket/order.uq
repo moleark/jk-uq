@@ -1,0 +1,15 @@
+ID OrderMain ver 0.3 (
+	id,
+	KEY no,
+);
+
+ID OrderDetail ver 0.1 (
+	id,
+	main ID OrderMain,
+	endUser ID Customer,	--积分客户
+	createDate datetime,	--订单时间，用于计算积分年度
+
+);
+
+
+-- 记录积分需要的订单信息
