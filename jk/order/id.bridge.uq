@@ -8,7 +8,7 @@ ID OrderMainEx GLOBAL (
     currency ID,
     poNumber char(100),             -- 对应Termsa.CPONr
     carrier ID,
-    commentsAboutDeliver   char(100),
+    commentsAboutDeliver   char(1000),
     createDate TIMESTAMP,
 );
 
@@ -95,13 +95,13 @@ BUS couponBus.getMatchedCredits as q into tb {
 
         bus couponBus.creditsUsedByCustomer set orderId = orderId, customer = endUserId, coupon = creditsId;
         bus couponBus.creditsUsedByCustomer into orderItems add orderItemId = orderItemId;
-
-        bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
-            , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
-            , product = product, item = pack, quantity = quantity, price = price, retail = retail
-            , currency = currency, coupon = creditsId, promotion = promotionId, mark = mark
-            , tradeType = tradeType, createDate = createDate;
     }
+
+    bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
+        , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
+        , product = product, item = pack, quantity = quantity, price = price, retail = retail
+        , currency = currency, coupon = creditsId, promotion = promotionId, mark = mark
+        , tradeType = tradeType, createDate = createDate;
 
     BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer; -- TODO: 缺少Contact
     BUS JkOrderBus.order INTO detail 

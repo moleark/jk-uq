@@ -4,12 +4,12 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
         var no char(50);    --市场活动ID内部
         var brandDiscount dec(12, 2); --品牌折扣值
         var orderDiscount dec(12, 2); --订单折扣值
-        
+        var promotion int;
         
         -- 获取品牌折扣
         set brandDiscount = bd.discount
         from BrandMinDiscount as bd
-        where id=brand;
+        where bd.brand=brand;
 
         -- 订单折扣
         set orderDiscount = 1 - price/retail
@@ -17,10 +17,7 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
         if (orderDiscount > brandDiscount) {
             set multiple=0,promotion=0;
         } else {
-
-
             --获取可用的积分有关的市场活动
-            var no char(50);
             set no = p.no,promotion = p.id 
             from    Promotion as p
                     join PromotionStatus as ps on p.status=ps.id
@@ -28,10 +25,10 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
             where   ps.no = 'E'
                     and pt.no='A08'
                     and (
-                            ps.startDate < from_unixtime(createDate) 
+                            p.startDate < from_unixtime(createDate) 
                             and 
                             (
-                                ps.endDate is null or p.endDate > from_unixtime(createDate)
+                                p.endDate is null or p.endDate > from_unixtime(createDate)
                             )
                         )
             order by p.id desc limit 1;
@@ -44,7 +41,6 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
                 else {
                     set multiple = 1;
                 }
-
             }
         }
         into bus select promotion,multiple;
