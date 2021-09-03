@@ -6,6 +6,8 @@ ID OrderMain ver 0.3 (
 ID OrderDetail ver 0.1 (
 	id,
 	main ID OrderMain,
+	orderMainNo char(50),
+	orderDetailNo char(50),
 	endUser ID Customer,	--积分客户
 	createDate datetime,	--订单时间，用于计算积分年度
 
