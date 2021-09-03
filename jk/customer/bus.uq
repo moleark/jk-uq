@@ -1,8 +1,51 @@
-BUS webUserBus from [百灵威系统工程部]/WebUser;
-
-BUS webUserAuditPassBus from [百灵威系统工程部]/WebUser
+BUS wBus from [百灵威系统工程部]/WebUser
     ACCEPT WebUserAuditPass
-    {
+    BUS cBus.getWebUserAllCredits as q into tb {
+        set q.webUser = webUser;
+    } {
         if(not buyerAccount is null)
             book CustomerBuyerAccount at (customer, buyerAccount);
+        
+        foreach tb {
+            bus cBus.creditsDrawedByCustomer set customer = customer, webUser = webUser;
+            foreach tb.creditsDrawed {
+                book CustomerCredits at(customer, coupon) set creditsCode = couponCode
+                    , createDate = createDate, expiredDate = expiredDate;
+                bus cBus.creditsDrawedByCustomer into coupons add coupon = coupon, 
+                    createDate = createDate, expiredDate = expiredDate;
+            }
+            foreach tb.creditsUsed {
+                book CustomerCreditsUsed at(customer, coupon, saleOrder) set usedDate = usedDate;
+            }
+
+            foreach tb.couponDrawed {
+                book CustomerCoupon at(customer, coupon, couponType) set couponCode = couponCode
+                    , createDate = createDate, expiredDate = expiredDate;
+            } 
+            foreach tb.couponUsed {
+                book CustomerCouponUsed at(customer, coupon) set usedDate = usedDate;
+            }
+        }
+    };
+
+bus cBus from 百灵威系统工程部/coupon
+    -- 
+    ACCEPT creditsUsedByCustomer {
+        delete t from CustomerCredits as t where t.customer = customer and t.credits = coupon;
+        for orderItems {
+            book CustomerCreditsUsed at(customer, coupon, orderItemId ) set usedDate = now();
+        }
+    }
+    Query getMatchedCredits {
+        var credits ID;
+        set credits = t.credits from CustomerCredits as t 
+            where t.customer = customer and t.expiredDate > now() 
+                and t.createDate >= date(dateadd(day, -7, from_unixtime(createDate))) 
+                and t.createDate <= date(from_unixtime(createDate))
+            order by t.createDate, t.credits
+            limit 1;
+        
+        if (not credits is null) {
+            into bus select credits;
+        }
     };

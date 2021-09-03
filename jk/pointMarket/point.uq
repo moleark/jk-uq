@@ -117,6 +117,35 @@ HISTORY PointHistoryByCustomer (
     row,                        --子表的第几行
 );
 
+
+IDX DxOrderDetail (
+    id, -- order detailId
+    point int sum log,
+    totalPoint int,
+    multiple int,
+);
+
+-- 积分变化表(针对order订单明细),2021年8月27日，D72
+HISTORY OrderDetailPointHistory (
+    date,                                   --生成时间
+    orderDetailId ID orderDetail,           --订单明细ID
+    pointYear int,                          --积分年度
+    point int,                              --积分数(100 or -100)
+    type int,                               --1：积分，2：有效积分
+    comments char(1000) ,                   --备注
+);
+
+/*
+-- 积分订单明细表,2021年8月27日，D72
+BOOK PointBookByOrderDetail (
+    key orderDetailId ID orderDetail,       -- 订单明细ID
+    amountOfMoney  dec(12, 2),              -- 金额
+    point int not null default 0,           -- 有效积分
+    totalPoint int not null default 0,      -- 积分
+    multiple int not null default 1,        -- 积分倍数
+);
+*/
+
 -- 当前客户积分分布表（在某个积分段有多少人）
 BOOK PointDistributionBook (
     key pointStart int not null,
@@ -234,30 +263,6 @@ STATE Shipping {
 STATE CANCELED {
 
 };
-
-MAP CustomerCoupon (
-    key webUser ID WebUser,     -- WebUser编号，不是Customer
-    coupon int,
-    createDate date,
-    expiredDate date,
-);
-
-MAP WebUserCredits (
-    key webUser ID WebUser,     -- WebUser编号，不是Customer
-    key credits int not null,
-    creditsCode int not null,
-    createDate date,
-    expiredDate date,
-) ON ADD{
-    bus couponBus.creditsDrawedByWebUser set webUser = webUser, coupon = credits, createDate = createDate, expiredDate = expiredDate;
-};
-
-MAP WebUserCreditsUsed (
-    key webUser ID WebUser,     -- WebUser编号，不是Customer
-    key credits int not null,
-    key saleOrder char(50),
-    usedDate date,
-);
 
 /*
  * 有关产品的浏览量/兑换量统计

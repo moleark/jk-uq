@@ -1,0 +1,20 @@
+ID OrderMain ver 0.3 (
+	id,
+	KEY no,
+	customer ID,
+	contact ID
+);
+
+ID OrderDetail ver 0.1 (
+	id,
+	main ID OrderMain,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+    lotNumber char(50),
+	warehouse ID,						-- 库房
+);
+
+-- 从订单中发送过来的有关 发货的具体要求，应该保存在 DxOrderDetail 还是 DxDeliverDetail中？

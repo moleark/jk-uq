@@ -1,0 +1,3 @@
+import JKVIPCardType = 百灵威系统工程部/vipcardtype;
+
+TUID VIPCardType from JKVIPCardType;
