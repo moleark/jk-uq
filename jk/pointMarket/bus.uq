@@ -8,9 +8,6 @@ BUS pointBus from [百灵威系统工程部]/pointShop
     BUS webUserBus.getWuByCu as q into tb {
         set q.customer = customer;
     } {
-        -- 取消从内部系统导入PointBookByCustomer流程
-        -- book PointBookByCustomer at (customer, pointYear) set point = point, totalPoint = totalPoint, usedPoint = usedPoint;
-
         -- 根据customer获取webuser
         var webUserid ID [$user];
         foreach tb {
@@ -55,6 +52,7 @@ bus couponBus from 百灵威系统工程部/coupon
         history PointHistory
             set webUser = webuser, pointYear = pointYear, source = 1, point = point, comments = orderid;
 
+        /*
         --积分券下单添加客户积分
         var customerId int;
         foreach tb {
@@ -65,11 +63,12 @@ bus couponBus from 百灵威系统工程部/coupon
             history PointHistoryByCustomer 
                 set pointYear = pointYear, point = point, source = 1, comments = orderid, customer = customerId;
         }
+        */
     };
 
 BUS webUserBus from [百灵威系统工程部]/WebUser
-    ACCEPT WebUserAuditPass
-    {
+    ACCEPT WebUserAuditPass {
+        /*
         -- 审核后Customer的积分导入到webuser
         if(not exists(select 1 from PointBook as pb where pb.webUser = webUser)) {
             foreach (
@@ -80,6 +79,7 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
                 book PointBook at (webUser, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
             }
         }
+        */
 
         -- 审核后webUser的签到积分导入到内部
         foreach(
@@ -92,155 +92,177 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
         }
     };
 
-BUS pointOrderBus from 百灵威系统工程部/PointOrder;
-    ACCEPT orderPointChanged(
-            orderDetailId, orderDetailNo, orderMainId, orderMainNo, customer, product,item, quantity, price, retail, currency, 
-            coupon, promotion, mark, tradeType,createDate
-        )
-
+BUS poBus from 百灵威系统工程部/PointOrder
+    ACCEPT orderPointChanged
+        BUS ps2Bus.getCreditsMultiple as a into cm {
+            set a.credits = coupon;
+        }
+        BUS ps2Bus.getPromotionMultiple as a into pm {
+            set a.brand = brand, a.price = price, a.retail = retail, a.createDate = createDate;
+        }
+    {   
+        -- 保存订单信息
+        WITH OrderDetail as a id=orderDetailId
+            set a.endUser = customer, a.createDate = from_unixtime(createDate)
+                ,a.orderMainNo=orderMainNo, a.orderDetailNo = orderDetailNo;
         -- 订单积分条件的判定
         -- 销售币种为RMB、国内正常销售业务，允许积分
-        if (currency=6 and tradeType='a' and mark <> 'PR'){
+        if (currency = 5 and tradeType = 'a' and mark <> 'PR'){
 
-            -- 获取积分倍数multiple
-            -- 订单关联积分券倍数
-            -- 订单关联市场活动倍数
+            var multiple int, creditsMultiple int, promotionMultiple int;
+            foreach cm {
+                set creditsMultiple = multiple;
+            }
+            set creditsMultiple = ifnull(creditsMultiple, 0);
             
-            var multiple int;
-            set multiple=1
+            foreach pm {
+                set promotionMultiple = multiple;
+            }
+            set promotionMultiple = ifnull(promotionMultiple, 0);
 
-            
-            -- 计算折扣,订单折扣小于等于品牌折扣方可积分，没有对应的品牌折扣，则折扣为1.
-            var brandDiscount dec(12, 2)，orderDiscount dec(12,2);
-            -- 品牌折扣
-            set brandDiscount = b.discount
-            from    tv_productx as a
-                    inner join BrandMinDiscount as b on a.brand=b.brand
-            where   a.id=product;
-            
+            if (creditsMultiple > promotionMultiple) {
+                set multiple = creditsMultiple;
+            } else {
+                set multiple = promotionMultiple;
+            }
 
-            var ltotalPoint int, diffPoint dec(12,2);
-            -- 订单折扣
-            set orderDiscount = 1 - retail/price;
-
-            -- 订单折扣大于品牌折扣、mark为C：0积分
-            if (ifnull(brandDiscount,1) < orderDiscount or mark = 'C'){
+            var ltotalPoint int, diffPoint dec(12, 2);
+            -- mark为C：0积分
+            if (mark = 'C'){
                 set ltotalPoint = 0;
             } else {
-                set ltotalPoint = price * quantity * multiple
+                set ltotalPoint = price * quantity * multiple;
             }
 
             -- 获取订单积分记录
             -- 计算积分差值
             var rTotalPoint int;
             set rTotalPoint = a.totalPoint
-            from    OrderBack as a
-            where   a.orderItemId = orderDetailNo;
+            from    DxOrderDetail as a
+            where   a.id = orderDetailId;
 
             set diffPoint = ltotalPoint - ifnull(rTotalPoint, 0);
+            
             --积分年度
-            set pointYear = year(createDate)
+            var pointYear int ;
+            set pointYear = year(from_unixtime(createDate));
             -- 积分差值非零值，记录本次积分
-            if (diffPoint<>0){
-                -- 1.积分记账，根据积分差值增减总值分
+            if (diffPoint <> 0){
+                -- 1.积分记账
+                -- 1.1. 总积分记账, 针对客户
                 book PointBookByCustomer at (customer, pointYear) set totalpoint += diffPoint;
- 
-                -- 2.积分历史记录，客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
+                -- 1.2.订单积分记账，针对订单明细
+                WITH DxOrderDetail as a ID = orderDetailId
+                    set a.totalPoint += diffPoint, a.multiple = multiple;
+
+                -- 2.积分历史记录
+                -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
                 history PointHistoryByCustomer 
-                    set pointYear = pointYear, point = diffPoint, source = 5, comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
-                
-                -- 3.订单积分记账，orderItemId、orderId、年度、金额、倍数、积分值，在orderback表基础上增加一个积分倍数字段。
-                book orderBack at(orderItemId) set orderId = orderDetailNo, customer = customer, 
-                    quantity = quantity, price = price,multiple=multiple
-                    currency = currency, retail = retail, retailCurrency = Currency, totalPoint = ltotalPoint,
-                    mark = mark, createDate = from_unixtime(createDate);
+                    set pointYear = pointYear, point = diffPoint, source = 5, 
+                    comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
+                -- 2.2 针对订单明细
+                history OrderDetailPointHistory
+                    set orderDetailId = orderDetailId, pointYear = pointYear, point = diffPoint, 
+                        type = 1, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
-
-
-
-BUS orderPaiedBus from [百灵威系统工程部]/[FiReceivable]
-    ACCEPT innerOrderPaid {
-        /*
-        -- 测试数据 orderItemId找不到时的固定值
-        set orderItemId = 'LCW1742012231406135837527', amount = 744;
-        */
-        if not exists (select 1 from OrderBack as w where w.orderItemId = orderItemId){
-            var pid ID;
-            PENDING SOrderPaymentPending + ( orderId:orderId, orderItemId:orderItemId, amount:amount, currency:currency, 
-                action:action, createDate: from_unixtime(createDate)) to pid;
-        }
-
-        var pointYear int; --年度取值为最新的总积分年度
-        var totalPoint int, customer ID Customer,price dec(12, 2), quantity int;
-
-        set totalPoint = a.totalPoint, price = a.price, quantity = a.quantity, customer = a.customer, pointYear = year(a.createDate)
-        from    OrderBack as a
-        where   a.orderItemId = orderItemId;
-
-        /*
-            -- 因合同币种=开票币种=回款币种，货币转换 暂时不实现
-            var currentDate date, currentYear int, currentMonth int;
-            set currentDate = date(now());
-            set currentYear = year(currentDate), currentMonth = month(currentDate);
-            
-            var amountRMB dec(12, 2);
-            set amountRMB = amount * a.RMBTo 
-            from    CurrencyExchangeRate as a
-            where   a.currency = currency and a.year = currentYear and a.month = currentMonth; 
-            set amount = amountRMB;
-        */
-    
-        var realPoint int;
-        if(amount / (price * quantity) >= 1){
-            set realPoint = 1 * totalPoint; 
-        }else{
-            set realPoint = amount / (price * quantity) * totalPoint;  --按订单明细的回款占比*订单明细的总积分计算订单明细的有效积分
-        }
-
-        if(action <> 1) {
-            set realPoint = realPoint * -1;   --有效积分取消
-        }
-        book PointBookByCustomer at (customer, pointYear) set point += realPoint;
     };
 
-    BUS ps2Bus from [百灵威系统工程部]/pointShop2
-    ACCEPT pointInitialization {
-        --订单积分
-        if(source=5){
-            
-            book orderBack at(orderItemId) set orderId = orderId, customer = customer, 
-                brand = brand, product = product, pack = pack, quantity = quantity, price = price,
-                currency = currency, retail = retail, retailCurrency = retailCurrency, totalPoint += mscore,
-                mark = mark, createDate = createDate;
 
-            --总积分
-            book PointBookByCustomer at (customer, pointYear) set totalpoint += mscore;
-            history PointHistoryByCustomer 
-                set pointYear = pointYear, point = mscore, source = 5, comments = comments, customer = customer;
-
-            --有效积分
-            if(isvalid=1){
-                book PointBookByCustomer at (customer, pointYear) set point += mscore;
-            }
-
-        }else if(source=2){  --签到积分
-
-            book PointBookByCustomer at (customer, pointYear) set point += mscore, totalpoint += mscore;
-            history PointHistoryByCustomer 
-                set pointYear = pointYear, point = mscore, source = 2, comments = comments, customer = customer; 
-
-        }else if(source=3){  --积分兑换
-
-            book PointBookByCustomer at (customer, pointYear) set usedPoint += mscore;
-            history PointHistoryByCustomer 
-                set pointYear = pointYear, point = (0-mscore), source = 3, comments = comments, customer = customer; 
-
+BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order]
+    -- 积分订单信息
+    ACCEPT order {
+        VAR mainId ID;
+        SET mainId = id;
+        WITH OrderMain as a ID = id SET a.no = no;
+        FOR detail {
+            WITH OrderDetail as a 
+                ID = id
+                SET a.main = mainId;
         }
-        /*
+    }
+    -- 订单回款计算有效积分
+    ACCEPT [receive-done] {
+        FOR detail {
+            var lValidPoint int;    -- 本次回款有效积分
+            var pointYear int;      -- 积分年度
+            var customer int;        -- 最终积分用户
+            var rTotalPoint int;        -- 订单总积分
+            var orderMainNo char(50);
+            var orderDetailNo char(50);
+            var orderDetailId int;
+
+            if exists (select 1 from DxOrderDetail as dod where dod.id = id) {
+                set lValidPoint = value * b.multiple
+                    , customer = a.endUser, pointYear = year(a.createDate), rTotalPoint = b.totalPoint
+                    , orderMainNo = a.orderMainNo, orderDetailNo = a.orderDetailNo
+                    , orderDetailId = id
+                from    OrderDetail as a
+                        join DxOrderDetail as b on a.id = b.id
+                where a.id = id;
+
+                -- 如果本次回款有效积分大于订单总积分，则本次回款有效积分修改为订单总积分
+                if (lValidPoint > rTotalPoint) {
+                    set lValidPoint = rTotalPoint;
+                }
+
+                -- 1.有效积分记账
+                -- 1.1. 针对客户
+                book PointBookByCustomer at (customer, pointYear) set point += lValidPoint;
+                -- 1.2.订单积分记账，针对订单明细
+                WITH DxOrderDetail as a ID = orderDetailId set a.point += lValidPoint;
+
+                -- 2.积分历史记录
+                -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
+                history PointHistoryByCustomer 
+                    set pointYear = pointYear, point = lValidPoint, source = 6, 
+                    comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
+                -- 2.2 针对订单明细
+                history OrderDetailPointHistory
+                    set orderDetailId = orderDetailId, pointYear = pointYear, point = lValidPoint, 
+                    type = 2, comments = concat(orderMainNo, ',', orderDetailNo);
+            }
+        }
+    };
+
+
+BUS ps2Bus from [百灵威系统工程部]/pointShop2
+ACCEPT pointInitialization {
+    --订单积分
+    if(source=5){
+        
+        book orderBack at(orderItemId) set orderId = orderId, customer = customer, 
+            brand = brand, product = product, pack = pack, quantity = quantity, price = price,
+            currency = currency, retail = retail, retailCurrency = retailCurrency, totalPoint += mscore,
+            mark = mark, createDate = createDate;
+
+        --总积分
+        book PointBookByCustomer at (customer, pointYear) set totalpoint += mscore;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = mscore, source = 5, comments = comments, customer = customer;
+
+        --有效积分
         if(isvalid=1){
-            if exists (select 1 from PointBookByCustomer as e where e.customer=customer and e.pointYear=pointYear){
-                book PointBookByCustomer at (customer, pointYear) set point += mscore;
-            }
-        }*/
-    };
+            book PointBookByCustomer at (customer, pointYear) set point += mscore;
+        }
+
+    }else if(source=2){  --签到积分
+
+        book PointBookByCustomer at (customer, pointYear) set point += mscore, totalpoint += mscore;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = mscore, source = 2, comments = comments, customer = customer; 
+
+    }else if(source=3){  --积分兑换
+
+        book PointBookByCustomer at (customer, pointYear) set usedPoint += mscore;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = (0-mscore), source = 3, comments = comments, customer = customer; 
+
+    }
+    /*
+    if(isvalid=1){
+        if exists (select 1 from PointBookByCustomer as e where e.customer=customer and e.pointYear=pointYear){
+            book PointBookByCustomer at (customer, pointYear) set point += mscore;
+        }
+    }*/
+};

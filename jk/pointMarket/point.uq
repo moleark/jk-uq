@@ -121,7 +121,7 @@ HISTORY PointHistoryByCustomer (
 IDX DxOrderDetail (
     id, -- order detailId
     point int sum log,
-    totalPoint int,
+    totalPoint int sum,
     multiple int,
 );
 
@@ -187,13 +187,15 @@ Action submit {
             book PointBook at (webUser, pointYear) set usedPoint += p;
             history PointHistory
                 set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
-             
+
+            /* 
             --添加客户积分兑换
             if (customer > 0) {
                 book PointBookByCustomer at (customer, pointYear) set usedPoint += p;
                 history PointHistoryByCustomer
                     set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
             }
+            */
 
             set leftAmount = leftAmount - p;
             if(leftAmount <= 0){
@@ -251,11 +253,13 @@ STATE Shipping {
                 set webUser = webUser, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;
 
             --添加客户积分兑换取消
+            /*
             if (customer > 0) {
                 book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
                 history PointHistoryByCustomer
                     set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;            
             }
+            */
         } 
         STATE TO CANCELED;
     }
