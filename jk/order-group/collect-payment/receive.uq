@@ -1,18 +1,26 @@
--- 退款凭证是否也保存在该表中？
 ID ReceiveMain (
     id,
-    receiveNr char(50),
+    receiveWay  tinyint,    -- 银行；微信；支付宝；现金等
+    receiveNr char(50),     -- 和receiveWay有关
     organization ID,
     customer ID,
     /*
-    付款日期，
-    付款方式,
     回款类型,   -- 正常回款;预存款;质投免款;质投退款;事故免款;事故退款;无货退款;汇错退款等
-    作废，
     */
+    currency ID,
+    direction ENUM EnumReceiveDirection,
+    isValid tinyint,
     comments char(500),
+    payDate TIMESTAMP,
     receiver ID,
     createDate TIMESTAMP,
+);
+
+-- 退款对应的收款记录
+IX Refund (
+    ix,     -- ReceiveMain
+    xi,     -- ReceiveMain
+    comments char(100),
 );
 
 -- 收款/退款均记录在该表中，这个好像是DxOrderDetail.receiveDone/receiveReturnDone的history，也是DxReceiveMain.leftAmount的history
@@ -25,8 +33,12 @@ ID ReceiveDetail (
 IDX DxReceiveMain (
     id,
     sumAmount DEC(18, 4),
+    usedAmount dec(18, 4),
+    returnAmount dec(18, 4),
     leftAmount dec(18, 4), 
 );
+
+ENUM EnumReceiveDirection (in = 1, out = -1);
 
 QUERY PendingReceive(
 )

@@ -16,7 +16,7 @@ IDX DxOrderDetail (
 	receive DEC(12,2) DEFAULT 0,		-- 应收, 发货后增加；
 	receiveDone DEC(12,2) DEFAULT 0,	-- 已收，付款（关联）后增加
 	invoice DEC(12,2) DEFAULT 0,		-- 应开票，发货后增加
-	invoiceDone DEC(12,2) DEFAULT 0,	-- 已开票，开票后增加（退票后"不"减少，重开后接着增加，所以已开票可能大于应开票）
+	invoiceDone DEC(12,2) DEFAULT 0,	-- 已开票，开票后增加（退票作废的"不"减少，退票冲红后此值减少。重开后接着增加，所以已开票可能大于应开票）
 );
 
 IDX DxOrderDetailReturn (
@@ -24,7 +24,7 @@ IDX DxOrderDetailReturn (
 	receiveReturn DEC(12,2) SUM,		-- 应退款，发生退货后增加；
 	receiveReturnDone DEC(12,2) SUM,	-- 已退款，退款后增加；
 	invoiceReturn DEC(12,2) SUM,		-- 应退票，发生退货后增加；
-	invoiceReturnDone DEC(12,2) SUM,	-- 已退票，收到退票后增加；
+	invoiceReturnDone DEC(12,2) SUM,	-- 已退票，退票有两种情况：退票作废和冲红，作废的，invoiceReturnDone增加(同时发票的使用额减少），冲红的，此值不改变，而是已开票减少
 );
 
 -- 这个账的history记录在哪儿？也是DxInvoiceMain/DxReceiveMain?
