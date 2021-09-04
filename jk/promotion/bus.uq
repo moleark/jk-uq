@@ -9,21 +9,24 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
         -- 获取品牌折扣
         set brandDiscount = bd.discount
         from BrandMinDiscount as bd
-        where bd.brand=brand;
+        where bd.brand = brand;
 
         -- 订单折扣
-        set orderDiscount = 1 - price/retail
+        set orderDiscount = 1;
+        if (ifnull(retail, 0 ) <> 0 ) {
+            set orderDiscount = 1 - price/retail;
+        }
 
         if (orderDiscount > brandDiscount) {
-            set multiple=0,promotion=0;
+            set multiple = 0, promotion = null;
         } else {
             --获取可用的积分有关的市场活动
-            set no = p.no,promotion = p.id 
+            set no = p.no, promotion = p.id 
             from    Promotion as p
                     join PromotionStatus as ps on p.status=ps.id
                     join PromotionType as pt on p.type=pt.id
             where   ps.no = 'E'
-                    and pt.no='A08'
+                    and pt.no = 'A08'
                     and (
                             p.startDate < from_unixtime(createDate) 
                             and 
@@ -32,16 +35,17 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
                             )
                         )
             order by p.id desc limit 1;
+
             if (promotion is null) {
-                set multiple=0,promotion=0;
+                set multiple = 0, promotion = null;
             } else {
                 if (no = 'A08-20210831A'){      -- 根据客服市场活动调整
                     set multiple = 3;
                 }
                 else {
-                    set multiple = 1;
+                    set multiple = 1, promotion = 'A08-20160421';
                 }
             }
         }
-        into bus select promotion,multiple;
+        into bus select promotion, multiple;
     };

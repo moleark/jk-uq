@@ -126,12 +126,12 @@ BUS poBus from 百灵威系统工程部/PointOrder
                 set multiple = promotionMultiple;
             }
 
-            var ltotalPoint int, diffPoint dec(12, 2);
+            var lTotalPoint int, diffPoint dec(12, 2);
             -- mark为C：0积分
             if (mark = 'C'){
-                set ltotalPoint = 0;
+                set lTotalPoint = 0;
             } else {
-                set ltotalPoint = price * quantity * multiple;
+                set lTotalPoint = price * quantity * multiple;
             }
 
             -- 获取订单积分记录
@@ -141,7 +141,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
             from    DxOrderDetail as a
             where   a.id = orderDetailId;
 
-            set diffPoint = ltotalPoint - ifnull(rTotalPoint, 0);
+            set diffPoint = lTotalPoint - ifnull(rTotalPoint, 0);
             
             --积分年度
             var pointYear int ;
