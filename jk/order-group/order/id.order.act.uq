@@ -96,7 +96,7 @@ RETURNS ret (
 					, item = item
 					, product = product
 					, quantity = quantity
-					, amount = amount
+					-- , amount = amount
 					, price = price;
 			BUS JkOrderBus.[deliver-ext] INTO detail 
 				ADD id = detailId, needInsuredWhenDelivery = 0;

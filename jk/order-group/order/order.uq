@@ -63,7 +63,8 @@ BUS webUserBus.getCuByWu as q into tb {
             , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
             , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
             , a.currency = currency, a.sumAmount = amount
-            , a.sheetId=$id, a.createDate = now();
+            , a.sheetId=$id;
+            -- , a.createDate = now();
     -- WITH DxOrderDraft as a ID mainId; -- SET a.flag=1;
     
     book webUserAccount at (webUser, currency) set 总订单金额 += amount;
@@ -103,7 +104,7 @@ BUS webUserBus.getCuByWu as q into tb {
         WITH OrderDetail as a ID detailId 
             SET a.main = mainId
                 , a.product = product, a.item = pack
-                , a.price = price, a.quantity = quantity, a.createDate = now();
+                , a.price = price, a.quantity = quantity; --, a.createDate = now();
 
         if(not coupon is NULL){ 
             WITH IxOrderDetailCoupon ix = detailId xi = coupon;
