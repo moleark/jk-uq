@@ -100,7 +100,7 @@ BUS couponBus.getMatchedCredits as q into tb {
     bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
         , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
         , brand = brand, product = product, item = pack, quantity = quantity, price = price, retail = retail
-        , currency = currency, coupon = creditsId, promotion = promotionId, mark = mark
+        , currency = currency, coupon = creditsId, mark = mark
         , tradeType = tradeType, createDate = createDate;
 
     BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer; -- TODO: 缺少Contact
