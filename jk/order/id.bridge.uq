@@ -21,7 +21,7 @@ ID OrderDetailEx GLOBAL (
     -- pack ID,                     -- OrderDetail 有这个字段
     -- quantity DEC(12,2),          -- OrderDetail 有这个字段
     -- price  DEC(12,2),            -- OrderDetail 有这个字段
-    retail DEC(12,2),
+    retail DEC(12,2),               -- TODO:下面的6个字段应该转移到OrderDetail的一个专门的IDX中，不应该放在这个Ex大杂烩中
     retailCurrency ID,
     bottomPrice DEC(12,2),
     bottomPriceCurrency ID,
@@ -42,6 +42,16 @@ BUS couponBus.getMatchedCredits as q into tb {
     set q.orderItemId = orderItemId;
     set q.createDate = createDate;
 } {
+    var lSalesman ID;
+    set lSalesman = salesman
+    from    OrderMainEx
+    where   id = orderMainId;
+
+    var lBottomPrice dec(18, 4);
+    set lBottomPrice = bottomPrice
+    from    OrderDetailEx
+    where   id = orderDetailId;
+
     WITH OrderMain ID=orderMainId SET customer=customer
         , no=orderId, createDate = from_unixtime(createDate);
     WITH OrderMainEx ID=orderMainId SET seller=seller
@@ -118,4 +128,16 @@ BUS couponBus.getMatchedCredits as q into tb {
     -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
     -- BUS JkOrderBus.[deliver-ext] INTO detail 
     --    ADD id = detailId, needInsuredWhenDelivery = 0;
+
+    if((ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) > 0.001) or (ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) < -0.001)){
+        BUS JkOrderBus.[order-bottom-price] set order = orderMainId;
+        BUS JkOrderBus.[order-bottom-price] into [detail]
+            ADD [order-detail] = orderDetailId, [bottom-price] = bottomPrice;
+    }
+
+    if(ifnull(lSalesman, 0) <> ifnull(salesman, 0)){
+        BUS JkOrderBus.[order-bound] set order = orderMainId;
+        BUS JkOrderBus.[order-bound] into [to]
+            ADD [type] = 'staff-sales', [id] = salesman, [id-type] = 'staff';
+    }
 };
