@@ -28,12 +28,12 @@ returns ret (
 */
 
 IX IxOrderMainCustomerCoupon (
-    ixx,
-    ix,
-    xi,
+    ixx,    -- orderMain
+    ix,     -- endUser
+    xi,     -- credits
 );
 
 IX IxOrderDetailCoupon (
-    ix,
-    xi,
+    ix,     -- orderDetail
+    xi,     -- credits
 );
