@@ -36,14 +36,24 @@ BUS ps2Bus from [百灵威系统工程部]/PointShop2
                         )
             order by p.id desc limit 1;
 
+
+            -- 判断当前客户是否在市场活动客户黑名单中
+            var bCustomer int;
+            set bCustomer = a.blackCustomer
+            from    PromotionCustomerBlacklist as a
+                    join promotion as b on a.promotion=b.id
+            where   a.blackCustomer = endUser and b.no = 'A08-20210831A';
+            set bCustomer = ifnull(bCustomer, 0);
+
             if (promotion is null) {
                 set multiple = 0, promotion = null;
             } else {
-                if (no = 'A08-20210831A'){      -- 根据客服市场活动调整
+                if (no = 'A08-20210831A' and bCustomer=0){
+                    -- 根据客服市场活动调整
                     set multiple = 3;
                 }
                 else {
-                    set multiple = 1, promotion = 'A08-20160421';
+                    set multiple = 1;
                 }
             }
         }
