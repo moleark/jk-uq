@@ -98,16 +98,42 @@ BUS poBus from 百灵威系统工程部/PointOrder
             set a.credits = coupon;
         }
         BUS ps2Bus.getPromotionMultiple as a into pm {
-            set a.brand = brand, a.price = price, a.retail = retail, a.createDate = createDate;
+            set a.endUser = customer, a.brand = brand, a.price = price, a.retail = retail, a.createDate = createDate;
         }
     {   
-        -- 保存订单信息
-        WITH OrderDetail as a id=orderDetailId
-            set a.endUser = customer, a.createDate = from_unixtime(createDate)
-                ,a.orderMainNo=orderMainNo, a.orderDetailNo = orderDetailNo;
+        --积分年度
+        var pointYear int ;
+        set pointYear = year(from_unixtime(createDate));
+        
+        -- 客户是积分黑名单客户，则不参与积分。
+        var bCustomer int;
+        set bCustomer= a.blackCustomer
+        from PointCustomerBlacklist as a
+        where a.blackCustomer=customer;
+        set bCustomer = ifnull(bCustomer, 0);
+
+        -- 1.积分调整
+        -- 1.1，积分最终用户改变
+        var lastEnduser int;        --上次订单积分最终用户
+        var lastTotalPoint int;     --上次订单积分值
+        set lastEnduser = b.endUser, lastTotalPoint = a.totalPoint
+        from    DxOrderDetail as a
+                join OrderDetail as b on a.id = b.id
+        where b.endUser = customer;
+        set lastEnduser = ifnull(lastEnduser,0);
+
+        if ( lastEnduser <> 0 and lastEnduser <> customer) {
+                -- 取消上次订单客户记账
+                book PointBookByCustomer at (lastEnduser, pointYear) set totalpoint += -lastTotalPoint;
+                -- 上次订单客户积分，取消历史记录
+                history PointHistoryByCustomer 
+                    set pointYear = pointYear, point = -lastTotalPoint, source = 5, 
+                    comments = concat(orderMainNo, ',', orderDetailNo), customer = lastEnduser;
+        }
+
         -- 订单积分条件的判定
-        -- 销售币种为RMB、国内正常销售业务，允许积分
-        if (currency = 5 and tradeType = 'a' and mark <> 'PR'){
+        -- 销售币种为RMB、国内正常销售业务,非积分黑名单客户，允许积分
+        if (currency = 5 and tradeType = 'a' and mark <> 'PR' and bCustomer = 0){
 
             var multiple int, creditsMultiple int, promotionMultiple int;
             foreach cm {
@@ -143,9 +169,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
 
             set diffPoint = lTotalPoint - ifnull(rTotalPoint, 0);
             
-            --积分年度
-            var pointYear int ;
-            set pointYear = year(from_unixtime(createDate));
+
             -- 积分差值非零值，记录本次积分
             if (diffPoint <> 0){
                 -- 1.积分记账
@@ -166,6 +190,11 @@ BUS poBus from 百灵威系统工程部/PointOrder
                         type = 1, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
+
+        -- 保存订单信息
+        WITH OrderDetail as a id=orderDetailId
+            set a.endUser = customer, a.createDate = from_unixtime(createDate)
+                ,a.orderMainNo=orderMainNo, a.orderDetailNo = orderDetailNo;
     };
 
 

@@ -146,6 +146,13 @@ BOOK PointBookByOrderDetail (
 );
 */
 
+-- 积分客户黑名单（在该表中的客户不参与积分），2021年09月07日，D72
+MAP PointCustomerBlacklist (
+    key blackCustomer ID Customer not null,
+    createTime datetime,
+
+);
+
 -- 当前客户积分分布表（在某个积分段有多少人）
 BOOK PointDistributionBook (
     key pointStart int not null,
