@@ -225,3 +225,25 @@ returns ret(
     where   b.shelfLayer = shelfLayer and (key is null or b.name like key2)
     order by b.id asc;
 };
+
+-- 获取发运方式列表
+QUERY GetExpressLogisticsList()
+returns ret(
+    id ID,
+    name char(50)
+){
+    Into ret select a.id, a.name
+    from    ExpressLogistics as a
+    where   a.isvalid = 1;
+};
+
+-- 获取出入库原因列表
+Query GetOutInBoundReasonList()
+returns list(
+    id ID,
+    name char(100)
+){
+    Into list select a.id, a.name
+    from    OutInBoundReason as a
+    where   a.no like 'B%';
+};

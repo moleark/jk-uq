@@ -13,7 +13,7 @@ ACCEPT order {
 }
 ACCEPT deliver {
 	FOR detail {
-		VAR quantity DEC(12,2);
+		--VAR quantity DEC(12,2);
 		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
 		WITH IxPendingPickup ix=warehouse xi=id;
 	}
@@ -30,7 +30,7 @@ BUS warehouseBus from [百灵威系统工程部]/warehouse
     ACCEPT productInventory {
         book ProductInventory at (warehouse, product, pack) set quantity = quantity;
     };
-
+/*
 BUS warehouseShelfBus from [百灵威系统工程部]/warehouse
     ACCEPT shelfInOutBoundHistory {
         if(inOutType = 1){
@@ -104,4 +104,4 @@ BUS outboundResultSync from [百灵威系统工程部]/warehouse2
 
         delete t from OutBoundHandoverTask as t where t.id = tId;
     };
-
+*/

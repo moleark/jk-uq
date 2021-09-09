@@ -14,6 +14,8 @@ ID OrderDetail ver 0.1 (
 	amount DEC(12,2),
 	price DEC(12,2),
 	warehouse ID,						-- 库房
+	lotNumber char(50),
+	carrier ID
 );
 
 IDX OrderDetailX (

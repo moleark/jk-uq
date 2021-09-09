@@ -19,6 +19,14 @@ IDX DxCutOffMain (
 	finishTime TIMESTAMP
 );
 
+ID CutOffType(
+	id,
+	name char(50) not null,
+	customer ID,
+	outInBoundReason ID,
+	sys(create, owner)
+);
+
 /* 查询待截单数据 */
 QUERY GetReadyCutOffList(
     warehouse ID
@@ -47,9 +55,10 @@ QUERY GetCutOffMainList(
 )
 RETURNS list (
 	id ID,
-	no CHAR(20)
+	no CHAR(20),
+	cutter ID
 ) {
-	INTO list SELECT a.id, a.no
+	INTO list SELECT a.id, a.no, a.cutter
 		FROM CutOffMain AS a
 		WHERE a.warehouse=warehouse AND a.cutter=$user
 		ORDER BY a.id DESC;
@@ -174,6 +183,9 @@ RETURNS detail (
 	item ID,
 	product ID,
 	tallyShould DEC(12,2),
+	price DEC(12,2),
+	lotNumber char(50),
+	apointCarrier ID,
 	content text
 ) {
 	INTO main SELECT a.id, a.no, a.warehouse, a.cutter, b.staff
@@ -183,7 +195,8 @@ RETURNS detail (
 
 	INTO detail SELECT b.id as delivermain, b.trayNumber,
 		b.contact, b.customer, f.carrier, f.waybillNumber, f.deliverTime,
-		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, g.json as content
+		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, 
+		d.price, d.lotNumber, d.carrier as apointCarrier, g.json as content
 		FROM CutOffMain as a
 			JOIN DeliverMain as b on a.id=b.cutOffMain
 			JOIN DeliverDetail as c on b.id=c.main
@@ -216,3 +229,43 @@ ACT Tallied (
 	--	BUS JkOrderBus.[pickup-done] INTO detail ADD id=orderDetail, value=quantity;
 	--}
 };
+
+-- 查询截单类型列表
+QUERY GetCutOffTypeList(
+)RETURNS list (
+	cutOffType ID,
+	name char(50)
+) {
+	INTO list SELECT a.id as cutOffType, a.name
+		FROM CutOffType as a
+		order by a.[$create] DESC;
+};
+
+-- 查询截单类型详情
+QUERY GetCutOffType(
+	cutOffType ID
+) RETURNS ret (
+	cutOffType ID,
+	name char(50),
+	customer ID,
+	outInBoundReason ID,
+	createTime datetime,
+	--owner ID
+)
+{
+	INTO ret SELECT a.id as cutOffType, a.name, a.customer, a.outInBoundReason,
+		a.[$create] as createTime --, a.[$owner] as owner
+		FROM CutOffType as a
+		WHERE a.id = cutOffType;
+};
+
+/*-- 获取截单类型设置客户的cid
+Query GetCutOffCustomerList(
+)RETURNS list (
+	customer ID,
+	name char(50)
+){
+	INTO list SELECT a.id as customer, a.name
+		FROM Customer as a
+		WHERE a.no in ('HI3040000', 'HI3040010', 'JK10001G0', 'JS01170000');
+};*/

@@ -33,6 +33,7 @@ ID DeliverDetail GLOBAL(
 
 IDX DxDeliverDetail (
     id,
+	pickDone DEC(12,2) DEFAULT 0,			-- 已拣货
 	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
 );
 
