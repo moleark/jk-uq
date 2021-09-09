@@ -7,24 +7,27 @@ ID CutOffMain (
 	sys(create)
 );
 
+/* 库房和截单表关联 */
 IX IxWarehouseCutOffMain(
 	ix Warehouse,
 	xi CutOffMain,
 );
 
+/* 截单扩展信息 */
 IDX DxCutOffMain (
-	id,										-- CutOffMain id
-	staff ID,								-- 理货人
+	id,						-- CutOffMain id
+	staff ID,				-- 理货人
 	startTime TIMESTAMP,
 	finishTime TIMESTAMP
 );
 
+/* 截单类型 */
 ID CutOffType(
 	id,
-	name char(50) not null,
+	key name char(50),
 	customer ID,
 	outInBoundReason ID,
-	sys(create, owner)
+	sys(create)
 );
 
 /* 查询待截单数据 */
@@ -64,7 +67,7 @@ RETURNS list (
 		ORDER BY a.id DESC;
 };
 
-/*查询待理货列表*/
+/* 查询待理货列表 */
 QUERY WarehouseCutOffMain (
 )
 RETURNS ret (
@@ -160,7 +163,7 @@ RETURNS main (
     INTO main SELECT cutOffMain as id, cutOffMainNo as no;
 };
 
-
+/* 获取截单表详细信息 */
 QUERY GetCutOffMain(
     cutOffMain ID
 )
@@ -207,12 +210,14 @@ RETURNS detail (
 		WHERE a.id=cutOffMain;
 };
 
+/* 开始理货 */
 ACT Tallying (
 	cutOffMain ID,
 ) {
 	WITH DxCutOffMain ID=cutOffMain SET staff=$user,startTime=$date;
 };
 
+/* 理货完成 */
 ACT Tallied (
 	cutOffMain ID,
 	-- 实际理货数量
@@ -245,7 +250,7 @@ QUERY GetCutOffTypeList(
 QUERY GetCutOffType(
 	cutOffType ID
 ) RETURNS ret (
-	cutOffType ID,
+	id ID,
 	name char(50),
 	customer ID,
 	outInBoundReason ID,
@@ -253,13 +258,15 @@ QUERY GetCutOffType(
 	--owner ID
 )
 {
-	INTO ret SELECT a.id as cutOffType, a.name, a.customer, a.outInBoundReason,
+	INTO ret SELECT a.id, a.name, a.customer, a.outInBoundReason,
 		a.[$create] as createTime --, a.[$owner] as owner
 		FROM CutOffType as a
 		WHERE a.id = cutOffType;
 };
 
-/*-- 获取截单类型设置客户的cid
+/* 获取截单类型设置客户的cid
+** 截单类型分类只使用到4个内部客户id，下拉列表选项
+*/
 Query GetCutOffCustomerList(
 )RETURNS list (
 	customer ID,
@@ -268,4 +275,4 @@ Query GetCutOffCustomerList(
 	INTO list SELECT a.id as customer, a.name
 		FROM Customer as a
 		WHERE a.no in ('HI3040000', 'HI3040010', 'JK10001G0', 'JS01170000');
-};*/
+};
