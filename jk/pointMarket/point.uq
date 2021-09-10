@@ -77,8 +77,8 @@ BOOK PointBook (
     point int not null default 0,           -- 总有效积分
     usedPoint int default 0,                -- 消耗的积分
     totalPoint int not null default 0,      -- 总积分
-    tempPoint int not null default 0,       -- 在tonva订单系统产生的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
-    tempUsedPoint int not null default 0,   -- 在tonva系统消耗的临时积分（当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零), 2020-10-16, ligsh, 不再使用此字段
+    tempPoint int not null default 0,       -- 在tonva订单系统产生的临时积分(当此积分同步到内部系统，再从内部系统同步回来时，会并入totalPoint内，此积分清零)
+    tempUsedPoint int not null default 0,   -- 在tonva系统消耗的临时积分(当此积分同步到内部系统，再从内部系统同步回来时，会并入usedPoint内，此积分清零), 2020-10-16, ligsh, 不再使用此字段
     tempSignInPoint int not null default 0  -- 签到产生的积分，该积分和tempPoint的区别是，它是有效积分，该积分也需要同步到内部系统，从内部系统同步回来时，并入到totalPoint和point中，此积分清零, 2020-10-16, ligsh, 不再使用此字段
 );
 
@@ -104,6 +104,12 @@ HISTORY PointHistory (
     row,                        --子表的第几行
 );
 
+ENUM EnumPointChangingSource (
+    ordermultiple = 1, signIn = 2, exchange = 3, exchangeCanceled = 4, order = 5, orderCanceled = 7, lottery = 8
+);
+
+-- PointBookByCustomer账上的3个数值，需要各自的history（不应混在这一个history中，否则需要在此history中增加一个字段用于
+-- 区分是哪个数值的history），另外需要把下面的source定义为enum；使用Henry说的Log能不能达到这个目的？
 -- 积分变化表(针对customer)
 HISTORY PointHistoryByCustomer (
     date,                       --生成时间
@@ -150,7 +156,6 @@ BOOK PointBookByOrderDetail (
 MAP PointCustomerBlacklist (
     key blackCustomer ID Customer not null,
     createTime datetime,
-
 );
 
 -- 当前客户积分分布表（在某个积分段有多少人）
@@ -178,8 +183,8 @@ Action submit {
 
     foreach (var mPoint int, pointYear int of
         select  (p.point - p.usedPoint) as mPoint, p.pointYear
-        from    PointBook as p
-        where   p.webUser = webUser and p.pointYear > YEAR(NOW()) - 3
+        from    PointBookByCustomer as p
+        where   p.customer = webUser and p.pointYear > YEAR(NOW()) - 3
                 and (p.point - p.usedPoint) > 0
         order by p.pointYear
     ) {
@@ -191,18 +196,13 @@ Action submit {
                 set p = mPoint;
             }
 
-            book PointBook at (webUser, pointYear) set usedPoint += p;
-            history PointHistory
-                set webUser = webUser, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
-
-            /* 
             --添加客户积分兑换
             if (customer > 0) {
                 book PointBookByCustomer at (customer, pointYear) set usedPoint += p;
                 history PointHistoryByCustomer
-                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no, source = 3;
+                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no
+                    , source = EnumPointChangingSource.exchange;
             }
-            */
 
             set leftAmount = leftAmount - p;
             if(leftAmount <= 0){
@@ -211,62 +211,29 @@ Action submit {
         }
     }
 
-    if (customer > 0) {
-        bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
-            shippingContact = shippingContact, amount = amount;
-        var source char(8), sourceId int;
-        foreach exchangeItems {
-            set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
-            bus pointBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
-                quantity = quantity, point = point, subAmount = subAmount;
-        }
-        STATE TO Shipping;
-    } else {
-        STATE TO Matching;
+    bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
+        shippingContact = shippingContact, amount = amount;
+    var source char(8), sourceId int;
+    foreach exchangeItems {
+        set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
+        bus pointBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
+            quantity = quantity, point = point, subAmount = subAmount;
     }
+    STATE TO Shipping;
 }
-STATE Matching {
-    ACTION Pass
-    BUS webUserBus.getCuByWu as q into tb {
-        set q.webUser = webUser;
-    } {
-        if(customer is null) {
-            var customerid int;
-            foreach tb {
-                set customerid = customer;
-            }
-
-            bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customerid,
-                shippingContact = shippingContact, amount = amount;
-            var source char(8), sourceId int;
-            foreach exchangeItems {
-                set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
-                bus pointBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
-                    quantity = quantity, point = point, subAmount = subAmount;
-            }
-        STATE TO Shipping;
-        }
-    }
-}
+-- 前台界面需修改：未审核的新webuser不能兑换产品，需要新进行审核，界面上要有提示
 STATE Shipping {
     ACTION Cancel {
         foreach(var pointYear int, point int of 
             select p.pointYear, p.point
-            from PointHistory as p
-            where p.webUser = webUser and p.source = 3 and p.comments = $sheet_no
+            from PointHistoryByCustomer as p
+            where p.customer = customer and p.source = EnumPointChangingSource.exchange and p.comments = $sheet_no
         ){
-            book PointBook at (webUser, pointYear) set usedPoint -= point * -1;
-            history PointHistory
-                set webUser = webUser, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;
-
             --添加客户积分兑换取消
-            /*
-            if (customer > 0) {
-                book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
-                history PointHistoryByCustomer
-                    set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no, source = 4;            
-            }
-            */
+            book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
+            history PointHistoryByCustomer
+                set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no
+                , source = EnumPointChangingSource.exchangeCanceled;            
         } 
         STATE TO CANCELED;
     }

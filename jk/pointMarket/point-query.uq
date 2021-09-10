@@ -40,23 +40,31 @@ PAGE (
 };
 
 
-QUERY GetPointSigninHistory()
+QUERY GetPointSigninHistory(customer ID)
 PAGE (
     id bigint desc,
     date DATETIME,
     point int,
-    pointYear int,              
-    comments char(1000) ,        
-    webUser ID [$user],                       
+    pointYear int,
+    comments char(1000),
     type int,
     source int
 ){
-    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.webUser, p.type, p.source
-    from    PointHistory as p
-    where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
-            and p.source = 2
-    order by  unix_timestamp(p.date) desc
-    limit $pageSize;
+    if(NOT customer is null) {
+        PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        from    PointHistoryByCustomer as p
+        where   p.customer = customer and unix_timestamp(p.date) < $pageStart
+                and p.source = EnumPointChangingSource.signIn
+        order by  unix_timestamp(p.date) desc
+        limit $pageSize;
+    }else{
+        PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        from    PointHistory as p
+        where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
+                and p.source = EnumPointChangingSource.signIn
+        order by  unix_timestamp(p.date) desc
+        limit $pageSize;
+    }
 };
 
 -- 获取当前最大的积分数，用于界面上的区间计算
