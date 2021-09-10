@@ -27,16 +27,15 @@ ACCEPT deliver {
 		VAR deliverQuantity DEC(12,2);
 		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
 		SET deliverQuantity = a.quantity FROM OrderDetail as a WHERE a.id=id;
+		
+		-- todo:接收bus时候保存cutOffType（截单类型）,
+		-- IX表目前保存无法超过3列。可考虑取消掉此表中的customer替换为cutOffType，orderMain中已存在customer
 		WITH IxPendingDeliver ixx=warehouse ix=customer xi=id;
 		WITH DxOrderDetail as a ID=id SET a.deliverShould=deliverQuantity;
 		FOR (VAR user ID OF SELECT ix as user FROM IxUserWarehouse WHERE xi=warehouse) {
 			TUID [$User] ID (user) SET poke=1;
 		}
 	}
-	/* 20210816 z461 注释，此处操作改为手动触发进行
-	LOG 'JKOrder-deliver SCHEDULE' SUBJECT 'delay 1';
-	SCHEDULE AutoWarehouseDeliver DELAY 1; -- 1分钟以后执行一次
-	*/
 }
 ACCEPT [deliver-ext] {
 	FOR detail {

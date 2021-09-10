@@ -1,9 +1,0 @@
-import JKCustomer = 百灵威系统工程部/customer;
-
-TUID Customer from JKCustomer (
-    id,
-    no char(30) not null,
-    main name char(50) not null,
-    createTime datetime,
-    unique(no),
-);

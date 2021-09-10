@@ -7,12 +7,6 @@ ID CutOffMain (
 	sys(create)
 );
 
-/* 库房和截单表关联 */
-IX IxWarehouseCutOffMain(
-	ix Warehouse,
-	xi CutOffMain,
-);
-
 /* 截单扩展信息 */
 IDX DxCutOffMain (
 	id,						-- CutOffMain id
@@ -21,16 +15,22 @@ IDX DxCutOffMain (
 	finishTime TIMESTAMP
 );
 
+/* 库房和截单表关联 */
+IX IxWarehouseCutOffMain(
+	ix Warehouse,
+	xi CutOffMain,
+);
+
 /* 截单类型 */
 ID CutOffType(
 	id,
-	key name char(50),
-	customer ID,
-	outInBoundReason ID,
+	key no,
+	customer ID,		-- 不需要，应移到下一个层级
+	tradeType char(10),	-- 不需要，应移到下一个层级
 	sys(create)
 );
 
-/* 查询待截单数据 */
+/* 查询库房待截单数据 */
 QUERY GetReadyCutOffList(
     warehouse ID
 )
@@ -92,7 +92,7 @@ RETURNS ret (
 *  下一步要完善考虑根据不同业务类型的截单：例如：客户订单截单、河北质检截单...
 */
 ACT CutOff(
-    currentWarehouse ID
+    cutWarehouse ID
 )
 RETURNS main (
 	id ID,
@@ -100,7 +100,7 @@ RETURNS main (
 )
 {
     -- 1、操作权限检查
-	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=currentWarehouse) {
+	IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi=cutWarehouse) {
 		RETURN;
 	}
 
@@ -108,7 +108,7 @@ RETURNS main (
     VAR cutOffMain ID, cutOffMainNo CHAR(20);
 	SET cutOffMainNo=NO(CutOffMain);
 	SET cutOffMain=ID(CutOffMain new, cutOffMainNo);
-	WITH CutOffMain as a ID=cutOffMain SET a.no=cutOffMainNo, a.warehouse=currentWarehouse, a.cutter=$user;
+	WITH CutOffMain as a ID=cutOffMain SET a.no=cutOffMainNo, a.warehouse=cutWarehouse, a.cutter=$user;
 
     -- 3、生成发运单、临时理货号, 并删除已截单的数据
     LOG 'CutOff' SUBJECT 'start';
@@ -125,7 +125,7 @@ RETURNS main (
                  JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
                  JOIN OrderDetail as c ON c.id=a.xi
                  JOIN OrderMain as d ON d.id=c.main
-            WHERE a.ixx=currentWarehouse
+            WHERE a.ixx=cutWarehouse
 			ORDER BY a.ixx, a.ix, d.contact, a.xi
 			LIMIT 1;
 		IF warehouse IS NULL {
@@ -159,7 +159,7 @@ RETURNS main (
 		WITH DxDeliverMain as a ID=deliver SET a.rows=a.rows + 1;
 	}
 	LOG 'CutOff' SUBJECT 'end';
-	WITH IxWarehouseCutOffMain IX=currentWarehouse XI=cutOffMain;
+	WITH IxWarehouseCutOffMain IX=cutWarehouse XI=cutOffMain;
     INTO main SELECT cutOffMain as id, cutOffMainNo as no;
 };
 
@@ -188,7 +188,6 @@ RETURNS detail (
 	tallyShould DEC(12,2),
 	price DEC(12,2),
 	lotNumber char(50),
-	apointCarrier ID,
 	content text
 ) {
 	INTO main SELECT a.id, a.no, a.warehouse, a.cutter, b.staff
@@ -199,7 +198,7 @@ RETURNS detail (
 	INTO detail SELECT b.id as delivermain, b.trayNumber,
 		b.contact, b.customer, f.carrier, f.waybillNumber, f.deliverTime,
 		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, 
-		d.price, d.lotNumber, d.carrier as apointCarrier, g.json as content
+		d.price, d.lotNumber, g.json as content
 		FROM CutOffMain as a
 			JOIN DeliverMain as b on a.id=b.cutOffMain
 			JOIN DeliverDetail as c on b.id=c.main
@@ -239,9 +238,11 @@ ACT Tallied (
 QUERY GetCutOffTypeList(
 )RETURNS list (
 	cutOffType ID,
-	name char(50)
+	no char(50),
+	customer ID,
+	tradetype char(10)
 ) {
-	INTO list SELECT a.id as cutOffType, a.name
+	INTO list SELECT a.id as cutOffType, a.no, a.customer, a.tradetype
 		FROM CutOffType as a
 		order by a.[$create] DESC;
 };
@@ -251,28 +252,18 @@ QUERY GetCutOffType(
 	cutOffType ID
 ) RETURNS ret (
 	id ID,
-	name char(50),
+	no char(50),
 	customer ID,
-	outInBoundReason ID,
+	tradeType char(10),
 	createTime datetime,
-	--owner ID
+	--owner ID			-- owner报错无法使用？
 )
 {
-	INTO ret SELECT a.id, a.name, a.customer, a.outInBoundReason,
+	INTO ret SELECT a.id, a.no, a.customer, a.tradeType,
 		a.[$create] as createTime --, a.[$owner] as owner
 		FROM CutOffType as a
 		WHERE a.id = cutOffType;
 };
 
 /* 获取截单类型设置客户的cid
-** 截单类型分类只使用到4个内部客户id，下拉列表选项
 */
-Query GetCutOffCustomerList(
-)RETURNS list (
-	customer ID,
-	name char(50)
-){
-	INTO list SELECT a.id as customer, a.name
-		FROM Customer as a
-		WHERE a.no in ('HI3040000', 'HI3040010', 'JK10001G0', 'JS01170000');
-};
