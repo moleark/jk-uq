@@ -169,9 +169,14 @@ BUS poBus from 百灵威系统工程部/PointOrder
 
             set diffPoint = lTotalPoint - ifnull(rTotalPoint, 0);
 
-            -- 积分最终客户变动，差异积分+在上次积分值
+            -- 积分最终客户变动，差异积分+在上次积分值，无变动差值不做调整
             var cDiffPoint int;
-            set cDiffPoint = diffPoint + ifnull(lastTotalPoint, 0);
+            
+             if ( lastEnduser <> 0 and lastEnduser <> customer) {
+                 set cDiffPoint = diffPoint + ifnull(lastTotalPoint, 0);
+             } else {
+                 set cDiffPoint = diffPoint;
+             }
             if (cDiffPoint <> 0){
                 -- 1.积分记账
                 -- 1.1. 总积分记账, 针对客户
