@@ -54,12 +54,12 @@ BUS couponBus.getMatchedCredits as q into tb {
             JOIN OrderDetail as b on a.id = b.id
     where   a.id = orderDetailId;
 
-    WITH OrderMain ID=orderMainId SET customer=customer
+    WITH OrderMain ID=orderMainId SET buyerAccount = buyerAccount
         , no=orderId, createDate = from_unixtime(createDate);
     WITH OrderMainEx ID=orderMainId SET seller=seller
         , salesman=salesman
         , salesRegion=salesRegion
-        , buyerAccount=buyerAccount
+        , buyerAccount = buyerAccount
         , organization=organization
         , currency=currency
         , poNumber = poNumber
@@ -119,7 +119,7 @@ BUS couponBus.getMatchedCredits as q into tb {
     -- }
 
     if(customer <> ifnull(lCustomer, 0) or quantity <> ifnull(lQuantity, 0) or price <> ifnull(lPrice, 0)){
-        BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer; -- TODO: 缺少Contact
+        BUS JkOrderBus.order SET id=orderMainId, no=orderId, customerAccount = buyerAccount; -- TODO: 缺少Contact
         BUS JkOrderBus.order INTO detail 
             ADD id = orderDetailId
                     , item = pack
