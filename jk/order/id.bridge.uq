@@ -166,4 +166,10 @@ ACCEPT returnChanged {
     WITH ReturnDetailEx ID = returnDetailId SET returnItemId = returnItemId
         , endUser = endUser
         , mark = mark;
+    BUS JkOrderBus.return SET id = returnMainId;
+    BUS JkOrderBus.return INTO detail 
+        ADD id = returnDetailId
+                , [order-detail-id] = orderDetailId
+                , quantity = quantity
+                , amount = quantity*price;
 };
