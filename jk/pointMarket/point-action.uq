@@ -13,6 +13,7 @@ BUS webUserBus.getCuByWu as q into tb {
     bus ps2Bus.webUserSignIn set webUser = webUser, pointYear = pointYear, point = amount, comments = '';
 
     --签到添加客户积分
+    /*
     var customerId int;
     foreach tb {
         set customerId = customer;
@@ -22,6 +23,7 @@ BUS webUserBus.getCuByWu as q into tb {
         history PointHistoryByCustomer 
             set pointYear = pointYear, point = amount, source = 2, comments = '签到', customer = customerId;
     }
+    */
 };
 
 QUERY checkIsSignin()

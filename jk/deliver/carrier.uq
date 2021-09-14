@@ -1,0 +1,9 @@
+-- 快递/物流公司
+TUID Carrier(
+    id,
+    no char(10) not null,
+    main name char(50) not null,
+    isValid smallint not null,
+    stamp(create, update),
+    search(name)
+);

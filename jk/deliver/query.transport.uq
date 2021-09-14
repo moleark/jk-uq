@@ -1,0 +1,12 @@
+QUERY GetOrderDetailTransportation(orderDetail ID)
+returns ret (
+    orderDetail ID OrderDetail,
+    carrier ID Carrier,
+    waybillNumber char(50),
+    deliverTime TIMESTAMP,
+){
+    into ret select  a.id as orderDetail, b.carrier, b.waybillNumber, b.deliverTime
+    from    DeliverDetail as a
+            JOIN DxDeliverMain as b on a.main = b.id
+    where   a.id = orderDetail;
+};
