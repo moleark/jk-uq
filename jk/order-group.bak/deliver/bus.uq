@@ -1,4 +1,4 @@
-BUS JkOrderBus ver 1.3 from 百灵威系统工程部/[jk-order-1]
+BUS JkOrderBus ver 1.3 from 百灵威系统工程部/[jk-order]
 ACCEPT order {
 	VAR mainId ID;
 	SET mainId = id;
@@ -63,14 +63,14 @@ ACCEPT [return] {
 			, deliverDone=a.deliverDone
 			, deliverReturn=a.deliverReturn
 			, returnDone=a.returnDone
-			FROM DxOrderDetail as a WHERE a.id=[orderDetail];
-		SET warehouse=a.warehouse FROM OrderDetail as a WHERE a.id=[orderDetail];
+			FROM DxOrderDetail as a WHERE a.id=[order-detail-id];
+		SET warehouse=a.warehouse FROM OrderDetail as a WHERE a.id=[order-detail-id];
 		SET retQuantity = quantity;
 		WITH DxOrderDetail ID=id SET deliverReturn=retQuantity;
 		-- 做return相关操作
-		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customer AND xi=[orderDetail]) {
+		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customer AND xi=[order-detail-id]) {
 			IF deliverShould - deliverReturn - retQuantity <= 0 {
-				WITH IxPendingDeliver IXX=warehouse IX=customer XI=[orderDetail] 
+				WITH IxPendingDeliver IXX=warehouse IX=customer XI=[order-detail-id] 
 					DEL WHERE deliverShould - deliverReturn - retQuantity <= 0;
 			}
 		}

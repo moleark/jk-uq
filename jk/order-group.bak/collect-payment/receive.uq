@@ -1,4 +1,4 @@
-ID ReceiveMain GLOBAL (
+ID ReceiveMain (
     id,
     receiveWay  tinyint,    -- 银行；微信；支付宝；现金等
     receiveNr char(50),     -- 和receiveWay有关
@@ -24,10 +24,9 @@ IX Refund (
 );
 
 -- 收款/退款均记录在该表中，这个好像是DxOrderDetail.receiveDone/receiveReturnDone的history，也是DxReceiveMain.leftAmount的history
-ID ReceiveDetail GLOBAL (
-    id,						-- not orderDetail
+ID ReceiveDetail (
+    id,					-- orderDetail
     main ID ReceiveMain,
-    orderDetail ID,
     amount DEC(18,4),
 );
 

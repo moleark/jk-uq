@@ -39,14 +39,6 @@ ACCEPT deliveryConfirm {
         , warehouseName=warehouseName
         , addressString = deliveryAddress;
 
-    VAR deliverDetailId ID;
-    SET deliverDetailId=ID(DeliverDetail new);
-    WITH DeliverDetail ID = deliverDetailId set main=deliverId, orderDetail=orderDetailId;
-    WITH DxDeliverDetail ID = deliverDetailId set deliverDone=quantity;
-
-    BUS JkOrderBus.[deliver-done] SET id = deliverId;
-    BUS JkOrderBus.[deliver-done] INTO detail 
-        ADD id = deliverDetailId
-            , orderDetail = orderDetailId
-            , value = quantity; 
+    WITH DeliverDetail ID = orderDetailId set main=deliverId;
+    WITH DxDeliverDetail ID = orderDetailId set deliverDone=quantity;
 };

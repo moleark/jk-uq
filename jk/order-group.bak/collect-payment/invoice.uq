@@ -12,7 +12,7 @@
   8. 支持财务在财务软件中记账：借 贷    DxOrderDetailInvoiceReceive?
   9. 催款是另外一套系统，与此无关
 */
-ID InvoiceMain GLOBAL (
+ID InvoiceMain (
     id,
     invoiceNr char(50),
     invoiceType ID, 
@@ -37,10 +37,9 @@ IX RedInvoiceMain (
 
 -- 开票/退票均记录在该表中，这个好像是DxOrderDetail.invoiceDone/invoiceReturnDone的history，也是DxInvoiceMain.leftAmount的history
 -- DxOrderDetail.invoice/invoiceReturn也要有History，记录何时收到的应开票和应退票
-ID InvoiceDetail GLOBAL (
-    id,                         -- not orderDetail
+ID InvoiceDetail (
+    id,     -- orderDetail
     main ID InvoiceMain,
-    orderDetail ID,
     amount dec(18, 4),
 );
 

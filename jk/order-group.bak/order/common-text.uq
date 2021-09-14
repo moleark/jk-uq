@@ -1,0 +1,4 @@
+TUID CommonText (
+    id,
+    content text,
+);
