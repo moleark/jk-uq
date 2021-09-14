@@ -148,4 +148,22 @@ BUS couponBus.getMatchedCredits as q into tb {
         BUS JkOrderBus.[order-bound] into [to]
             ADD [type] = 'staff-sales', [id] = salesman, [id-type] = 'staff';
     }
+}
+ACCEPT returnChanged {
+    WITH ReturnMain ID = returnMainId SET customerAccount = customerAccount
+        , no = returnId, createDate = from_unixtime(createDate);
+    WITH ReturnMainEx ID = returnMainId SET seller=seller
+        , salesman=salesman
+        , salesRegion=salesRegion;
+
+    WITH ReturnDetail ID = returnDetailId SET main = returnMainId, orderDetail = orderDetailId
+	    , item = pack
+	    , product = product
+	    , quantity = quantity
+	    , price = price
+        , lotNumber = lotNumber
+        , createDate = from_unixtime(createDate);
+    WITH ReturnDetailEx ID = returnDetailId SET returnItemId = returnItemId
+        , endUser = endUser
+        , mark = mark;
 };
