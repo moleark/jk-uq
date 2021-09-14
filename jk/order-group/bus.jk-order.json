@@ -101,14 +101,39 @@
 		"-- invoice-done 出现负值，就是return invoice",
 		"note"
 	],
+	"order-cost-price-detail": [
+		"order-detail: id",
+		"cost-price: number"
+	],
+	"order-cost-price": [
+		"order: id",
+		"detail: order-cost-price-detail"
+	],
 	"order-binding": [
 		"-- order id, binding可以是coupon，也可以是userid，或者其它标志。如果网页点击，可以直接带id",
-		"id: id",
+		"order: id",
 		"binding: string"
+	],
+	"order-bound-detail":[
+		"type: string  -- sales, person-client, 预定义的类型",
+		"id: id  -- 指定类型的id"
 	],
 	"order-bound": [
 		"-- order id, coupon体系根据coupon，找到order的绑定人",
-		"id: id",
-		"promoter: id  -- 推广人"
+		"order: id",
+		"-- promoter: id  -- 推销人，销售，或者外部人员", 
+		"to: order-bound-detail -- type: sales|client, id is sales id or client id"
+	],
+	"order-bound-profit": [
+		"order: id",
+		"to: order-bound-detail -- type: sales|client, id is sales id or client id"
+	],
+	"order-bound-amount": [
+		"order: id",
+		"to: order-bound-detail -- type: sales|client, id is sales id or client id"
+	],
+	"order-customer-points": [
+		"order: id",
+		"to: order-bound-detail -- type: customer, id is customer person id"
 	]
 }

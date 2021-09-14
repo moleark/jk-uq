@@ -22,3 +22,27 @@ ID ReturnDetail (
 	amount DEC(12,2),
 );
 */
+
+ID InvoiceMain (
+	id,
+	customer ID,
+	sumAmount DEC(18,4),
+);
+
+ID InvoiceDetail (
+	id,					-- orderDetail
+	main ID InvoiceMain,
+	amount DEC(18,4),
+);
+
+ID ReceiveMain (
+	id,
+	customer ID,
+	sumAmount DEC(18,4),
+);
+
+ID ReceiveDetail (
+	id,					-- orderDetail
+	main ID ReceiveMain,
+	amount DEC(18,4),
+);

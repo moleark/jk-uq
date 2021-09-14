@@ -67,5 +67,5 @@ RETURNS ret (
 	INTO ret SELECT a.id as customer, b.sumAmount as receive, c.sumAmount as invoice
 		FROM tblCustomers as a
 			LEFT JOIN DxCustomerReceive as b ON a.id=b.id
-			LEFT JOIN DxCustomerInvoice as c ON a.id=c.id;		
+			LEFT JOIN DxCustomerInvoice as c ON a.id=c.id;
 };
