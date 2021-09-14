@@ -2,7 +2,7 @@ ID OrderMain ver 0.6 GLOBAL (
 	id,
 	KEY no,
     webUser ID,                         -- 下单user注册账号
-	customer ID,                        -- customer的个人的ID
+	customer ID,                        -- 弃用,ligsh, 20210914
     buyerAccount ID,                    -- 买方账号
 
 	shippingContact ID,                 -- 发货地址
