@@ -135,6 +135,25 @@ HISTORY OrderDetailPointHistory (
     comments char(1000) ,                   --备注
 );
 
+-- 退货订单积分表,2021年9月15日，D72
+IDX DxReOrderDetail (
+    id, -- order detailId
+    point int sum log,
+    totalPoint int sum,
+);
+
+-- 退货订单积分变化表(针对order订单明细),2021年9月15日，D72
+HISTORY ReOrderDetailPointHistory (
+    date,                                   --生成时间
+    orderDetailId ID orderDetail,           --订单明细ID
+    pointYear int,                          --积分年度
+    point int,                              --积分数(100 or -100)
+    type int,                               --1：积分，2：有效积分
+    comments char(1000),                   --备注
+);
+
+
+
 /*
 -- 积分订单明细表,2021年8月27日，D72
 BOOK PointBookByOrderDetail (
