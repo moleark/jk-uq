@@ -6,47 +6,73 @@ OPEN TUID JNKRestrict (
     stamp(create, update)
 );
 
-
+-- 法规
 ID Statute (
     id,
     name    char(100),
 );
 
+-- 是ID还是设置成Chemical的IDX？
 ID ChemicalControlled (
     id,
     chemical ID Chemical,
     -- 其他特征？
 );
 
+-- 危险性类别(各种法规的多个分类统一吗？子分类怎么表达？)
 ID HazardClass (
     id,
     statute ID Statute,     -- 
     no  char(10),
     description char(100),
+    unique(no),
 );
 
-IDX ChemicalControlledHazardClass (
+-- 危险化学品的危险性类别
+IX ChemicalControlledHazardClass (
     ix,     -- ChemicalControlled
     xi,     -- HazardClass
 );
 
+-- 业务环节（使用环节）
 ID buziPhase (
     id,
-    name char(10),
+    name char(10),  -- 生产(或开发) / 经营(销售) / 采购 / 存储 / 运输 / 寄递 / 进口 / 出口 / 废弃 等
+    unique(name),
 );
 
+-- 法规规定的许可证
 ID license (
     id,
+    statute ID Statute,     -- 
     name   char(100),
 );
 
-IDX buziPhaseLicense (
-    ix,
-    xi,
+-- 许可证针对的业务环节
+IX buziPhaseLicense (
+    ix,     -- 业务环节
+    xi,     -- 许可证
 );
 
+ID Strategy (
+    id,
+    name    char(10),   -- 禁止 / 条件允许 / 允许
+    unique(name);
+);
 
 ---------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------
+
+-- 企业办理的许可证(企业办理的许可证的编号、有效期如何表达？许可证中包含的化学品如何表达？)
+IX OrganizationLicense (
+    ix,     -- organization
+    xi,     -- license
+);
+
+--  考虑一下白名单和黑名单以及在名单上再“抠洞”的问题
+IX ProductHazardClass (
+    ix,     -- Product or pack?
+    xi,     -- HazardClass
+);

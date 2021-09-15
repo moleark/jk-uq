@@ -62,7 +62,7 @@ BUS webUserBus.getCuByWu as q into tb {
     var mainId ID;
     SET mainId = ID(orderMain new, $sheet_no);
     WITH OrderMain as a ID mainId
-    SET a.webUser = webUser, a.customer = customerid, a.buyerAccount = customer
+    SET a.webUser = webUser, a.buyerAccount = customer
             , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
             , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
             , a.currency = currency, a.sumAmount = amount
