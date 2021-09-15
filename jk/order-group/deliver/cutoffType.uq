@@ -1,0 +1,24 @@
+/* 截单类型 */
+ID CutOffType(
+	id,
+    name char(10),
+    description char(100),
+	sys(create)
+);
+
+/*
+ * DeliverType共3种：1.销售发货；2.调库发货；3.质检发货
+*/
+ID DeliverType (
+    id,
+    name    char(20),
+    description char(100),
+);
+
+-- 如：销售发货给A客户群的，截单类型为1；销售发货给B客户群的，截单类型为2，销售发货给其他客户的，截单类型为3等；
+-- 报废出库 等不须发货的，不在此处处理（deliver bus不应发送这些发货要求）
+IX IxCutoffTypeDefinition (
+    ixx,    -- BizType
+    ix,     -- CustomerId
+    xi,     -- CutOffType
+);

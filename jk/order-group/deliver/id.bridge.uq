@@ -30,7 +30,7 @@ ACCEPT deliveryConfirm {
     "customer:id",
     { "name": "customerId", "type": "string" }
 */
-    WITH DeliverMain ID = deliverId set customer = customer
+    WITH DeliverMain ID = deliverId set customerAccount = customer
         , warehouse = warehouseId;
     WITH DxDeliverMain ID = deliverId set carrier=logisticsCompanyId
         , waybillNumber = logisticsNumber

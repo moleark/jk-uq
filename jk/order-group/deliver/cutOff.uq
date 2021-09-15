@@ -21,15 +21,6 @@ IX IxWarehouseCutOffMain(
 	xi CutOffMain,
 );
 
-/* 截单类型 */
-ID CutOffType(
-	id,
-	key no,
-	customer ID,		-- 不需要，应移到下一个层级
-	tradeType char(10),	-- 不需要，应移到下一个层级
-	sys(create)
-);
-
 /* 查询库房待截单数据 */
 QUERY GetReadyCutOffList(
     warehouse ID
@@ -39,11 +30,11 @@ RETURNS list (
 	product ID,
 	item ID,
 	shouldQuantity DEC(12,2),
-    customer ID
+    customerAccount ID
 ) {
 	INTO list SELECT a.xi as orderDetail,
 		b.product, b.item, b.quantity as shouldQuantity,
-        a.ix as customer
+        a.ix as customerAccount
 		FROM IxPendingDeliver as a
              JOIN OrderDetail as b ON a.xi=b.id
              JOIN IxUserWarehouse as c on c.ix=$user AND c.xi=a.ixx
@@ -112,15 +103,15 @@ RETURNS main (
 
     -- 3、生成发运单、临时理货号, 并删除已截单的数据
     LOG 'CutOff' SUBJECT 'start';
-	TABLE tblCutOff(key warehouse ID, key customer ID, key contact ID, deliver ID);
+	TABLE tblCutOff(key warehouse ID, key customerAccount ID, key contact ID, deliver ID);
 	VAR trayNumber int;
     SET trayNumber=1;
 
 	WHILE 1=1 {
         -- 循环获取 limit1数据
-		VAR warehouse ID, customer ID, contact ID, orderDetail ID;
+		VAR warehouse ID, customerAccount ID, contact ID, orderDetail ID;
 		SET warehouse=NULL;
-		SET warehouse=a.ixx, customer=a.ix, contact=d.contact, orderDetail=a.xi
+		SET warehouse=a.ixx, customerAccount=a.ix, contact=d.contact, orderDetail=a.xi
 			FROM IxPendingDeliver as a
                  JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
                  JOIN OrderDetail as c ON c.id=a.xi
@@ -136,21 +127,21 @@ RETURNS main (
                  JOIN IxUserWarehouse as b on b.ix=$user AND b.xi=a.ixx
                  JOIN OrderDetail as c ON c.id=a.xi
                  JOIN OrderMain as d ON d.id=c.main
-			WHERE a.ixx=warehouse AND a.ix=customer AND d.contact=contact AND a.xi=orderDetail;
+			WHERE a.ixx=warehouse AND a.ix=customerAccount AND d.contact=contact AND a.xi=orderDetail;
 
         -- 从临时表中查询是否存在，不存在则生成新发运单和临时理货号
 		VAR deliver ID, deliverNo CHAR(20);
 		SET deliver=NULL;
 		SET deliver=a.deliver FROM tblCutOff as a 
-			WHERE a.warehouse=warehouse AND a.customer=customer AND a.contact=contact;
+			WHERE a.warehouse=warehouse AND a.customerAccount=customerAccount AND a.contact=contact;
 
 		IF deliver IS NULL {
 			SET deliverNo=NO(DeliverMain);
 			SET deliver=ID(DeliverMain new, deliverNo);
-			WITH DeliverMain as a ID=deliver SET a.customer=customer, 
+			WITH DeliverMain as a ID=deliver SET a.customerAccount=customerAccount, 
                 a.contact=contact, a.warehouse=warehouse, a.cutOffMain=cutOffMain, a.trayNumber=trayNumber;
 			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
-			INTO tblCutOff SELECT warehouse, customer, contact, deliver;
+			INTO tblCutOff SELECT warehouse, customerAccount, contact, deliver;
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
 			WITH DxDeliverMain as a ID=deliver;
 			SET trayNumber=trayNumber+1;
@@ -178,7 +169,7 @@ RETURNS detail (
 	delivermain ID,
 	trayNumber int,
 	contact ID,
-	customer ID,
+	customerAccount ID,
 	carrier ID,
     waybillNumber char(50),
 	deliverTime TIMESTAMP DEFAULT NULL,
@@ -196,7 +187,7 @@ RETURNS detail (
 		WHERE a.id=cutOffMain;
 
 	INTO detail SELECT b.id as delivermain, b.trayNumber,
-		b.contact, b.customer, f.carrier, f.waybillNumber, f.deliverTime,
+		b.contact, b.customerAccount, f.carrier, f.waybillNumber, f.deliverTime,
 		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, 
 		d.price, d.lotNumber, g.json as content
 		FROM CutOffMain as a
@@ -234,6 +225,7 @@ ACT Tallied (
 	--}
 };
 
+/*
 -- 查询截单类型列表
 QUERY GetCutOffTypeList(
 )RETURNS list (
@@ -264,6 +256,4 @@ QUERY GetCutOffType(
 		FROM CutOffType as a
 		WHERE a.id = cutOffType;
 };
-
-/* 获取截单类型设置客户的cid
 */
