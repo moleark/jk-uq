@@ -14,7 +14,7 @@ IX IxCustomerPendingInvoice (
 IDX DxOrderDetail (
 	id,									-- order detail
 	receive DEC(12,2) DEFAULT 0,		-- 应收, 发货后增加；
-	receiveDone DEC(12,2) DEFAULT 0,	-- 已收，付款（关联）后增加
+	receiveDone DEC(12,2) DEFAULT 0 SUM,	-- 已收，付款（关联）后增加
 	invoice DEC(12,2) DEFAULT 0,		-- 应开票，发货后增加
 	invoiceDone DEC(12,2) DEFAULT 0,	-- 已开票，开票后增加（退票作废的"不"减少，退票冲红后此值减少。重开后接着增加，所以已开票可能大于应开票）
 );

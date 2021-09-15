@@ -1,66 +1,82 @@
 ID OrderMainEx GLOBAL (
     id,                             -- 就是OrderMain的id
-    KEY orderId CHAR(20),           -- 对应Ex系统的orderId
     seller CHAR(50),
     salesman ID,
     salesRegion ID,
-    customer ID,
     buyerAccount ID,
     organization ID,
     currency ID,
-    promotionId CHAR(20),
+    poNumber char(100),             -- 对应Termsa.CPONr
+    carrier ID,
+    commentsAboutDeliver   char(1000),
     createDate TIMESTAMP,
 );
 
 ID OrderDetailEx GLOBAL (
     id,                             -- 就是OrderDetail的id
     KEY orderItemId CHAR(50),       -- 对应Ex系统的orderItemId
+    endUser ID,
     brand ID,                       -- 品牌id，应该在product里面带
     -- product ID,                  -- OrderDetail 有这个字段
     -- pack ID,                     -- OrderDetail 有这个字段
     -- quantity DEC(12,2),          -- OrderDetail 有这个字段
     -- price  DEC(12,2),            -- OrderDetail 有这个字段
-    retail DEC(12,2),
+    retail DEC(12,2),               -- TODO:下面的6个字段应该转移到OrderDetail的一个专门的IDX中，不应该放在这个Ex大杂烩中
     retailCurrency ID,
     bottomPrice DEC(12,2),
     bottomPriceCurrency ID,
     costPrice DEC(12,2),
     costPriceCurrency ID,
+    poItemNumber char(100), 
     mark CHAR(10),
     tradeType CHAR(10),
     taxRate DEC(6,2),
+    promotionId CHAR(20),
     createDate TIMESTAMP,
 );
 
-BUS BusOrderChangedEx ver 0.6 FROM 百灵威系统工程部/orderChanged
-ACCEPT orderChanged {
+BUS oChangeBus ver 0.7 FROM 百灵威系统工程部/orderChanged
+ACCEPT orderChanged
+BUS couponBus.getMatchedCredits as q into tb {
+    set q.customer = ifnull(endUser, customer);
+    set q.orderItemId = orderItemId;
+    set q.createDate = createDate;
+} {
+    var lSalesman ID, lCustomerAccount ID;
+    set lSalesman = a.salesman, lCustomerAccount = b.buyerAccount
+    from    OrderMainEx as a
+            JOIN OrderMain as b on a.id = b.id 
+    where   a.id = orderMainId;
 
-    WITH OrderMain ID=orderMainId SET customer=customer
-        -- , no=orderId
-	    , shippingContact=null
-	    -- , sumQuanity=null
-	    , sumAmount=null
-	    , couponNo=promotionId
-	    , sheetId=null;
+    var lQuantity dec(18, 4), lPrice dec(18,4), lBottomPrice dec(18, 4);
+    set lQuantity = b.quantity, lPrice = b.price, lBottomPrice = a.bottomPrice
+    from    OrderDetailEx as a
+            JOIN OrderDetail as b on a.id = b.id
+    where   a.id = orderDetailId;
+
+    WITH OrderMain ID=orderMainId SET buyerAccount = buyerAccount
+        , no=orderId, createDate = from_unixtime(createDate);
     WITH OrderMainEx ID=orderMainId SET seller=seller
-        , orderId=orderId
         , salesman=salesman
         , salesRegion=salesRegion
-        , customer=customer
-        , buyerAccount=buyerAccount
+        , buyerAccount = buyerAccount
         , organization=organization
         , currency=currency
-        , promotionId=promotionId
+        , poNumber = poNumber
+        , carrier = carrier
+        , commentsAboutDeliver = commentsAboutDeliver
         , createDate=from_unixtime(createDate);
 
     WITH OrderDetail ID=orderDetailId SET main=orderMainId
-	    , warehouse=null
 	    , item=pack
 	    , product=product
 	    , quantity=quantity
-	    , price=price;
-    WITH OrderDetailEx ID=orderDetailId SET brand=brand
-        , orderItemId=orderItemId
+	    , price=price
+        , lotNumber = lotNumber
+        , createDate = from_unixtime(createDate);
+    WITH OrderDetailEx ID=orderDetailId SET orderItemId=orderItemId
+        , endUser = endUser
+        , brand=brand
         , retail=retail
         , retailCurrency=retailCurrency
         , bottomPrice=bottomPrice
@@ -68,84 +84,92 @@ ACCEPT orderChanged {
         , costPrice=costPrice
         , costPriceCurrency=costPriceCurrency
         , mark=mark
+        , poItemNumber = poItemNumber
         , tradeType=tradeType
         , taxRate=taxRate
+        , promotionId=promotionId
         , createDate=from_unixtime(createDate);
 
     WITH DxOrderDetail ID=orderDetailId SET deliver=quantity;
-    /*
-    -- 没有想好，暂时不发bus
-    BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer;
-    -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
+
+    -- 匹配coupon, 这个要使用bus QUERY，待写好提供方后再添加
+    var creditsId ID, endUserId ID;
+    set endUserId = ifnull(endUser, customer);
+    set creditsId = a.xi from IxOrderMainCustomerCoupon as a where a.ixx = orderMainId and a.ix = endUserId;
+    if(creditsId is NULL) {
+        foreach tb {
+            set creditsId = credits;
+        }
+    }
+    if(not creditsId is NULL) {
+        WITH IxOrderMainCustomerCoupon ixx = orderMainId ix = endUserId xi = creditsId; 
+        WITH IxOrderDetailCoupon ix = orderDetailId xi = creditsId;
+
+        bus couponBus.creditsUsedByCustomer set orderId = orderId, customer = endUserId, coupon = creditsId;
+        bus couponBus.creditsUsedByCustomer into orderItems add orderItemId = orderItemId;
+    }
+
+    if(quantity > 0) {
+        -- endUser <> ifnull(lEndUser, 0) or quantity <> ifnull(lQuantity, 0) or price <> ifnull(lPrice, 0)
+        -- or mark <> ifnull(lMark, '') or tradeType <> ifnull(lTradeType)) {
+        bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
+            , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
+            , brand = brand, product = product, item = pack, quantity = quantity, price = price, retail = retail
+            , currency = currency, coupon = creditsId, mark = mark
+            , tradeType = tradeType, createDate = createDate;
+    }
+
+    if(buyerAccount <> ifnull(lCustomerAccount, 0) or quantity <> ifnull(lQuantity, 0) or price <> ifnull(lPrice, 0)){
+        BUS JkOrderBus.order SET id=orderMainId, no=orderId, customerAccount = buyerAccount; -- TODO: 缺少Contact
+        BUS JkOrderBus.order INTO detail 
+            ADD id = orderDetailId
+                    , item = pack
+                    , product = product
+                    , quantity = quantity
+                    , price = price
+                    , amount = quantity*price;  -- TODO:缺少lotNumber等
+    }
+
     -- BUS JkOrderBus.deliver SET id=mainId, contact=contact;
-    BUS JkOrderBus.order INTO detail 
-        ADD id = orderDetailId
-                , item = pack
-                , product = product
-                , quantity = quantity
-                , price = price
-                , amount = quantity*price;
-    -- BUS JkOrderBus.[deliver-ext] INTO detail 
-    --    ADD id = detailId, needInsuredWhenDelivery = 0;
     -- BUS JkOrderBus.deliver INTO detail 
     --    ADD id = detailId, warehouse = warehouse;
-    */
-};
+    -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
+    -- BUS JkOrderBus.[deliver-ext] INTO detail 
+    --    ADD id = detailId, needInsuredWhenDelivery = 0;
 
-BUS BusAdapterEx ver 0.2 FROM 百灵威系统工程部/Adapter
-ACCEPT deliveryConfirm {
-/*
-    { "name": "outBoundItemId", "type": "string" },
-    { "name": "outBoundId", "type": "string" },
-    { "name": "warehouseName", "type": "string" },
-    { "name": "logisticsCompanyId", "type": "number" },
-    { "name": "logisticsNumber", "type": "string" },
-    { "name": "deliveryGoodsTime", "type": "string" },
-    { "name": "deliveryAddress", "type": "string" },
-    { "name": "saleOrderId", "type": "string" },
-    { "name": "saleOrderItemId", "type": "string" },
-    { "name": "packageId", "type": "string" },
-    { "name": "quantity", "type": "number" },
-    { "name": "operatorId", "type": "string" },
-    { "name": "operatorName", "type": "string" },
-    { "name": "operatorPhone", "type": "string" },
-    { "name": "customerId", "type": "string" }
-*/
-    VAR mainId ID, detailId ID;
-    SET mainId=a.id FROM OrderMainEx as a WHERE a.orderId=saleOrderId;
-    SET detailId=a.id FROM OrderDetailEx as a WHERE a.orderItemId=saleOrderItemId;
-    IF mainId IS NULL OR detailId IS NULL {
-        LOG 'mainId IS NULL OR detailId IS NULL' SUBJECT 'BUS deliveryConfirm';
-        RETURN;
+    if((ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) > 0.001) or (ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) < -0.001)){
+        BUS JkOrderBus.[order-bottom-price] set order = orderMainId;
+        BUS JkOrderBus.[order-bottom-price] into [detail]
+            ADD [order-detail] = orderDetailId, [bottom-price] = bottomPrice;
     }
-	BUS JkOrderBus.[deliver-done] SET id=mainId;
-	-- FOR detail {
-		-- WITH DxOrderDetail ID=detailId SET deliverDone=quantity;
-		BUS JkOrderBus.[deliver-done] INTO detail ADD id=detailId, value=quantity;
-	-- }
-    -- 直接本地UQ处理
-    BUS JkOrderBus.[deliver-done] LOCAL;
-};
 
-BUS BusFiReceivable ver 0.6 FROM 百灵威系统工程部/FiReceivable
-ACCEPT innerOrderPaid {
-/*
-    { "name": "orderItemId", "type": "string" },
-    { "name": "orderId", "type": "string" },
-    { "name": "amount", "type": "number" },
-    { "name": "currency", "type": "id" },
-    { "name": "action", "type": "string" },
-    { "name": "createDate", "type": "number" }
-*/
-    VAR mainId ID, detailId ID;
-    SET mainId=a.id FROM OrderMainEx as a WHERE a.orderId=orderId;
-    SET detailId=a.id FROM OrderDetailEx as a WHERE a.orderItemId=orderItemId;
-    IF mainId IS NULL OR detailId IS NULL {
-        LOG 'mainId IS NULL OR detailId IS NULL' SUBJECT 'BUS FiReceivable.innerOrderPaid';
-        RETURN;
+    if(ifnull(lSalesman, 0) <> ifnull(salesman, 0)){
+        BUS JkOrderBus.[order-bound] set order = orderMainId;
+        BUS JkOrderBus.[order-bound] into [to]
+            ADD [type] = 'staff-sales', [id] = salesman, [id-type] = 'staff';
     }
-	BUS JkOrderBus.[receive-done] SET id=mainId;
-	BUS JkOrderBus.[receive-done] INTO detail ADD id=detailId, value=amount;
-    -- 直接本地UQ处理
-    BUS JkOrderBus.[receive-done] LOCAL;
+}
+ACCEPT returnChanged {
+    WITH ReturnMain ID = returnMainId SET customerAccount = customerAccount
+        , no = returnId, createDate = from_unixtime(createDate);
+    WITH ReturnMainEx ID = returnMainId SET seller=seller
+        , salesman=salesman
+        , salesRegion=salesRegion;
+
+    WITH ReturnDetail ID = returnDetailId SET main = returnMainId, orderDetail = orderDetailId
+	    , item = pack
+	    , product = product
+	    , quantity = quantity
+	    , price = price
+        , lotNumber = lotNumber
+        , createDate = from_unixtime(createDate);
+    WITH ReturnDetailEx ID = returnDetailId SET returnItemId = returnItemId
+        , endUser = endUser
+        , mark = mark;
+    BUS JkOrderBus.return SET id = returnMainId;
+    BUS JkOrderBus.return INTO detail 
+        ADD id = returnDetailId
+                , [order-detail-id] = orderDetailId
+                , quantity = quantity
+                , amount = quantity*price;
 };

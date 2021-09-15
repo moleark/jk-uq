@@ -1,40 +1,26 @@
 BUS orderBus from 百灵威系统工程部/order;
 BUS webUserBus from 百灵威系统工程部/WebUser;
--- BUS couponBus from 百灵威系统工程部/coupon;
-
-BUS cmB from [百灵威系统工程部]/coupon
+BUS pointOrderBus from 百灵威系统工程部/PointOrder;
+BUS couponBus from 百灵威系统工程部/coupon
     ACCEPT creditsInnerMatched {
         if ( not webUser is null ) {
-            bus cmB.creditsUsedByWebUser set orderId = orderId, webUser = webUser, amount = amount, currency = currency
+            bus couponBus.creditsUsedByWebUser set orderId = orderId, webUser = webUser, amount = amount, currency = currency
                 , point = point, coupon = coupon;
             foreach orderItems {
-                bus cmB.creditsUsedByWebUser into orderItems add orderItemId = orderItemId, point = point;
+                bus couponBus.creditsUsedByWebUser into orderItems add orderItemId = orderItemId, point = point;
             }
         }
         
-        bus cmB.creditsUsedByCustomer set orderId = orderId, customer = customer, amount = amount, currency = currency
+        bus couponBus.creditsUsedByCustomer set orderId = orderId, customer = customer, amount = amount, currency = currency
             , point = point, coupon = coupon;
         foreach orderItems {
-            bus cmB.creditsUsedByCustomer into orderItems add orderItemId = orderItemId, point = point;
+            bus couponBus.creditsUsedByCustomer into orderItems add orderItemId = orderItemId, point = point;
         }
     };
 
-/*
-    orderItemId string,
-    orderId string,
-    amount number,
-    currency id,
-    action string,
-    createDate number,
-*/
-/*
-BUS fiReceivable from 百灵威系统工程部/FiReceivable
-ACCEPT orderPayed {
--- 原来代码
-    -- 检查order是否还在pending中，若在，则删除pending，同时读取order信息
-    -- 形成款项与订单的匹配历史，发送bus通知财务应收系统
-    delete p from OrderReceivable as p where p.order = order;
-
--- 新增，转发jk-order-bus/receive-done
-};
-*/
+bus fiReceivable from 百灵威系统工程部/FiReceivable
+    ACCEPT orderPayed {
+        -- 检查order是否还在pending中，若在，则删除pending，同时读取order信息
+        -- 形成款项与订单的匹配历史，发送bus通知财务应收系统
+        delete p from OrderReceivable as p where p.order = order;
+    };

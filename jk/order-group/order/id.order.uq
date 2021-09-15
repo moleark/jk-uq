@@ -1,68 +1,49 @@
-/*
-ID OrderMain ver 0.5 GLOBAL (
+ID OrderMain ver 0.6 GLOBAL (
 	id,
 	KEY no,
-    webUser ID,
-	customer ID,
-    buyerAccount ID,
+    webUser ID,                         -- 下单user注册账号
+	customer ID,                        -- 弃用,ligsh, 20210914
+    buyerAccount ID,                    -- 买方账号
 
-	shippingContact ID,
-	invoiceContact ID,
-    invoiceType ID,
-    invoiceInfo ID,
+	shippingContact ID,                 -- 发货地址
+	invoiceContact ID,                  -- 发票寄送地址
+    invoiceType ID,                     -- 增值税，普通发票
+    invoiceInfo ID,                     -- 发票抬头，税号等
 
-	sumQuanity DEC(12,2), 	-- 各行数量和
-	sumAmount DEC(12,2),	-- 各行金额和
+	sumAmount DEC(12,2),	            -- 订单总金额。各行金额
     currency ID Currency,
-    freightFee dec(12, 2),
-    freightFeeRemitted dec(12, 2),
 
-	couponNo CHAR(16),
-    couponOffsetAmount dec(12, 2),
-    couponRemitted dec(12,2),
+	couponNo CHAR(16),                  -- 优惠券
 
 	sheetId ID,
-
+    createDate TIMESTAMP,
 	INDEX customer_id(customer, id) UNIQUE,
 	INDEX sheetId(sheetId) UNIQUE,
 );
 
-ID OrderDetail ver 0.5 GLOBAL (
+ID OrderDetail ver 0.6 GLOBAL (
 	id,
 	main ID OrderMain,
 	warehouse ID,
 	item ID,
 	product ID,
 	quantity DEC(12,2),
-    retail DEC(12, 2),
-	price DEC(12,2),
-	amount DEC(12,2),
-    refrigerationFee dec(12, 2),
-    freezingFee dec(12, 2),
-    packingFee dec(12, 2),
-    proxyFreightFee dec(12, 2),
+	price DEC(12,2),                    -- 实际成交价
+    lotNumber char(50),
+    createDate TIMESTAMP,
 );
 
--- 订单或订单明细状态如何表达？
--- 因发货在老系统中造成的明细拆分如何处理？
-
-ID ReturnMain GLOBAL (
-	id,
-	-- orderMain ID, 去掉，可能是针对不同订单，一次退货
+ENUM EnumFeeType (packing=11, refrigeration=12, freezing=13, proxyFreight=14);
+IX IxOrderMainFee (
+	ix,						-- orderMain
+	xi ENUM EnumFeeType,
+	fee DEC(12,2),
 );
 
-ID ReturnDetail ver 0.1 GLOBAL (
-	id,
-	main ID ReturnMain,
-	orderDetail ID,
-	quantity DEC(12,2),
-	amount DEC(12,2),
-);
-
-IDX DxOrderMain (
-	id,
-	state TINYINT,						-- 0:初始，1:完成, 2:处理中 -1: 取消
-	-- bus: order-cancel
+IX IxOrderDetailFee (
+	ix,						-- orderDetail
+	xi ENUM EnumFeeType,
+	fee DEC(12,2),
 );
 
 IDX DxOrderDetail ver 0.1 (
@@ -73,7 +54,7 @@ IDX DxOrderDetail ver 0.1 (
 	deliverReturn DEC(12,2) SUM,		-- 应退货
 	deliverReturnDone DEC(12,2) SUM,	-- 已退货
 	receive DEC(12,2),					-- 应收
-	receiveDone DEC(12,2),				-- 已收
+	receiveDone DEC(12,2) SUM,				-- 已收
 	receiveTime TIMESTAMP,				-- 收款时间
 	receiveReturn DEC(12,2) SUM,		-- 应退款
 	receiveReturnDone DEC(12,2) SUM,	-- 已退款
@@ -83,18 +64,3 @@ IDX DxOrderDetail ver 0.1 (
 	invoiceReturn DEC(12,2) SUM,		-- 应退票
 	invoiceReturnDone DEC(12,2) SUM,	-- 已退票
 );
-
-IDX DxReturnDetail ver 0.1 (
-	id,									-- return detail
-	deliverReturnDone DEC(12,2) SUM,	-- 已退数量
-	-- receiveDone DEC(12,2) SUM,			-- 已退款金额
-	-- invoiceDone DEC(12,2) SUM,			-- 已收回票金额
-);
-
-IX IxCustomerReturnable (
-	ixx,				-- customer
-	ix,					-- unixtime deliver time
-	xi,					-- orderDetail
-	INDEX ix(ix),
-);
-*/

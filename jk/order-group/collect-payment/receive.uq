@@ -1,17 +1,14 @@
 ID ReceiveMain (
     id,
-    receiveWay  tinyint,    -- 银行；微信；支付宝；现金等
-    receiveNr char(50),     -- 和receiveWay有关
-    organization ID,
-    customer ID,
-    /*
-    回款类型,   -- 正常回款;预存款;质投免款;质投退款;事故免款;事故退款;无货退款;汇错退款等
-    */
-    currency ID,
+    organization ID Organization,
+    customer ID Customer,
+    currency ID Currency,
     direction ENUM EnumReceiveDirection,
     isValid tinyint,
     comments char(500),
-    payDate TIMESTAMP,
+    receiveWay ENUM EnumReceiveWay,    -- 银行；微信；支付宝；现金等
+    receiveNr char(50),     -- 和receiveWay有关
+    receiveDate TIMESTAMP,
     receiver ID,
     createDate TIMESTAMP,
 );
@@ -38,6 +35,7 @@ IDX DxReceiveMain (
     leftAmount dec(18, 4), 
 );
 
+ENUM EnumReceiveWay (bank = 1, weixin = 2, alipay = 3, cash = 4);
 ENUM EnumReceiveDirection (in = 1, out = -1);
 
 QUERY PendingReceive(
