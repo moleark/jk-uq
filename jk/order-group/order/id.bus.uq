@@ -55,7 +55,7 @@ ACCEPT [deliver-done] {
 }
 ACCEPT [receive-done] {
 	FOR detail {
-		WITH DxOrderDetail ID=id SET receiveDone=value, receiveTime=$date;
+		WITH DxOrderDetail ID=id SET receiveDone += value, receiveTime=$date;
 	}
 }
 ACCEPT [invoice-done] {
