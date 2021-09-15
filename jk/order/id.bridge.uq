@@ -21,7 +21,7 @@ ID OrderDetailEx GLOBAL (
     -- pack ID,                     -- OrderDetail 有这个字段
     -- quantity DEC(12,2),          -- OrderDetail 有这个字段
     -- price  DEC(12,2),            -- OrderDetail 有这个字段
-    retail DEC(12,2),
+    retail DEC(12,2),               -- TODO:下面的6个字段应该转移到OrderDetail的一个专门的IDX中，不应该放在这个Ex大杂烩中
     retailCurrency ID,
     bottomPrice DEC(12,2),
     bottomPriceCurrency ID,
@@ -42,12 +42,24 @@ BUS couponBus.getMatchedCredits as q into tb {
     set q.orderItemId = orderItemId;
     set q.createDate = createDate;
 } {
-    WITH OrderMain ID=orderMainId SET customer=customer
+    var lSalesman ID, lCustomerAccount ID;
+    set lSalesman = a.salesman, lCustomerAccount = b.buyerAccount
+    from    OrderMainEx as a
+            JOIN OrderMain as b on a.id = b.id 
+    where   a.id = orderMainId;
+
+    var lQuantity dec(18, 4), lPrice dec(18,4), lBottomPrice dec(18, 4);
+    set lQuantity = b.quantity, lPrice = b.price, lBottomPrice = a.bottomPrice
+    from    OrderDetailEx as a
+            JOIN OrderDetail as b on a.id = b.id
+    where   a.id = orderDetailId;
+
+    WITH OrderMain ID=orderMainId SET buyerAccount = buyerAccount
         , no=orderId, createDate = from_unixtime(createDate);
     WITH OrderMainEx ID=orderMainId SET seller=seller
         , salesman=salesman
         , salesRegion=salesRegion
-        , buyerAccount=buyerAccount
+        , buyerAccount = buyerAccount
         , organization=organization
         , currency=currency
         , poNumber = poNumber
@@ -97,20 +109,26 @@ BUS couponBus.getMatchedCredits as q into tb {
         bus couponBus.creditsUsedByCustomer into orderItems add orderItemId = orderItemId;
     }
 
-    bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
-        , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
-        , brand = brand, product = product, item = pack, quantity = quantity, price = price, retail = retail
-        , currency = currency, coupon = creditsId, promotion = promotionId, mark = mark
-        , tradeType = tradeType, createDate = createDate;
+    if(quantity > 0) {
+        -- endUser <> ifnull(lEndUser, 0) or quantity <> ifnull(lQuantity, 0) or price <> ifnull(lPrice, 0)
+        -- or mark <> ifnull(lMark, '') or tradeType <> ifnull(lTradeType)) {
+        bus pointOrderBus.orderPointChanged set orderDetailId = orderDetailId, orderDetailNo = orderItemId
+            , orderMainId = orderMainId, orderMainNo = orderId, customer = endUserId
+            , brand = brand, product = product, item = pack, quantity = quantity, price = price, retail = retail
+            , currency = currency, coupon = creditsId, mark = mark
+            , tradeType = tradeType, createDate = createDate;
+    }
 
-    BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer; -- TODO: 缺少Contact
-    BUS JkOrderBus.order INTO detail 
-        ADD id = orderDetailId
-                , item = pack
-                , product = product
-                , quantity = quantity
-                , price = price
-                , amount = quantity*price;  -- TODO:缺少lotNumber等
+    if(buyerAccount <> ifnull(lCustomerAccount, 0) or quantity <> ifnull(lQuantity, 0) or price <> ifnull(lPrice, 0)){
+        BUS JkOrderBus.order SET id=orderMainId, no=orderId, customerAccount = buyerAccount; -- TODO: 缺少Contact
+        BUS JkOrderBus.order INTO detail 
+            ADD id = orderDetailId
+                    , item = pack
+                    , product = product
+                    , quantity = quantity
+                    , price = price
+                    , amount = quantity*price;  -- TODO:缺少lotNumber等
+    }
 
     -- BUS JkOrderBus.deliver SET id=mainId, contact=contact;
     -- BUS JkOrderBus.deliver INTO detail 
@@ -118,4 +136,40 @@ BUS couponBus.getMatchedCredits as q into tb {
     -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
     -- BUS JkOrderBus.[deliver-ext] INTO detail 
     --    ADD id = detailId, needInsuredWhenDelivery = 0;
+
+    if((ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) > 0.001) or (ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) < -0.001)){
+        BUS JkOrderBus.[order-bottom-price] set order = orderMainId;
+        BUS JkOrderBus.[order-bottom-price] into [detail]
+            ADD [order-detail] = orderDetailId, [bottom-price] = bottomPrice;
+    }
+
+    if(ifnull(lSalesman, 0) <> ifnull(salesman, 0)){
+        BUS JkOrderBus.[order-bound] set order = orderMainId;
+        BUS JkOrderBus.[order-bound] into [to]
+            ADD [type] = 'staff-sales', [id] = salesman, [id-type] = 'staff';
+    }
+}
+ACCEPT returnChanged {
+    WITH ReturnMain ID = returnMainId SET customerAccount = customerAccount
+        , no = returnId, createDate = from_unixtime(createDate);
+    WITH ReturnMainEx ID = returnMainId SET seller=seller
+        , salesman=salesman
+        , salesRegion=salesRegion;
+
+    WITH ReturnDetail ID = returnDetailId SET main = returnMainId, orderDetail = orderDetailId
+	    , item = pack
+	    , product = product
+	    , quantity = quantity
+	    , price = price
+        , lotNumber = lotNumber
+        , createDate = from_unixtime(createDate);
+    WITH ReturnDetailEx ID = returnDetailId SET returnItemId = returnItemId
+        , endUser = endUser
+        , mark = mark;
+    BUS JkOrderBus.return SET id = returnMainId;
+    BUS JkOrderBus.return INTO detail 
+        ADD id = returnDetailId
+                , [order-detail-id] = orderDetailId
+                , quantity = quantity
+                , amount = quantity*price;
 };

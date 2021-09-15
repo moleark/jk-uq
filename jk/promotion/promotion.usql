@@ -11,6 +11,13 @@ OPEN TUID Promotion (
     unique(no),
 );
 
+-- 市场活动黑名单表（用于记录不参于指定市场活动的客户），2021年9月7日，D72
+MAP PromotionCustomerBlacklist (
+    key blackCustomer ID Customer not null, 
+    key promotion ID Promotion not null,
+    createTime datetime,
+);
+
 OPEN MAP PromotionSalesRegion(
     key promotion ID Promotion not null,
     key salesRegion ID SalesRegion not null,

@@ -98,16 +98,42 @@ BUS poBus from 百灵威系统工程部/PointOrder
             set a.credits = coupon;
         }
         BUS ps2Bus.getPromotionMultiple as a into pm {
-            set a.brand = brand, a.price = price, a.retail = retail, a.createDate = createDate;
+            set a.endUser = customer, a.brand = brand, a.price = price, a.retail = retail, a.createDate = createDate;
         }
     {   
-        -- 保存订单信息
-        WITH OrderDetail as a id=orderDetailId
-            set a.endUser = customer, a.createDate = from_unixtime(createDate)
-                ,a.orderMainNo=orderMainNo, a.orderDetailNo = orderDetailNo;
+        --积分年度
+        var pointYear int ;
+        set pointYear = year(from_unixtime(createDate));
+        
+        -- 客户是积分黑名单客户，则不参与积分。
+        var bCustomer int;
+        set bCustomer= a.blackCustomer
+        from PointCustomerBlacklist as a
+        where a.blackCustomer=customer;
+        set bCustomer = ifnull(bCustomer, 0);
+
+        -- 1.积分调整
+        -- 1.1，积分最终用户改变
+        var lastEnduser int;        --上次订单积分最终用户
+        var lastTotalPoint int;     --上次订单积分值
+        set lastEnduser = b.endUser, lastTotalPoint = a.totalPoint
+        from    DxOrderDetail as a
+                join OrderDetail as b on a.id = b.id
+        where a.id=orderDetailId;
+        set lastEnduser = ifnull(lastEnduser,0);
+
+        if ( lastEnduser <> 0 and lastEnduser <> customer) {
+                -- 取消上次订单客户记账
+                book PointBookByCustomer at (lastEnduser, pointYear) set totalpoint += -lastTotalPoint;
+                -- 上次订单客户积分，取消历史记录
+                history PointHistoryByCustomer 
+                    set pointYear = pointYear, point = -lastTotalPoint, source = 5, 
+                    comments = concat(orderMainNo, ',', orderDetailNo), customer = lastEnduser;
+        }
+
         -- 订单积分条件的判定
-        -- 销售币种为RMB、国内正常销售业务，允许积分
-        if (currency = 5 and tradeType = 'a' and mark <> 'PR'){
+        -- 销售币种为RMB、国内正常销售业务,非积分黑名单客户，允许积分
+        if (currency = 5 and tradeType = 'a' and mark <> 'PR' and bCustomer = 0){
 
             var multiple int, creditsMultiple int, promotionMultiple int;
             foreach cm {
@@ -126,12 +152,12 @@ BUS poBus from 百灵威系统工程部/PointOrder
                 set multiple = promotionMultiple;
             }
 
-            var ltotalPoint int, diffPoint dec(12, 2);
+            var lTotalPoint int, diffPoint dec(12, 2);
             -- mark为C：0积分
             if (mark = 'C'){
-                set ltotalPoint = 0;
+                set lTotalPoint = 0;
             } else {
-                set ltotalPoint = price * quantity * multiple;
+                set lTotalPoint = price * quantity * multiple;
             }
 
             -- 获取订单积分记录
@@ -141,31 +167,47 @@ BUS poBus from 百灵威系统工程部/PointOrder
             from    DxOrderDetail as a
             where   a.id = orderDetailId;
 
-            set diffPoint = ltotalPoint - ifnull(rTotalPoint, 0);
+            set diffPoint = lTotalPoint - ifnull(rTotalPoint, 0);
+
+            -- 积分最终客户变动，差异积分+在上次积分值，无变动差值不做调整
+            var cDiffPoint int;
             
-            --积分年度
-            var pointYear int ;
-            set pointYear = year(from_unixtime(createDate));
+             if ( lastEnduser <> 0 and lastEnduser <> customer) {
+                 set cDiffPoint = diffPoint + ifnull(lastTotalPoint, 0);
+             } else {
+                 set cDiffPoint = diffPoint;
+             }
+            if (cDiffPoint <> 0){
+                -- 1.积分记账
+                -- 1.1. 总积分记账, 针对客户
+                book PointBookByCustomer at (customer, pointYear) set totalpoint += cDiffPoint;
+
+                -- 2.积分历史记录
+                -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
+                history PointHistoryByCustomer 
+                    set pointYear = pointYear, point = cDiffPoint, source = 5, 
+                    comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
+            }
+
             -- 积分差值非零值，记录本次积分
             if (diffPoint <> 0){
                 -- 1.积分记账
-                -- 1.1. 总积分记账, 针对客户
-                book PointBookByCustomer at (customer, pointYear) set totalpoint += diffPoint;
                 -- 1.2.订单积分记账，针对订单明细
                 WITH DxOrderDetail as a ID = orderDetailId
                     set a.totalPoint += diffPoint, a.multiple = multiple;
 
                 -- 2.积分历史记录
-                -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
-                history PointHistoryByCustomer 
-                    set pointYear = pointYear, point = diffPoint, source = 5, 
-                    comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
                 -- 2.2 针对订单明细
                 history OrderDetailPointHistory
                     set orderDetailId = orderDetailId, pointYear = pointYear, point = diffPoint, 
                         type = 1, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
+
+        -- 保存订单信息
+        WITH OrderDetail as a id=orderDetailId
+            set a.endUser = customer, a.createDate = from_unixtime(createDate)
+                ,a.orderMainNo=orderMainNo, a.orderDetailNo = orderDetailNo;
     };
 
 

@@ -54,12 +54,15 @@ Action submit
 BUS webUserBus.getCuByWu as q into tb {
     set q.webUser = webUser;
 } {
+    var customerid int;
+    foreach tb {
+        set customerid = customer;
+    }
+
     var mainId ID;
     SET mainId = ID(orderMain new, $sheet_no);
-    -- BUS JkOrderBus.order SET id=mainId, customer=webUser;
-
     WITH OrderMain as a ID mainId
-    SET a.webUser = webUser, a.customer = webUser
+    SET a.webUser = webUser, a.buyerAccount = customer
             , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
             , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
             , a.currency = currency, a.sumAmount = amount
@@ -77,11 +80,6 @@ BUS webUserBus.getCuByWu as q into tb {
                 freezingFee = freezingFee, refrigerationFee = refrigerationFee, 
 				packingFee = packingFee, proxyFreightFee = proxyFreightFee,
                 salesRegion = salesRegion;
-    }
-    
-    var customerid int;
-    foreach tb {
-        set customerid = customer;   -- 这个customer是bus query中返回的字段名称，不是order中的customer，其含义是webuser对应的CID
     }
 
     var bustype int;
@@ -108,10 +106,6 @@ BUS webUserBus.getCuByWu as q into tb {
         if(not coupon is NULL){ 
             WITH IxOrderDetailCoupon ix = detailId xi = coupon;
         }
-        /*
-        BUS JkOrderBus.order INTO [detail]
-            ADD id=detailId, item=pack, product=product, price = price, quantity = quantity, amount = subAmount;
-        */
         bus orderBus.order into orderItems 
             add orderDetailId = detailId, product = product, pack = pack, quantity = quantity, price = price, subAmount = subAmount;
     }
@@ -164,6 +158,8 @@ STATE Matching {
             if (buyerAccount > 0) {
                 var mainId ID;
                 set mainId = a.id from OrderMain as a where a.sheetId = $id;
+                WITH OrderMain as a ID mainId SET a.buyerAccount = buyerAccount;
+
                 bus orderBus.order set type = 3, orderMainId = mainId, id = $id, no = $sheet_no, webUser = webUser, organization = organization, 
                     customer = customerid, buyerAccount = buyerAccount,
                     shippingContact = shippingContact, invoiceContact = invoiceContact, invoiceType = invoiceType, invoiceInfo = invoiceInfo,

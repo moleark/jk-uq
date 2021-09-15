@@ -2,7 +2,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
 ACCEPT order {
 	VAR mainId ID;
 	SET mainId = id;
-	WITH OrderMain as a ID=id SET a.no=no, a.customer=customer;
+	WITH OrderMain as a ID=id SET a.no=no, a.customer=customerAccount;
 	FOR detail {
 		WITH OrderDetail as a 
 			ID = id
