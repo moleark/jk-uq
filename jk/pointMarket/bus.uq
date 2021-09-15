@@ -125,7 +125,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
         where a.id=orderDetailId;
         set lastEnduser = ifnull(lastEnduser,0);
 
-        if ( lastEnduser <> 0 and lastEnduser <> customer) {
+        if ( lastEnduser <> 0 and lastEnduser <> customer and pointYear > 2020) {
                 -- 取消上次订单客户记账
                 book PointBookByCustomer at (lastEnduser, pointYear) set totalpoint += -lastTotalPoint;
                 -- 上次订单客户积分，取消历史记录
@@ -136,7 +136,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
 
         -- 订单积分条件的判定
         -- 销售币种为RMB、国内正常销售业务,非积分黑名单客户，允许积分
-        if (currency = 5 and tradeType = 'a' and mark <> 'PR' and bCustomer = 0){
+        if (currency = 5 and tradeType = 'a' and mark <> 'PR' and bCustomer = 0 and pointYear > 2020){
 
             var multiple int, creditsMultiple int, promotionMultiple int;
             foreach cm {
