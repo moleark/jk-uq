@@ -1,0 +1,151 @@
+ID OrderMainEx GLOBAL (
+    id,                             -- 就是OrderMain的id
+    KEY orderId CHAR(20),           -- 对应Ex系统的orderId
+    seller CHAR(50),
+    salesman ID,
+    salesRegion ID,
+    customer ID,
+    buyerAccount ID,
+    organization ID,
+    currency ID,
+    promotionId CHAR(20),
+    createDate TIMESTAMP,
+);
+
+ID OrderDetailEx GLOBAL (
+    id,                             -- 就是OrderDetail的id
+    KEY orderItemId CHAR(50),       -- 对应Ex系统的orderItemId
+    brand ID,                       -- 品牌id，应该在product里面带
+    -- product ID,                  -- OrderDetail 有这个字段
+    -- pack ID,                     -- OrderDetail 有这个字段
+    -- quantity DEC(12,2),          -- OrderDetail 有这个字段
+    -- price  DEC(12,2),            -- OrderDetail 有这个字段
+    retail DEC(12,2),
+    retailCurrency ID,
+    bottomPrice DEC(12,2),
+    bottomPriceCurrency ID,
+    costPrice DEC(12,2),
+    costPriceCurrency ID,
+    mark CHAR(10),
+    tradeType CHAR(10),
+    taxRate DEC(6,2),
+    createDate TIMESTAMP,
+);
+
+BUS BusOrderChangedEx ver 0.6 FROM 百灵威系统工程部/orderChanged
+ACCEPT orderChanged {
+
+    WITH OrderMain ID=orderMainId SET customer=customer
+        -- , no=orderId
+	    , shippingContact=null
+	    -- , sumQuanity=null
+	    , sumAmount=null
+	    , couponNo=promotionId
+	    , sheetId=null;
+    WITH OrderMainEx ID=orderMainId SET seller=seller
+        , orderId=orderId
+        , salesman=salesman
+        , salesRegion=salesRegion
+        , customer=customer
+        , buyerAccount=buyerAccount
+        , organization=organization
+        , currency=currency
+        , promotionId=promotionId
+        , createDate=from_unixtime(createDate);
+
+    WITH OrderDetail ID=orderDetailId SET main=orderMainId
+	    , warehouse=null
+	    , item=pack
+	    , product=product
+	    , quantity=quantity
+	    , price=price;
+    WITH OrderDetailEx ID=orderDetailId SET brand=brand
+        , orderItemId=orderItemId
+        , retail=retail
+        , retailCurrency=retailCurrency
+        , bottomPrice=bottomPrice
+        , bottomPriceCurrency=bottomPriceCurrency
+        , costPrice=costPrice
+        , costPriceCurrency=costPriceCurrency
+        , mark=mark
+        , tradeType=tradeType
+        , taxRate=taxRate
+        , createDate=from_unixtime(createDate);
+
+    WITH DxOrderDetail ID=orderDetailId SET deliver=quantity;
+    /*
+    -- 没有想好，暂时不发bus
+    BUS JkOrderBus.order SET id=orderMainId, no=orderId, customer=customer;
+    -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
+    -- BUS JkOrderBus.deliver SET id=mainId, contact=contact;
+    BUS JkOrderBus.order INTO detail 
+        ADD id = orderDetailId
+                , item = pack
+                , product = product
+                , quantity = quantity
+                , price = price
+                , amount = quantity*price;
+    -- BUS JkOrderBus.[deliver-ext] INTO detail 
+    --    ADD id = detailId, needInsuredWhenDelivery = 0;
+    -- BUS JkOrderBus.deliver INTO detail 
+    --    ADD id = detailId, warehouse = warehouse;
+    */
+};
+
+BUS BusAdapterEx ver 0.2 FROM 百灵威系统工程部/Adapter
+ACCEPT deliveryConfirm {
+/*
+    { "name": "outBoundItemId", "type": "string" },
+    { "name": "outBoundId", "type": "string" },
+    { "name": "warehouseName", "type": "string" },
+    { "name": "logisticsCompanyId", "type": "number" },
+    { "name": "logisticsNumber", "type": "string" },
+    { "name": "deliveryGoodsTime", "type": "string" },
+    { "name": "deliveryAddress", "type": "string" },
+    { "name": "saleOrderId", "type": "string" },
+    { "name": "saleOrderItemId", "type": "string" },
+    { "name": "packageId", "type": "string" },
+    { "name": "quantity", "type": "number" },
+    { "name": "operatorId", "type": "string" },
+    { "name": "operatorName", "type": "string" },
+    { "name": "operatorPhone", "type": "string" },
+    { "name": "customerId", "type": "string" }
+*/
+    VAR mainId ID, detailId ID;
+    SET mainId=a.id FROM OrderMainEx as a WHERE a.orderId=saleOrderId;
+    SET detailId=a.id FROM OrderDetailEx as a WHERE a.orderItemId=saleOrderItemId;
+    IF mainId IS NULL OR detailId IS NULL {
+        LOG 'mainId IS NULL OR detailId IS NULL' SUBJECT 'BUS deliveryConfirm';
+        RETURN;
+    }
+	BUS JkOrderBus.[deliver-done] SET id=mainId;
+	-- FOR detail {
+		-- WITH DxOrderDetail ID=detailId SET deliverDone=quantity;
+		BUS JkOrderBus.[deliver-done] INTO detail ADD id=detailId, value=quantity;
+	-- }
+    -- 直接本地UQ处理
+    BUS JkOrderBus.[deliver-done] LOCAL;
+};
+
+BUS BusFiReceivable ver 0.6 FROM 百灵威系统工程部/FiReceivable
+ACCEPT innerOrderPaid {
+/*
+    { "name": "orderItemId", "type": "string" },
+    { "name": "orderId", "type": "string" },
+    { "name": "amount", "type": "number" },
+    { "name": "currency", "type": "id" },
+    { "name": "action", "type": "string" },
+    { "name": "createDate", "type": "number" }
+*/
+    VAR mainId ID, detailId ID;
+    SET mainId=a.id FROM OrderMainEx as a WHERE a.orderId=orderId;
+    SET detailId=a.id FROM OrderDetailEx as a WHERE a.orderItemId=orderItemId;
+    IF mainId IS NULL OR detailId IS NULL {
+        LOG 'mainId IS NULL OR detailId IS NULL' SUBJECT 'BUS FiReceivable.innerOrderPaid';
+        RETURN;
+    }
+	BUS JkOrderBus.[receive-done] SET id=mainId;
+	BUS JkOrderBus.[receive-done] INTO detail ADD id=detailId, value=amount;
+    -- 直接本地UQ处理
+    BUS JkOrderBus.[receive-done] LOCAL;
+};

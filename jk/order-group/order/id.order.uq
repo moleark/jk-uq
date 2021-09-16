@@ -33,6 +33,13 @@ ID OrderDetail ver 0.6 GLOBAL (
     createDate TIMESTAMP,
 );
 
+ENUM EnumAmountDiff (packing=11, refrigeration=12, freezing=13, proxyFreight=14);
+IX IxOrderAmountDiff (
+	ix,						
+	xi ENUM EnumAmountDiff,
+	diff DEC(12, 2),
+);
+
 ENUM EnumFeeType (packing=11, refrigeration=12, freezing=13, proxyFreight=14);
 IX IxOrderMainFee (
 	ix,						-- orderMain
@@ -51,13 +58,9 @@ IDX DxOrderDetail ver 0.1 (
 	deliver DEC(12,2),					-- 应发
 	deliverDone DEC(12,2),				-- 已发
 	deliverTime TIMESTAMP,				-- 发货时间
-	deliverReturn DEC(12,2) SUM,		-- 应退货
-	deliverReturnDone DEC(12,2) SUM,	-- 已退货
 	receive DEC(12,2),					-- 应收
 	receiveDone DEC(12,2) SUM,				-- 已收
 	receiveTime TIMESTAMP,				-- 收款时间
-	receiveReturn DEC(12,2) SUM,		-- 应退款
-	receiveReturnDone DEC(12,2) SUM,	-- 已退款
 	invoice DEC(12,2),					-- 应开票
 	invoiceDone DEC(12,2),				-- 已开票
 	invoiceTime TIMESTAMP,				-- 开票时间

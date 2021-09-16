@@ -1,0 +1,16 @@
+import JKWarehouse = 百灵威系统工程部/warehouse;
+
+TUID Warehouse from JKWarehouse(
+    id,
+    main name char(50) not null,
+    search(name),
+    unique(name),
+);
+
+Map SalesRegionWarehouse from JKWarehouse(
+    key salesregion ID SalesRegion,
+    key warehouse ID Warehouse,
+    order,
+);
+
+TUID expressLogistics from JKWarehouse;

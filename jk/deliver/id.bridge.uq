@@ -1,0 +1,52 @@
+ID DeliverMainEx GLOBAL (
+    id,
+    key deliverId char(50),
+    warehouseName char(20),
+    addressString char(100),
+);
+
+BUS BusAdapterEx ver 0.1 FROM 百灵威系统工程部/Adapter
+ACCEPT deliveryConfirm {
+/*
+    "deliverId:id",
+    "deliverItemId:id",
+    { "name": "outBoundItemId", "type": "string" },
+    { "name": "outBoundId", "type": "string" },
+    "warehouseId:id",
+    { "name": "warehouseName", "type": "string" },
+    { "name": "logisticsCompanyId", "type": "number" },
+    { "name": "logisticsNumber", "type": "string" },
+    { "name": "deliveryGoodsTime", "type": "string" },
+    { "name": "deliveryAddress", "type": "string" },
+    { "name": "orderMainId", "type": "id" },
+    { "name": "orderDetailId", "type": "id" },
+    { "name": "saleOrderId", "type": "string" },
+    { "name": "saleOrderItemId", "type": "string" },
+    { "name": "packageId", "type": "string" },
+    { "name": "quantity", "type": "number" },
+    { "name": "operatorId", "type": "string" },
+    { "name": "operatorName", "type": "string" },
+    { "name": "operatorPhone", "type": "string" },
+    "customer:id",
+    { "name": "customerId", "type": "string" }
+*/
+    WITH DeliverMain ID = deliverId set customer = customer
+        , warehouse = warehouseId;
+    WITH DxDeliverMain ID = deliverId set carrier=logisticsCompanyId
+        , waybillNumber = logisticsNumber
+        , deliverTime = from_unixtime(deliveryGoodsTime/1000);
+    WITH DeliverMainEx id = deliverId set deliverId = outBoundItemId
+        , warehouseName=warehouseName
+        , addressString = deliveryAddress;
+
+    VAR deliverDetailId ID;
+    SET deliverDetailId=ID(DeliverDetail new);
+    WITH DeliverDetail ID = deliverDetailId set main=deliverId, orderDetail=orderDetailId;
+    WITH DxDeliverDetail ID = deliverDetailId set deliverDone=quantity;
+
+    BUS JkOrderBus.[deliver-done] SET id = deliverId;
+    BUS JkOrderBus.[deliver-done] INTO detail 
+        ADD id = deliverDetailId
+            , orderDetail = orderDetailId
+            , value = quantity; 
+};
