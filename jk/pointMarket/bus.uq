@@ -203,7 +203,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
                 -- 2.2 针对订单明细
                 history OrderDetailPointHistory
                     set orderDetailId = orderDetailId, pointYear = pointYear, point = diffPoint, 
-                        type = 1, comments = concat(orderMainNo, ',', orderDetailNo);
+                        type = 5, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
 
@@ -268,7 +268,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                 -- 2.2 针对订单明细
                 history OrderDetailPointHistory
                     set orderDetailId = orderDetailId, pointYear = pointYear, point = lValidPoint, 
-                    type = 2, comments = concat(orderMainNo, ',', orderDetailNo);
+                    type = 6, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
     }
@@ -327,7 +327,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                     set pointYear = pointYear, point = dReTotalPoint, source = 5, comments = concat(orderMainNo, ',', '退货'), customer = customer;               
                 -- 2.2 针对订单明细
                 history ReOrderDetailPointHistory
-                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dReTotalPoint, type = 1, comments = concat(orderMainNo, ',', '退货');                
+                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dReTotalPoint, type = 5, comments = concat(orderMainNo, ',', '退货');                
             }
 
             -- 退货有效积分，记账、历史记录
@@ -347,7 +347,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                 -- 2.2 针对订单明细
                 history ReOrderDetailPointHistory
                     set orderDetailId = orderDetailId, pointYear = pointYear, point = dRePoint, 
-                    type = 2, comments = concat(orderMainNo, ',', '退货');                
+                    type = 6, comments = concat(orderMainNo, ',', '退货');                
             }
         }
     };
