@@ -1,7 +1,0 @@
-ENUM EnumOrderState (matching=11, delivering=12, delivered=13, completed=14, canceled=15, pendingPayment=21, paid=22);
-IDX DxOrderMainState (
-    ID,	                -- orderMain
-    state ENUM EnumOrderState,
-    createDate datetime,
-    index idx_state,
-);

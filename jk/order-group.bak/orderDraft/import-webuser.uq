@@ -1,3 +1,0 @@
-import JkWebUser = 百灵威系统工程部/webUser;
-
-TUID WebUser from JkWebUser;
