@@ -92,6 +92,9 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
         }
     };
 
+/*
+订单总积分计算
+*/
 BUS poBus from 百灵威系统工程部/PointOrder
     ACCEPT orderPointChanged
         BUS ps2Bus.getCreditsMultiple as a into cm {
@@ -211,7 +214,10 @@ BUS poBus from 百灵威系统工程部/PointOrder
     };
 
 
-BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order]
+/*
+订单有效积分计算
+*/
+BUS JkOrderBus from 百灵威系统工程部/[jk-order]
     -- 积分订单信息
     ACCEPT order {
         VAR mainId ID;
@@ -265,7 +271,87 @@ BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order]
                     type = 2, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
+    }
+    ACCEPT return {
+        /*
+        订单退货积分计算
+        */
+        FOR detail {
+            var lReTotalPoint int;        -- 本次退货总积分
+            var pointYear int;          -- 积分年度
+            var customer int;           -- 最终积分用户
+            var rTotalPoint int;        -- 订单总积分
+            var rPoint int;
+            var orderMainNo char(50);
+            var orderDetailNo char(50);
+            var orderDetailId int;
+            var multiple int;
+            var rReTotalPoint int;      -- 退货总积分上次值
+            var rRePoint int;           -- 退货有效积分上次值
+
+            var dReTotalPoint int;          --总积分差
+            var dRePoint int;          --有效积分差
+
+            set orderDetailId = id;
+
+            set orderMainNo = a.orderMainNo
+            from OrderDetail as a
+            where a.id = [order-detail-id];
+            set orderMainNo = ifnull(orderMainNo,'');
+
+            -- 退货积分计算、获取与退货订单关联订单积分
+            set lReTotalPoint = -amount * a.multiple, rTotalPoint = a.totalPoint, rPoint = a.point, pointYear = year(b.createDate), customer = b.endUser
+            from DxOrderDetail as a
+                 join OrderDetail as b on a.id = b.id
+            where a.id = [order-detail-id];
+            set lReTotalPoint = ifnull(lReTotalPoint, 0), rTotalPoint = ifnull(rTotalPoint, 0), rPoint = ifnull(rPoint, 0);
+
+            -- 获取退货积分上次值
+            set rReTotalPoint = a.totalPoint, rRePoint = a.point
+            from DxReOrderDetail as a
+            where a.id=id;
+            set rReTotalPoint = ifnull(rReTotalPoint, 0), rRePoint = ifnull(rRePoint, 0);
+
+            -- 退货总积分，记账、历史记录
+            set dReTotalPoint = lReTotalPoint - rReTotalPoint;
+            if ( dReTotalPoint <> 0 ) {
+                -- 1.退货积分记账
+                -- 1.1. 针对客户
+                book PointBookByCustomer at (customer, pointYear) set totalpoint += -dReTotalPoint;
+                -- 1.2.退货订单积分记账，针对订单明细
+                WITH DxReOrderDetail as a ID = orderDetailId set a.totalpoint += dReTotalPoint;
+
+                -- 2.积分历史记录
+                -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
+                history PointHistoryByCustomer 
+                    set pointYear = pointYear, point = dReTotalPoint, source = 5, comments = concat(orderMainNo, ',', '退货'), customer = customer;               
+                -- 2.2 针对订单明细
+                history ReOrderDetailPointHistory
+                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dReTotalPoint, type = 1, comments = concat(orderMainNo, ',', '退货');                
+            }
+
+            -- 退货有效积分，记账、历史记录
+            set dRePoint = lReTotalPoint - rRePoint;
+            if ( dRePoint <> 0 ) {
+                -- 1.退货积分记账
+                -- 1.1. 针对客户
+                book PointBookByCustomer at (customer, pointYear) set point += -dRePoint;
+                -- 1.2.退货订单积分记账，针对订单明细
+                WITH DxReOrderDetail as a ID = orderDetailId set a.point += dRePoint;
+
+                -- 2.积分历史记录
+                -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
+                history PointHistoryByCustomer 
+                    set pointYear = pointYear, point = dRePoint, source = 6, 
+                    comments = concat(orderMainNo, ',', '退货'), customer = customer;               
+                -- 2.2 针对订单明细
+                history ReOrderDetailPointHistory
+                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dRePoint, 
+                    type = 2, comments = concat(orderMainNo, ',', '退货');                
+            }
+        }
     };
+
 
 
 BUS ps2Bus from [百灵威系统工程部]/pointShop2
