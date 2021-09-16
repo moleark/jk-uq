@@ -1,5 +1,5 @@
 
-BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order]
+BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order-1]
 ACCEPT [deliver-done] {
 	BUS JkOrderBus.receive SET id=id;	-- 因为可以是多张订单上的内容一起发送，所以，id可能是null
 	BUS JkOrderBus.invoice SET id=id;
@@ -10,7 +10,7 @@ ACCEPT [deliver-done] {
             , realAmount DEC(12,2), shortAmount DEC(12,2)
             , customer ID, orderDetailId ID;
         VAR returnDetail ID;
-        SET orderDetailId=id;
+        SET orderDetailId=orderDetail;
         SET quantity=a.quantity, price=a.price, amount=a.quantity*a.price FROM OrderDetail as a WHERE a.id=orderDetailId;
         SET receiveDone=a.receiveDone, invoiceDone=a.invoiceDone FROM DxOrderDetail as a WHERE a.id=orderDetailId;
         SET customer=b.customer FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id WHERE a.id=orderDetailId;
@@ -29,12 +29,12 @@ ACCEPT [deliver-done] {
             -- 已收款
             IF value<quantity {
                 -- 如果发货短缺，则退款
-                BUS JkOrderBus.[receive-return] INTO detail ADD id = orderDetailId, value = shortAmount;
+                BUS JkOrderBus.[receive-return] INTO detail ADD orderDetail = orderDetailId, value = shortAmount;
             }
         }
         ELSE {
             -- 未收款，则记应收款
-            BUS JkOrderBus.receive INTO detail ADD id = orderDetailId, value = amount;
+            BUS JkOrderBus.receive INTO detail ADD orderDetail = orderDetailId, value = amount;
     		WITH DxOrderDetail ID=orderDetailId SET receive=amount;
         }
 
@@ -42,13 +42,13 @@ ACCEPT [deliver-done] {
             -- 已开票
             IF value<quantity {
                 -- 如果发货短缺，则退票
-                BUS JkOrderBus.[invoice-return] INTO detail ADD id = orderDetailId, value = shortAmount;
+                BUS JkOrderBus.[invoice-return] INTO detail ADD orderDetail = orderDetailId, value = shortAmount;
                 -- WITH DxReturnDetail ID=returnDetail SET receiveReturn+=shortAmount;
             }
         }
         ELSE {
             -- 未开票，则记应开票
-            BUS JkOrderBus.invoice INTO detail ADD id = orderDetailId, value = amount;
+            BUS JkOrderBus.invoice INTO detail ADD orderDetail = orderDetailId, value = amount;
     		WITH DxOrderDetail ID=orderDetailId SET invoice=amount;
         }
 	}

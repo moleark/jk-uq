@@ -30,6 +30,7 @@ ID DeliverDetail GLOBAL (
 	id,									-- not orderDetail
 	main ID DeliverMain,				-- DeliverMain id	
 	orderDetail ID OrderDetail,
+	quantity DEC(18,4),
 );
 
 IDX DxDeliverDetail (
