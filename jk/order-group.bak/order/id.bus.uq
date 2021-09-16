@@ -1,0 +1,71 @@
+
+BUS JkOrderBus ver 0.2 from 百灵威系统工程部/[jk-order]
+ACCEPT [deliver-done] {
+	BUS JkOrderBus.receive SET id=id;	-- 因为可以是多张订单上的内容一起发送，所以，id可能是null
+	BUS JkOrderBus.invoice SET id=id;
+    BUS JkOrderBus.[receive-return] SET id=0;       -- 无主表
+    BUS JkOrderBus.[invoice-return] SET id=0;       -- 无主表
+	FOR detail {
+		VAR amount DEC(12,2), quantity DEC(12,2), price DEC(12,2), receiveDone DEC(12,2), invoiceDone DEC(12,2)
+            , realAmount DEC(12,2), shortAmount DEC(12,2)
+            , customer ID, orderDetailId ID;
+        VAR returnDetail ID;
+        SET orderDetailId=id;
+        SET quantity=a.quantity, price=a.price, amount=a.quantity*a.price FROM OrderDetail as a WHERE a.id=orderDetailId;
+        SET receiveDone=a.receiveDone, invoiceDone=a.invoiceDone FROM DxOrderDetail as a WHERE a.id=orderDetailId;
+        SET customer=b.customer FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id WHERE a.id=orderDetailId;
+        SET returnDetail=a.id FROM ReturnDetail as a WHERE a.orderDetail=orderDetailId;
+        if value > quantity {
+            -- ??? 错误 ??? something wrong
+            -- 发送退货信息，发货服务器没有收到，直接发货了。就会出现这样的情况。
+            -- 怎么处理？有待细想。等同于已经发货了之后的退货。
+            LOG 'error in JkOrderBus.deliver-done: value cannot bigger than quanity';
+        }        
+		WITH DxOrderDetail ID=id SET deliverDone=value, deliverTime=$date;
+        WITH IxCustomerReturnable IXX=customer IX=unix_timestamp($date) XI=orderDetailId;
+		SET realAmount = value * price;
+        SET shortAmount = amount - realAmount;
+        IF receiveDone>0 {
+            -- 已收款
+            IF value<quantity {
+                -- 如果发货短缺，则退款
+                BUS JkOrderBus.[receive-return] INTO detail ADD id = orderDetailId, value = shortAmount;
+            }
+        }
+        ELSE {
+            -- 未收款，则记应收款
+            BUS JkOrderBus.receive INTO detail ADD id = orderDetailId, value = amount;
+    		WITH DxOrderDetail ID=orderDetailId SET receive=amount;
+        }
+
+        IF invoiceDone>0 {
+            -- 已开票
+            IF value<quantity {
+                -- 如果发货短缺，则退票
+                BUS JkOrderBus.[invoice-return] INTO detail ADD id = orderDetailId, value = shortAmount;
+                -- WITH DxReturnDetail ID=returnDetail SET receiveReturn+=shortAmount;
+            }
+        }
+        ELSE {
+            -- 未开票，则记应开票
+            BUS JkOrderBus.invoice INTO detail ADD id = orderDetailId, value = amount;
+    		WITH DxOrderDetail ID=orderDetailId SET invoice=amount;
+        }
+	}
+}
+ACCEPT [receive-done] {
+	FOR detail {
+		WITH DxOrderDetail ID=id SET receiveDone=value, receiveTime=$date;
+	}
+}
+ACCEPT [invoice-done] {
+	FOR detail {
+		WITH DxOrderDetail ID=id SET invoiceDone=value, invoiceTime=$date;
+	}
+}
+ACCEPT [return-accept-done] {
+	FOR detail {
+		-- WITH DxOrderDetail ID=id SET deliverReturnDone+=value;
+	}
+}
+;

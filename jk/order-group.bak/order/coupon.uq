@@ -1,0 +1,39 @@
+import JKSalestask = 百灵威系统工程部/salestask;
+
+--优惠券
+TUID Coupon from JKSalestask (
+    id,
+    main code char(8),
+    main user ID [$user],
+    main customer ID Customer,
+    main discount dec(12, 2),     --折扣
+    main preferential dec(12, 2), --优惠额度
+    main validitydate date,
+    main isValid smallint,
+);
+
+/*
+QUERY getCoupon(code char(8))
+returns ret (
+    code char(8),
+    discount dec(12, 2),     --折扣
+    preferential dec(12, 2), --优惠额度
+    validitydate date,
+    isValid smallint
+){
+    into ret select code, discount, preferential, validitydate, isValid
+    from    coupon
+    where   code = code and isValid = 1 and validitydate > now() and customer = $user;
+};
+*/
+
+IX IxOrderMainCustomerCoupon (
+    ixx,    -- orderMain
+    ix,     -- endUser
+    xi,     -- credits
+);
+
+IX IxOrderDetailCoupon (
+    ix,     -- orderDetail
+    xi,     -- credits
+);

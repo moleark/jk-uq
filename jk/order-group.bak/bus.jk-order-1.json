@@ -21,7 +21,7 @@
 		"-- return detail id",
 		"id: id",
 		"-- 对应的 order detail id",
-		"order-detail-id: id",
+		"orderdetail: id",
 		"quantity: number",
 		"amount: number",
 		"-- price不需要, 在order detail id 里面可以获得"
@@ -32,6 +32,7 @@
 	],
 	"note-detail": [
 		"id: id",
+		"orderdetail: id",
 		"value: number"
 	],
 	"deliver-detail": [
@@ -115,26 +116,28 @@
 		"binding: string"
 	],
 	"order-bound-detail":[
-		"type: string  -- sales, person-client, 预定义的类型",
-		"id: id  -- 指定类型的id",
-		"id-type: string -- staff, customer, 如果没有值，id表示webUser"
+		"id: id  -- 指定类型的id"
 	],
 	"order-bound": [
 		"-- order id, coupon体系根据coupon，找到order的绑定人",
 		"order: id",
 		"-- promoter: id  -- 推销人，销售，或者外部人员", 
-		"to: order-bound-detail -- type: sales|client, id is sales id or client id"
+		"to: order-bound-detail -- id is sales id or agent id"
 	],
-	"order-bound-profit": [
+	"order-bound-staff-sales": [
 		"order: id",
-		"to: order-bound-detail -- type: sales|client, id is sales id or client id"
+		"to: order-bound-detail -- id is sales id or agent id"
 	],
-	"order-bound-amount": [
+	"order-bound-agent": [
 		"order: id",
-		"to: order-bound-detail -- type: sales|client, id is sales id or client id"
+		"to: order-bound-detail -- id is sales id or agent id"
 	],
-	"order-customer-points": [
+	"order-bound-distributor": [
 		"order: id",
-		"to: order-bound-detail -- type: customer, id is customer person id"
+		"to: order-bound-detail -- id is sales id or agent id"
+	],
+	"order-bound-customer": [
+		"order: id",
+		"to: order-bound-detail -- id is sales id or agent id"
 	]
 }

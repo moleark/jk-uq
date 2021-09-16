@@ -62,7 +62,7 @@ BUS webUserBus.getCuByWu as q into tb {
     var mainId ID;
     SET mainId = ID(orderMain new, $sheet_no);
     WITH OrderMain as a ID mainId
-    SET a.webUser = webUser, a.buyerAccount = customer
+    SET a.webUser = webUser, a.customer = customerid, a.buyerAccount = customer
             , a.shippingContact = shippingContact, a.invoiceContact = invoiceContact
             , a.invoiceType = invoiceType, a.invoiceInfo = invoiceInfo
             , a.currency = currency, a.sumAmount = amount
@@ -117,10 +117,10 @@ BUS webUserBus.getCuByWu as q into tb {
     if (now() > '2020-09-01' and now() < '2020-10-01') 
         set pointMultiple = 4
     if(point > 0){
-        bus couponBus.creditsUsedByWebUser set orderId = $sheet_no, webUser = webUser, amount = amount, currency = currency
+        bus cmB.creditsUsedByWebUser set orderId = $sheet_no, webUser = webUser, amount = amount, currency = currency
         , point = point, coupon = coupon;
         foreach orderItems {
-            bus couponBus.creditsUsedByWebUser into orderItems add row = $row, point = quantity * price * pointMultiple;
+            bus cmB.creditsUsedByWebUser into orderItems add row = $row, point = quantity * price * pointMultiple;
         }
     }
 
@@ -129,10 +129,10 @@ BUS webUserBus.getCuByWu as q into tb {
             WITH IxOrderMainCustomerCoupon ixx = mainId ix = customerid xi = coupon; 
         } 
         if(point > 0){
-            bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+            bus cmB.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
             foreach orderItems {
-                bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
+                bus cmB.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
             }
         }
     }
@@ -191,10 +191,10 @@ STATE Matching {
                 set pointMultiple = 2;
                 if (now() > '2020-09-01' and now() < '2020-10-01') 
                     set pointMultiple = 4;
-                bus couponBus.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
+                bus cmB.creditsUsedByCustomer set orderId = $sheet_no, customer = customerid, amount = amount, currency = currency
                 , point = point, coupon = coupon;
                 foreach orderItems {
-                    bus couponBus.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
+                    bus cmB.creditsUsedByCustomer into orderItems add row = $row, point = quantity * price * pointMultiple;
                 }
             }
         }

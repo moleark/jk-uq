@@ -80,7 +80,7 @@ RETURNS ret (
 			, couponNo=couponNo
 			, sheetId=sheetId
     		, shippingContact=shippingContact;
-		BUS JkOrderBus.order SET id=mainId, no=orderNo, customerAccount=customer;
+		BUS JkOrderBus.order SET id=mainId, no=orderNo, customer=customer;
 		BUS JkOrderBus.[deliver-ext] SET id=mainId;
 		BUS JkOrderBus.deliver SET id=mainId, contact=shippingContact;
 		FOR detail {
@@ -123,7 +123,7 @@ RETURNS ret (
 	SET mainId = 0;
 	SET checkOk = 1;
 	IF checkOk = 1 {
-		SET mainId=ID(ReturnMain new, '');
+		SET mainId=ID(ReturnMain new);
 		WITH ReturnMain ID=mainId;
 		BUS JkOrderBus.return SET id=mainId; -- , [order-id]=orderMain;
 		BUS JkOrderBus.[receive-return] SET id=0;       -- 无主表

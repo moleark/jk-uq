@@ -1,0 +1,39 @@
+ID OrderMain ver 0.3 (
+	id,
+	KEY no,
+	customer ID,
+	contact ID
+);
+
+ID OrderDetail ver 0.1 (
+	id,
+	main ID OrderMain,
+	item ID,
+	product ID,
+	quantity DEC(12,2),
+	amount DEC(12,2),
+	price DEC(12,2),
+	warehouse ID,						-- 库房
+);
+
+IDX OrderDetailX (
+	id,
+	needInsuredWhenDelivery TINYINT,
+	showPrice tinyint,
+	lotNumber char(20),
+	json text
+);
+
+IDX DxOrderDetail (
+	id,										-- order detail id
+	deliverShould DEC(12,2) DEFAULT 0,		-- 应发, 一个订单分仓，有可能跟订单上不一样。
+	deliverReturn DEC(12,2) SUM,			-- 应退货
+	returnDone DEC(12,2) SUM,				-- 已退货
+	pickDone DEC(12,2) DEFAULT 0,			-- 已捡
+	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
+);
+
+IDX DxReturnDetail (
+	id,									-- return detail
+	quantityDone DEC(12,2) SUM,			-- 已退货数量
+);

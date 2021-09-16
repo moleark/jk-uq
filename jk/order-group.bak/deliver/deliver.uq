@@ -26,10 +26,9 @@ IDX DxDeliverMain (
 
 /*
 */
-ID DeliverDetail GLOBAL (
-	id,									-- not orderDetail
-	main ID DeliverMain,				-- DeliverMain id	
-	orderDetail ID OrderDetail,
+ID DeliverDetail GLOBAL(
+	id,						-- orderDetail
+	main ID DeliverMain,	-- DeliverMain id	
 );
 
 IDX DxDeliverDetail (

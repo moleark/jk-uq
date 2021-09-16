@@ -1,0 +1,50 @@
+
+-- 60天内发运的货物可以退。
+-- 这个目前直接写在代码里面。以后可以设置。甚至根据不同品种设置。
+QUERY GetCustomerReturnable ver 0.1 (
+    customer ID,
+)
+PAGE (
+    id ID DESC,
+    # OrderDetail,
+    # DxOrderDetail,
+) {
+    VAR returnableDays INT = 60;
+    PAGE SELECT 
+        a.xi as id
+        -- , b.main, b.warehouse, b.item, b.product
+        -- , b.quantity, b.amount, b.price
+        , #b
+        -- , c.deliver, c.deliverDone, c.deliverTime, c.deliverReturn, c.deliverReturnDone
+        -- , c.receive, c.receiveDone, c.receiveTime, c.receiveReturn, c.receiveReturnDone
+        -- , c.invoice, c.invoiceDone, c.invoiceTime, c.invoiceReturn, c.invoiceReturnDone
+        , #c
+        FROM IxCustomerReturnable as a
+            JOIN OrderDetail as b ON a.xi=b.id
+            JOIN DxOrderDetail as c ON b.id=c.id
+        WHERE a.ixx=customer AND a.ix>=unix_timestamp()-3600*24*returnableDays AND b.id<$pageStart
+        ORDER BY a.xi DESC
+        LIMIT $pageSize;
+};
+
+QUERY GetCustomerOrderReturn (
+    customer ID,
+    order ID,
+)
+RETURNS main (
+    # OrderMain,
+)
+RETURNS detail (
+    # OrderDetail,
+    # DxOrderDetail,
+) {
+    VAR returnableDays INT = 60;
+    INTO main SELECT #a
+        FROM OrderMain as a
+        WHERE a.customer=customer;
+    INTO detail SELECT #a, #b
+        FROM OrderDetail as a
+            JOIN DxOrderDetail as b ON a.id=b.id
+        WHERE a.main=order
+        ORDER BY a.id;
+};
