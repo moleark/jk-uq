@@ -29,6 +29,7 @@ ID OrderDetail ver 0.6 GLOBAL (
 	product ID,
 	quantity DEC(12,2),
 	price DEC(12,2),                    -- 实际成交价
+	amount DEC(18,4),					-- 实际成交金额
     lotNumber char(50),
     createDate TIMESTAMP,
 );
@@ -64,4 +65,6 @@ IDX DxOrderDetail ver 0.1 (
 	invoice DEC(12,2),					-- 应开票
 	invoiceDone DEC(12,2),				-- 已开票
 	invoiceTime TIMESTAMP,				-- 开票时间
+
+    deliverReturn DEC(18,4) SUM,		-- 应退货
 );
