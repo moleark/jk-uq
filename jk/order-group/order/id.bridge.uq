@@ -48,8 +48,8 @@ BUS couponBus.getMatchedCredits as q into tb {
             JOIN OrderMain as b on a.id = b.id 
     where   a.id = orderMainId;
 
-    var lQuantity dec(18, 4), lPrice dec(18,4), lBottomPrice dec(18, 4);
-    set lQuantity = b.quantity, lPrice = b.price, lBottomPrice = a.bottomPrice
+    var lQuantity dec(18, 4), lPrice dec(18,4), lCostPrice dec(18, 4);
+    set lQuantity = b.quantity, lPrice = b.price, lCostPrice = a.costPrice
     from    OrderDetailEx as a
             JOIN OrderDetail as b on a.id = b.id
     where   a.id = orderDetailId;
@@ -130,16 +130,15 @@ BUS couponBus.getMatchedCredits as q into tb {
                     , amount = quantity*price;  -- TODO:缺少lotNumber等
     }
 
-    if((ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) > 0.001) or (ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) < -0.001)){
-        BUS JkOrderBus.[order-bottom-price] set order = orderMainId;
-        BUS JkOrderBus.[order-bottom-price] into [detail]
-            ADD [order-detail] = orderDetailId, [bottom-price] = bottomPrice;
+    if((ifnull(lCostPrice, 0) - ifnull(costPrice, 0) > 0.001) or (ifnull(lCostPrice, 0) - ifnull(costPrice, 0) < -0.001)){
+        BUS JkOrderBus.[order-cost-price] set order = orderMainId;
+        BUS JkOrderBus.[order-cost-price] into [detail]
+            ADD [order-detail] = orderDetailId, [cost-price] = costPrice;
     }
 
     if(ifnull(lSalesman, 0) <> ifnull(salesman, 0)){
-        BUS JkOrderBus.[order-bound] set order = orderMainId;
-        BUS JkOrderBus.[order-bound] into [to]
-            ADD [type] = 'staff-sales', [id] = salesman, [id-type] = 'staff';
+        BUS JkOrderBus.[order-bound-stuff-sales] set order = orderMainId;
+        BUS JkOrderBus.[order-bound-stuff-sales] into [to] ADD [id] = salesman;
     }
 }
 ACCEPT returnChanged {
