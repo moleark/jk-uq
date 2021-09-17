@@ -4,10 +4,10 @@ ACCEPT innerOrderPaid {
     if (action = 1) {
         WITH DxOrderDetail as a ID = orderDetailId set a.receiveDone += amount;
         BUS JkOrderBus.[receive-done] INTO detail 
-            ADD id=orderDetailId, value=amount;
+            ADD id = null, orderdetail = orderDetailId, value = amount;
     } else {
         WITH DxOrderDetail as a ID = orderDetailId set a.receiveDone -= amount;
         BUS JkOrderBus.[receive-done] INTO detail 
-            ADD id=orderDetailId, value=amount * -1;
+            ADD id = null, orderdetail = orderDetailId, value = amount * -1;
     }	
 };

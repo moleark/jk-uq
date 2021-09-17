@@ -1,4 +1,0 @@
-BUS BusOrderChangedEx FROM 百灵威系统工程部/OrderChanged;
-BUS BusFiReceivableEx FROM 百灵威系统工程部/FiReceivable;
-BUS BusAdapterEx FROM 百灵威系统工程部/Adapter;
-

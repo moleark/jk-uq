@@ -1,6 +1,0 @@
-ENUM EnumAmountDiff (packing=11, refrigeration=12, freezing=13, proxyFreight=14);
-IX IxOrderAmountDiff (
-	ix,						
-	xi ENUM EnumAmountDiff,
-	diff DEC(12, 2),
-);
