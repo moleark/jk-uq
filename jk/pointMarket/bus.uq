@@ -1,4 +1,5 @@
 bus commonBus from 百灵威系统工程部/common;
+BUS ps2Bus from [百灵威系统工程部]/pointShop2;
 
 /*
  * 接收从内部系统导入的积分
@@ -126,12 +127,12 @@ BUS poBus from 百灵威系统工程部/PointOrder
         set lastEnduser = ifnull(lastEnduser,0);
 
         if ( lastEnduser <> 0 and lastEnduser <> customer and pointYear > 2020) {
-                -- 取消上次订单客户记账
-                book PointBookByCustomer at (lastEnduser, pointYear) set totalpoint += -lastTotalPoint;
-                -- 上次订单客户积分，取消历史记录
-                history PointHistoryByCustomer 
-                    set pointYear = pointYear, point = -lastTotalPoint, source = 5, 
-                    comments = concat(orderMainNo, ',', orderDetailNo), customer = lastEnduser;
+            -- 取消上次订单客户记账
+            book PointBookByCustomer at (lastEnduser, pointYear) set totalpoint += -lastTotalPoint;
+            -- 上次订单客户积分，取消历史记录
+            history PointHistoryByCustomer 
+                set pointYear = pointYear, point = -lastTotalPoint, pointType = EnumPointType.total, source = EnumPointChangingSource.order, 
+                comments = concat(orderMainNo, ',', orderDetailNo), customer = lastEnduser;
         }
 
         -- 订单积分条件的判定
@@ -188,7 +189,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
                 -- 2.积分历史记录
                 -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
                 history PointHistoryByCustomer 
-                    set pointYear = pointYear, point = cDiffPoint, source = 5, 
+                    set pointYear = pointYear, point = cDiffPoint, pointType = EnumPointType.total source = EnumPointChangingSource.order, 
                     comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
             }
 
@@ -263,7 +264,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                 -- 2.积分历史记录
                 -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
                 history PointHistoryByCustomer 
-                    set pointYear = pointYear, point = lValidPoint, source = 6, 
+                    set pointYear = pointYear, point = lValidPoint, pointType = EnumPointType.point, source = EnumPointChangingSource.order, 
                     comments = concat(orderMainNo, ',', orderDetailNo), customer = customer;               
                 -- 2.2 针对订单明细
                 history OrderDetailPointHistory
@@ -314,7 +315,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
 
             -- 退货总积分，记账、历史记录
             set dReTotalPoint = lReTotalPoint - rReTotalPoint;
-            if ( dReTotalPoint <> 0 ) {
+            if (dReTotalPoint <> 0) {
                 -- 1.退货积分记账
                 -- 1.1. 针对客户
                 book PointBookByCustomer at (customer, pointYear) set totalpoint += -dReTotalPoint;
@@ -324,10 +325,12 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                 -- 2.积分历史记录
                 -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
                 history PointHistoryByCustomer 
-                    set pointYear = pointYear, point = dReTotalPoint, source = 5, comments = concat(orderMainNo, ',', '退货'), customer = customer;               
+                    set pointYear = pointYear, point = dReTotalPoint, pointType = EnumPointType.total, source = EnumPointChangingSource.return, 
+                    comments = concat(orderMainNo, ',', '退货'), customer = customer;
                 -- 2.2 针对订单明细
                 history ReOrderDetailPointHistory
-                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dReTotalPoint, type = 5, comments = concat(orderMainNo, ',', '退货');                
+                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dReTotalPoint
+                    , type = 5, comments = concat(orderMainNo, ',', '退货');                
             }
 
             -- 退货有效积分，记账、历史记录
@@ -342,7 +345,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                 -- 2.积分历史记录
                 -- 2.1针对客户、年度、积分、积分来源分类、积分源ID(订单ID,积分券Id),备注（上次积分与本次积分计算过程）
                 history PointHistoryByCustomer 
-                    set pointYear = pointYear, point = dRePoint, source = 6, 
+                    set pointYear = pointYear, point = dRePoint, pointType = EnumPointType.point source = EnumPointChangingSource.return, 
                     comments = concat(orderMainNo, ',', '退货'), customer = customer;               
                 -- 2.2 针对订单明细
                 history ReOrderDetailPointHistory
@@ -351,46 +354,3 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
             }
         }
     };
-
-
-
-BUS ps2Bus from [百灵威系统工程部]/pointShop2
-ACCEPT pointInitialization {
-    --订单积分
-    if(source=5){
-        
-        book orderBack at(orderItemId) set orderId = orderId, customer = customer, 
-            brand = brand, product = product, pack = pack, quantity = quantity, price = price,
-            currency = currency, retail = retail, retailCurrency = retailCurrency, totalPoint += mscore,
-            mark = mark, createDate = createDate;
-
-        --总积分
-        book PointBookByCustomer at (customer, pointYear) set totalpoint += mscore;
-        history PointHistoryByCustomer 
-            set pointYear = pointYear, point = mscore, source = 5, comments = comments, customer = customer;
-
-        --有效积分
-        if(isvalid=1){
-            book PointBookByCustomer at (customer, pointYear) set point += mscore;
-        }
-
-    }else if(source=2){  --签到积分
-
-        book PointBookByCustomer at (customer, pointYear) set point += mscore, totalpoint += mscore;
-        history PointHistoryByCustomer 
-            set pointYear = pointYear, point = mscore, source = 2, comments = comments, customer = customer; 
-
-    }else if(source=3){  --积分兑换
-
-        book PointBookByCustomer at (customer, pointYear) set usedPoint += mscore;
-        history PointHistoryByCustomer 
-            set pointYear = pointYear, point = (0-mscore), source = 3, comments = comments, customer = customer; 
-
-    }
-    /*
-    if(isvalid=1){
-        if exists (select 1 from PointBookByCustomer as e where e.customer=customer and e.pointYear=pointYear){
-            book PointBookByCustomer at (customer, pointYear) set point += mscore;
-        }
-    }*/
-};
