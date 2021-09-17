@@ -1,30 +1,33 @@
 ID DeliverMain GLOBAL(
-	id,
-	KEY no,
-	customer ID,
+    id,
+    KEY no,
+    customer ID,
     contact ID,
-	warehouse ID,
-	sys(create),
+    warehouse ID,
+    sys(create),
 );
 
 IDX DxDeliverMain (
-	id,										-- deliver main id
-	staff ID,								-- 发运人
-	rows SMALLINT DEFAULT 0,				-- 行数
-	pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
+    id,										-- deliver main id
+    staff ID,								-- 发运人
+    rows SMALLINT DEFAULT 0,				-- 行数
+    pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
     carrier ID,                             -- 承运方
     waybillNumber char(50),                 -- 运单号
-	deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
+    deliverTime TIMESTAMP DEFAULT NULL,		-- 发运时间
 );
 
 /*
 */
 ID DeliverDetail GLOBAL(
-	id,						-- orderDetail
-	main ID DeliverMain,	-- DeliverMain id	
+    id,                     -- 
+    main ID DeliverMain,    -- DeliverMain id	
+    orderDetail ID orderDetail,
+    quantity dec(18, 4),
+    INDEX idx_orderDetail(orderDetail),
 );
 
 IDX DxDeliverDetail (
     id,
-	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
+    deliverDone DEC(12,2) DEFAULT 0,        -- 已发
 );
