@@ -9,7 +9,7 @@ ID DeliverMain GLOBAL(
     customer ID,
     contact ID,
 	warehouse ID,
-	cutOffMain ID,
+	cutOffMain ID,          -- 这两个字段放在这儿不对，应该用单独的IX
 	trayNumber int,
 	sys(create),
 );
