@@ -26,6 +26,7 @@ ID ReceiveDetail GLOBAL (
     main ID ReceiveMain,
     orderDetail ID,
     amount DEC(18,4),
+    createDate TIMESTAMP,
 );
 
 IDX DxReceiveMain (
@@ -38,6 +39,7 @@ IDX DxReceiveMain (
 
 ENUM EnumReceiveWay (bank = 1, weixin = 2, alipay = 3, cash = 4);
 ENUM EnumReceiveDirection (in = 1, out = -1);
+
 
 QUERY PendingReceive(
 )

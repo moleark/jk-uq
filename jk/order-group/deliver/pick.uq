@@ -8,7 +8,7 @@ ACT DonePickup (
 	deliver ID,
 	-- 实际拣货数量。
 	ARR detail (
-		id ID,
+		id ID,					-- 
 		quantity DEC(12,2),
 	)
 ) {

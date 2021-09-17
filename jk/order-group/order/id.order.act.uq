@@ -56,7 +56,7 @@ ACTION OrderConfirm (
 };
 
 -- 保存订单，为了mock数据，直接发order bus，同时发deliver
-ACTION SaveOrder ver 0.1 (
+ACTION SaveOrder ver 0.2 (
 	# [OrderMain],
 	ARR detail (
 		# OrderDetail,
@@ -86,17 +86,17 @@ RETURNS ret (
 		FOR detail {
 			VAR detailId ID;
 			SET detailId=ID(OrderDetail new);
-			WITH OrderDetail ID=detailId SET main=mainId
-				, item=item, product=product
-				, warehouse=warehouse
-				, quantity=quantity, price=price;
+			WITH OrderDetail as a ID=detailId SET a.main=mainId
+				, a.item=item, a.product=product
+				, a.warehouse=warehouse
+				, a.quantity=quantity, a.price=price, a.amount=amount;
 			WITH DxOrderDetail ID=detailId SET deliver=quantity;
 			BUS JkOrderBus.order INTO detail 
 				ADD id = detailId
 					, item = item
 					, product = product
 					, quantity = quantity
-					-- , amount = amount
+					, amount = amount
 					, price = price;
 			BUS JkOrderBus.[deliver-ext] INTO detail 
 				ADD id = detailId, needInsuredWhenDelivery = 0;
@@ -138,11 +138,13 @@ RETURNS ret (
 				, receiveReturn=amount, invoiceReturn=amount;
 			BUS JkOrderBus.return INTO detail 
 				ADD id = detailId
-					, [order-detail-id] = orderDetail
+					, [orderDetail] = orderDetail
 					, quantity = quantity
 					, amount = amount;
-            BUS JKOrderBus.[receive-return] INTO detail ADD id=orderDetail, value=amount;
-            BUS JKOrderBus.[invoice-return] INTO detail ADD id=orderDetail, value=amount;
+            BUS JKOrderBus.[receive-return] INTO detail 
+				ADD id=detailId, orderDetail=orderDetail, value=amount;
+            BUS JKOrderBus.[invoice-return] INTO detail 
+				ADD id=detailId, orderDetail=orderDetail, value=amount;
 		}
 	}
 	INTO ret SELECT mainId as id;
