@@ -130,13 +130,6 @@ BUS couponBus.getMatchedCredits as q into tb {
                     , amount = quantity*price;  -- TODO:缺少lotNumber等
     }
 
-    -- BUS JkOrderBus.deliver SET id=mainId, contact=contact;
-    -- BUS JkOrderBus.deliver INTO detail 
-    --    ADD id = detailId, warehouse = warehouse;
-    -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
-    -- BUS JkOrderBus.[deliver-ext] INTO detail 
-    --    ADD id = detailId, needInsuredWhenDelivery = 0;
-
     if((ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) > 0.001) or (ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) < -0.001)){
         BUS JkOrderBus.[order-bottom-price] set order = orderMainId;
         BUS JkOrderBus.[order-bottom-price] into [detail]
