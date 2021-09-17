@@ -225,7 +225,7 @@ Action submit {
                 book PointBookByCustomer at (customer, pointYear) set usedPoint += p;
                 history PointHistoryByCustomer
                     set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no
-                    , source = EnumPointChangingSource.exchange;
+                    , pointType = EnumPointType.used, source = EnumPointChangingSource.exchange;
             }
 
             set leftAmount = leftAmount - p;
@@ -257,7 +257,7 @@ STATE Shipping {
             book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
             history PointHistoryByCustomer
                 set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no
-                , source = EnumPointChangingSource.exchangeCanceled;            
+                , pointType = EnumPointType.used, source = EnumPointChangingSource.exchangeCanceled;            
         } 
         STATE TO CANCELED;
     }
