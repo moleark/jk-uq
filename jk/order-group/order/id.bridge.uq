@@ -162,7 +162,7 @@ ACCEPT returnChanged {
     BUS JkOrderBus.return SET id = returnMainId;
     BUS JkOrderBus.return INTO detail 
         ADD id = returnDetailId
-                , [order-detail-id] = orderDetailId
+                , [orderdetail] = orderDetailId
                 , quantity = quantity
                 , amount = quantity*price;
 };

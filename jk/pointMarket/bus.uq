@@ -297,14 +297,14 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
 
             set orderMainNo = a.orderMainNo
             from OrderDetail as a
-            where a.id = [order-detail-id];
+            where a.id = [orderdetail];
             set orderMainNo = ifnull(orderMainNo,'');
 
             -- 退货积分计算、获取与退货订单关联订单积分
             set lReTotalPoint = -amount * a.multiple, rTotalPoint = a.totalPoint, rPoint = a.point, pointYear = year(b.createDate), customer = b.endUser
             from DxOrderDetail as a
                  join OrderDetail as b on a.id = b.id
-            where a.id = [order-detail-id];
+            where a.id = [orderdetail];
             set lReTotalPoint = ifnull(lReTotalPoint, 0), rTotalPoint = ifnull(rTotalPoint, 0), rPoint = ifnull(rPoint, 0);
 
             -- 获取退货积分上次值
