@@ -32,7 +32,7 @@ IX Refund (
 ID ReceiveDetail GLOBAL (
     id,						-- not orderDetail
     main ID ReceiveMain,
-    orderDetail ID,
+    orderDetail ID OrderDetail,
     amount DEC(18,4),
     createDate TIMESTAMP,
 );
