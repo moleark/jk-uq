@@ -131,7 +131,7 @@ HISTORY OrderDetailPointHistory (
     orderDetailId ID orderDetail,           --订单明细ID
     pointYear int,                          --积分年度
     point int,                              --积分数(100 or -100)
-    type int,                               --1：积分，2：有效积分
+    type int,                               --1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消; 5:订单积分;6:有效积分变动;
     comments char(1000) ,                   --备注
 );
 
@@ -148,7 +148,7 @@ HISTORY ReOrderDetailPointHistory (
     orderDetailId ID orderDetail,           --订单明细ID
     pointYear int,                          --积分年度
     point int,                              --积分数(100 or -100)
-    type int,                               --1：积分，2：有效积分
+    type int,                               --1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消; 5:订单积分;6:有效积分变动;
     comments char(1000),                   --备注
 );
 

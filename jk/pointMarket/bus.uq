@@ -125,7 +125,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
         where a.id=orderDetailId;
         set lastEnduser = ifnull(lastEnduser,0);
 
-        if ( lastEnduser <> 0 and lastEnduser <> customer) {
+        if ( lastEnduser <> 0 and lastEnduser <> customer and pointYear > 2020) {
                 -- 取消上次订单客户记账
                 book PointBookByCustomer at (lastEnduser, pointYear) set totalpoint += -lastTotalPoint;
                 -- 上次订单客户积分，取消历史记录
@@ -136,7 +136,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
 
         -- 订单积分条件的判定
         -- 销售币种为RMB、国内正常销售业务,非积分黑名单客户，允许积分
-        if (currency = 5 and tradeType = 'a' and mark <> 'PR' and bCustomer = 0){
+        if (currency = 5 and tradeType = 'a' and mark <> 'PR' and bCustomer = 0 and pointYear > 2020){
 
             var multiple int, creditsMultiple int, promotionMultiple int;
             foreach cm {
@@ -203,7 +203,7 @@ BUS poBus from 百灵威系统工程部/PointOrder
                 -- 2.2 针对订单明细
                 history OrderDetailPointHistory
                     set orderDetailId = orderDetailId, pointYear = pointYear, point = diffPoint, 
-                        type = 1, comments = concat(orderMainNo, ',', orderDetailNo);
+                        type = 5, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
 
@@ -268,7 +268,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                 -- 2.2 针对订单明细
                 history OrderDetailPointHistory
                     set orderDetailId = orderDetailId, pointYear = pointYear, point = lValidPoint, 
-                    type = 2, comments = concat(orderMainNo, ',', orderDetailNo);
+                    type = 6, comments = concat(orderMainNo, ',', orderDetailNo);
             }
         }
     }
@@ -327,7 +327,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                     set pointYear = pointYear, point = dReTotalPoint, source = 5, comments = concat(orderMainNo, ',', '退货'), customer = customer;               
                 -- 2.2 针对订单明细
                 history ReOrderDetailPointHistory
-                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dReTotalPoint, type = 1, comments = concat(orderMainNo, ',', '退货');                
+                    set orderDetailId = orderDetailId, pointYear = pointYear, point = dReTotalPoint, type = 5, comments = concat(orderMainNo, ',', '退货');                
             }
 
             -- 退货有效积分，记账、历史记录
@@ -347,7 +347,7 @@ BUS JkOrderBus from 百灵威系统工程部/[jk-order]
                 -- 2.2 针对订单明细
                 history ReOrderDetailPointHistory
                     set orderDetailId = orderDetailId, pointYear = pointYear, point = dRePoint, 
-                    type = 2, comments = concat(orderMainNo, ',', '退货');                
+                    type = 6, comments = concat(orderMainNo, ',', '退货');                
             }
         }
     };
