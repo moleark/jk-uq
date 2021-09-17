@@ -137,8 +137,8 @@ BUS couponBus.getMatchedCredits as q into tb {
     }
 
     if(ifnull(lSalesman, 0) <> ifnull(salesman, 0)){
-        BUS JkOrderBus.[order-bound-stuff-sales] set order = orderMainId;
-        BUS JkOrderBus.[order-bound-stuff-sales] into [to] ADD [id] = salesman;
+        BUS JkOrderBus.[order-bound-staff-sales] set order = orderMainId;
+        BUS JkOrderBus.[order-bound-staff-sales] into [to] ADD [id] = salesman;
     }
 }
 ACCEPT returnChanged {
