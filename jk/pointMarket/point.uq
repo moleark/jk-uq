@@ -104,18 +104,23 @@ HISTORY PointHistory (
     row,                        --子表的第几行
 );
 
-ENUM EnumPointChangingSource (
-    ordermultiple = 1, signIn = 2, exchange = 3, exchangeCanceled = 4, order = 5, orderCanceled = 7, lottery = 8
+-- 1:总积分；2.有效积分；3.用掉的积分
+ENUM EnumPointType (
+    total = 1, point = 2, used = 3
 );
 
--- PointBookByCustomer账上的3个数值，需要各自的history（不应混在这一个history中，否则需要在此history中增加一个字段用于
--- 区分是哪个数值的history），另外需要把下面的source定义为enum；使用Henry说的Log能不能达到这个目的？
+-- 1: 使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 5:订单积分; 8:中奖积分;
+ENUM EnumPointChangingSource (
+    ordermultiple = 1, signIn = 2, exchange = 3, order = 5, lottery = 8, return = 9
+);
+
 -- 积分变化表(针对customer)
 HISTORY PointHistoryByCustomer (
     date,                       --生成时间
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消; 5:订单积分;6:有效积分变动;
+    pointType ENUM EnumPointType, 
+    source ENUM EnumPointChangingSource, --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 5:订单积分;
     comments char(1000) ,       --备注
     customer ID Customer,       --客户
     sheet,                      --单据
@@ -137,9 +142,28 @@ HISTORY OrderDetailPointHistory (
     orderDetailId ID orderDetail,           --订单明细ID
     pointYear int,                          --积分年度
     point int,                              --积分数(100 or -100)
-    type int,                               --1：积分，2：有效积分
+    type int,                               --1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消; 5:订单积分;6:有效积分变动;
     comments char(1000) ,                   --备注
 );
+
+-- 退货订单积分表,2021年9月15日，D72
+IDX DxReOrderDetail (
+    id, -- order detailId
+    point int sum log,
+    totalPoint int sum,
+);
+
+-- 退货订单积分变化表(针对order订单明细),2021年9月15日，D72
+HISTORY ReOrderDetailPointHistory (
+    date,                                   --生成时间
+    orderDetailId ID orderDetail,           --订单明细ID
+    pointYear int,                          --积分年度
+    point int,                              --积分数(100 or -100)
+    type int,                               --1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消; 5:订单积分;6:有效积分变动;
+    comments char(1000),                   --备注
+);
+
+
 
 /*
 -- 积分订单明细表,2021年8月27日，D72
