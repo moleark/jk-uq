@@ -1,8 +1,8 @@
 ID OrderMain ver 0.3 (
 	id,
 	KEY no,
-	customer ID,
-	contact ID,
+	customerAccount ID,
+	contact ID
 );
 
 ID OrderDetail ver 0.1 (

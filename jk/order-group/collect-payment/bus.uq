@@ -2,7 +2,7 @@ BUS JkOrderBus ver 0.7 from 百灵威系统工程部/[jk-order]
 ACCEPT order {
 	VAR mainId ID, row INT;
 	SET mainId = id;
-	WITH OrderMain as a ID=id SET a.no=no, a.customer=customerAccount;
+	WITH OrderMain as a ID=id SET a.no=no, a.customerAccount = customerAccount;
 	FOR detail {
 		WITH OrderDetail as a 
 			ID = id
@@ -13,44 +13,44 @@ ACCEPT order {
 }
 ACCEPT receive {
 	FOR detail {
-		VAR customer ID;
-		SET customer = b.customer 
+		VAR customerAccount ID;
+		SET customerAccount = b.customerAccount 
 			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
 			WHERE a.id=id;
-		WITH IxCustomerPendingReceive IX=customer XI=id;
+		WITH IxCustomerPendingReceive IX=customerAccount XI=id;
 		WITH DxOrderDetail as a ID=id SET a.receive=value;
-		WITH DxCustomerReceive ID=customer SET sumAmount+=value;
+		WITH DxCustomerReceive ID=customerAccount SET sumAmount+=value;
 	}
 }
 ACCEPT [receive-return] {
 	FOR detail {
-		VAR customer ID;
-		SET customer=b.customer 
+		VAR customerAccount ID;
+		SET customerAccount=b.customerAccount 
 			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
 			WHERE a.id=id;
 		WITH DxOrderDetailReturn as a ID=id SET a.receiveReturn += value;
-		WITH DxCustomerReceive ID=customer SET sumAmount -= value;
+		WITH DxCustomerReceive ID=customerAccount SET sumAmount -= value;
 	}
 }
 ACCEPT invoice {
 	FOR detail {
-		VAR customer ID;
-		SET customer = b.customer 
+		VAR customerAccount ID;
+		SET customerAccount = b.customerAccount 
 			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
 			WHERE a.id=id;
-		WITH IxCustomerPendingInvoice IX=customer XI=id;
+		WITH IxCustomerPendingInvoice IX=customerAccount XI=id;
 		WITH DxOrderDetail as a ID=id SET a.invoice=value;
-		WITH DxCustomerInvoice ID=customer SET sumAmount+=value;
+		WITH DxCustomerInvoice ID=customerAccount SET sumAmount+=value;
 	}
 }
 ACCEPT [invoice-return] {
 	FOR detail {
-		VAR customer ID;
-		SET customer=b.customer 
+		VAR customerAccount ID;
+		SET customerAccount = b.customerAccount
 			FROM OrderDetail as a JOIN OrderMain as b ON a.main=b.id
 			WHERE a.id=id;
 		WITH DxOrderDetailReturn as a ID=id SET a.invoiceReturn += value;
-		WITH DxCustomerInvoice ID=customer SET sumAmount -= value;
+		WITH DxCustomerInvoice ID=customerAccount SET sumAmount -= value;
 	}
 }
 ;
