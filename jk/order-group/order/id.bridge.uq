@@ -3,7 +3,6 @@ ID OrderMainEx GLOBAL (
     seller CHAR(50),
     salesman ID,
     salesRegion ID,
-    buyerAccount ID,
     organization ID,
     currency ID,
     poNumber char(100),             -- 对应Termsa.CPONr
@@ -17,10 +16,6 @@ ID OrderDetailEx GLOBAL (
     KEY orderItemId CHAR(50),       -- 对应Ex系统的orderItemId
     endUser ID,
     brand ID,                       -- 品牌id，应该在product里面带
-    -- product ID,                  -- OrderDetail 有这个字段
-    -- pack ID,                     -- OrderDetail 有这个字段
-    -- quantity DEC(12,2),          -- OrderDetail 有这个字段
-    -- price  DEC(12,2),            -- OrderDetail 有这个字段
     retail DEC(12,2),               -- TODO:下面的6个字段应该转移到OrderDetail的一个专门的IDX中，不应该放在这个Ex大杂烩中
     retailCurrency ID,
     bottomPrice DEC(12,2),
@@ -59,7 +54,6 @@ BUS couponBus.getMatchedCredits as q into tb {
     WITH OrderMainEx ID=orderMainId SET seller=seller
         , salesman=salesman
         , salesRegion=salesRegion
-        , buyerAccount = buyerAccount
         , organization=organization
         , currency=currency
         , poNumber = poNumber

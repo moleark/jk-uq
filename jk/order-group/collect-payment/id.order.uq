@@ -1,7 +1,7 @@
 ID OrderMain ver 0.3 (
-	id,
-	KEY no,
-	customer ID,
+    id,
+    KEY no,
+    customerAccount ID,
 );
 
 ID OrderDetail ver 0.1 (
