@@ -138,7 +138,7 @@ RETURNS main (
 		IF deliver IS NULL {
 			SET deliverNo=NO(DeliverMain);
 			SET deliver=ID(DeliverMain new, deliverNo);
-			WITH DeliverMain as a ID=deliver SET a.customerAccount=customerAccount, 
+			WITH DeliverMain as a ID=deliver SET a.customer=customerAccount, 
                 a.contact=contact, a.warehouse=warehouse, a.cutOffMain=cutOffMain, a.trayNumber=trayNumber;
 			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
 			INTO tblCutOff SELECT warehouse, customerAccount, contact, deliver;
@@ -169,7 +169,7 @@ RETURNS detail (
 	delivermain ID,
 	trayNumber int,
 	contact ID,
-	customerAccount ID,
+	customer ID,
 	carrier ID,
     waybillNumber char(50),
 	deliverTime TIMESTAMP DEFAULT NULL,
@@ -187,7 +187,7 @@ RETURNS detail (
 		WHERE a.id=cutOffMain;
 
 	INTO detail SELECT b.id as delivermain, b.trayNumber,
-		b.contact, b.customerAccount, f.carrier, f.waybillNumber, f.deliverTime,
+		b.contact, b.customer, f.carrier, f.waybillNumber, f.deliverTime,
 		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, 
 		d.price, d.lotNumber, g.json as content
 		FROM CutOffMain as a

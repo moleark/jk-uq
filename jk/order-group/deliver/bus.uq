@@ -68,9 +68,9 @@ ACCEPT [return] {
 		SET retQuantity = quantity;
 		WITH DxOrderDetail ID=id SET deliverReturn=retQuantity;
 		-- 做return相关操作
-		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customerAccount AND xi=[order-detail-id]) {
+		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customerAccount AND xi=[orderdetail]) {
 			IF deliverShould - deliverReturn - retQuantity <= 0 {
-				WITH IxPendingDeliver IXX=warehouse IX=customerAccount XI=[order-detail-id] 
+				WITH IxPendingDeliver IXX=warehouse IX=customerAccount XI=[orderdetail] 
 					DEL WHERE deliverShould - deliverReturn - retQuantity <= 0;
 			}
 		}

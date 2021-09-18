@@ -76,7 +76,7 @@ RETURNS ret (
 	warehouse ID,
 	deliverMain ID,
 	no CHAR(20),
-	customerAccount ID,
+	customer ID,
 	create TIMESTAMP,
 	rows SMALLINT,
 	pickRows SMALLINT,
@@ -84,7 +84,7 @@ RETURNS ret (
 ) {
 	INTO ret SELECT uw.xi as warehouse
 		, b.id as deliverMain, b.no
-		, b.customerAccount, b.[$create] as create, c.rows, c.pickRows, c.staff
+		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
 		FROM IxUserWarehouse as uw
 			LEFT JOIN IxWarehouseDeliverMain as a ON uw.xi=a.ix
 			JOIN DeliverMain as b ON a.xi=b.id
@@ -150,7 +150,7 @@ ACT AutoWarehouseDeliver()
 		IF deliver IS NULL {
 			SET deliverNo=NO(DeliverMain);
 			SET deliver=ID(DeliverMain new, deliverNo);
-			WITH DeliverMain as a ID=deliver SET a.customerAccount=customer, a.warehouse=warehouse;
+			WITH DeliverMain as a ID=deliver SET a.customer=customer, a.warehouse=warehouse;
 			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
 			INTO tblWarehouseDeliver SELECT warehouse, customer, deliver;
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
@@ -168,7 +168,7 @@ QUERY GetDeliver (
 RETURNS main (
 	id ID,	--# [DeliverMain],
 	no varchar(20),
-	customerAccount ID,
+	customer ID,
 	contact ID,
 	warehouse ID,
 	staff ID,
@@ -187,7 +187,7 @@ RETURNS detail (
 	returnDone DEC(12,2)
 ) {
 	INTO main SELECT a.id, 
-		a.no, a.customerAccount, a.contact, a.warehouse,
+		a.no, a.customer, a.contact, a.warehouse,
 		b.staff, b.rows, b.pickRows, b.deliverTime 
 		FROM DeliverMain as a
 			LEFT JOIN DxDeliverMain as b ON a.id=b.id
