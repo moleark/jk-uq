@@ -17,7 +17,7 @@ ID DeliverMain GLOBAL(
 IDX DxDeliverMain (
     id,										-- deliver main id
     staff ID,								-- 发运人
-    rows SMALLINT DEFAULT 0,				-- 行数
+    rows SMALLINT DEFAULT 0,				-- Deliver中包含的DeliverDetail个数
     pickRows SMALLINT DEFAULT 0,			-- 已拣货行数
     carrier ID,                             -- 承运方
     waybillNumber char(50),                 -- 运单号
@@ -37,8 +37,12 @@ ID DeliverDetail GLOBAL(
 IDX DxDeliverDetail (
     id,
 	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
+    pickDone dec(12, 2) DEFAULT 0 SUM, 
+	deliverReturn DEC(12,2) SUM,			-- 应退货
+    returnDone dec(12, 2) DEFAULT 0,
 );
 
+-- 处理中的发货单？
 IX IxWarehouseDeliverMain (
 	ix Warehouse,
 	xi DeliverMain,
@@ -50,9 +54,11 @@ IX IxUserWarehouse (
 );
 
 IX IxPendingDeliver (
-	ixx Warehouse,
-	ix,									-- customerAccount
-	xi OrderDetail,
+    ixx Warehouse,
+    ix cutOffType,
+    xi OrderDetail,
+    quantity dec(18, 4),
+    -- 其实要加上此次发货的特殊要求，即deliver-ext的内容
 );
 
 QUERY WarehousePendingDeliver(
@@ -104,15 +110,12 @@ RETURNS ret (
 	amount DEC(12,2),
 	price DEC(12,2),
 	deliverShould DEC(12,2),			-- 请发
-	deliverDone DEC(12,2),				-- 已发
-	returnDone DEC(12,2),				-- 已退货
 ) {
 	INTO ret SELECT b.id as orderDetail
 		, b.item, b.product, b.quantity, b.amount, b.price
-		, c.deliverShould, c.deliverDone, c.returnDone
+		, a.quantity as deliverShould
 		FROM IxPendingDeliver as a
 			JOIN OrderDetail as b on a.xi=b.id
-			JOIN DxOrderDetail as c on b.id=c.id
 			-- JOIN IxUserWarehouse as d on d.ix=$user AND d.xi=a.ixx
 		WHERE a.ixx=warehouse AND a.ix=customer;
 };
@@ -195,9 +198,9 @@ RETURNS detail (
 	INTO detail SELECT a.id,
 		a.main as delivermain,			-- DeliverMain id
 		b.item, b.product,
-		c.deliverShould, c.pickDone, c.deliverDone, c.returnDone 
+		a.quantity as deliverShould, c.pickDone, c.deliverDone, c.returnDone 
 		FROM DeliverDetail as a 
-			JOIN OrderDetail as b ON a.id=b.id
-			LEFT JOIN DxOrderDetail as c ON a.id=c.id
-		WHERE a.main=deliver;
+			JOIN OrderDetail as b ON a.id = b.orderDetail
+			LEFT JOIN DxDeliverDetail as c ON a.id = c.id
+		WHERE a.main = deliver;
 };

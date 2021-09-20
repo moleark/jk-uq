@@ -17,7 +17,7 @@ ACT DonePickup (
 	WITH IxWarehouseDeliverMain IX=warehouse XI=deliver DEL;
 	BUS JkOrderBus.[deliver-done] SET id=deliver;
 	FOR detail {
-		WITH DxOrderDetail ID=id SET deliverDone=quantity;
+		WITH DxDeliverDetail ID = id SET deliverDone=quantity;
 		BUS JkOrderBus.[deliver-done] INTO detail ADD id=id, value=quantity;
 	}
 };

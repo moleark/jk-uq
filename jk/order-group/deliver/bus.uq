@@ -16,22 +16,20 @@ ACCEPT order {
  2. 此处接收deliver后， orderDetail和quantity都写入IxPendingDeliver（IxPendingDeliver中要添加quantity);
  3. OrderDetail中有一个warehouse是什么意思？好像OrderMain/OrderDetail应该只作为order中对应表的本地备份；
  4. DxOrderDetail不明白是干什么；
+ 1.2.3.4已经解决
  5. AutoWarehouseDeliver 考虑改成手动“截单”，截单后生成“发运单”和“拣货单”、“理货单”
 */
 ACCEPT deliver {
+	WITH OrderMain as a ID=id SET a.contact = contact;
+
 	VAR customerAccount ID;
 	SET customerAccount = a.customerAccount FROM OrderMain as a WHERE a.id=id;
-	
-	WITH OrderMain as a ID=id SET a.contact = contact;
 	FOR detail {
-		VAR deliverQuantity DEC(12,2);
-		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
-		SET deliverQuantity = a.quantity FROM OrderDetail as a WHERE a.id=id;
+		WITH OrderDetail as a ID = id SET a.warehouse = warehouse;
 		
 		-- todo:接收bus时候保存cutOffType（截单类型）,
 		-- IX表目前保存无法超过3列。可考虑取消掉此表中的customer替换为cutOffType，orderMain中已存在customer
-		WITH IxPendingDeliver ixx=warehouse ix=customerAccount xi=id;
-		WITH DxOrderDetail as a ID=id SET a.deliverShould=deliverQuantity;
+		WITH IxPendingDeliver ixx = warehouse ix = 1 xi = id quantity = quantity;
 
 		FOR (VAR user ID OF SELECT ix as user FROM IxUserWarehouse WHERE xi=warehouse) {
 			TUID [$User] ID (user) SET poke=1;
@@ -39,6 +37,7 @@ ACCEPT deliver {
 	}
 }
 ACCEPT [deliver-ext] {
+    -- TODO: 这个bus不能和deliver bus分开，这些信息应该放在IxPendingDeliver中
 	FOR detail {
 		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery = needInsuredWhenDelivery,
 		     a.showPrice = showPrice, a.lotNumber = lotNumber, a.json = json;
@@ -48,7 +47,7 @@ ACCEPT [pickup-done] {
 	FOR detail {
 		VAR main INT;
 		SET main=a.main FROM DeliverDetail as a WHERE a.id=id;
-		WITH DxOrderDetail as a ID=id SET a.pickDone=value;
+		WITH DxDeliverDetail as a ID = id SET a.pickDone += value;
 		WITH DxDeliverMain as a ID=main SET a.pickRows=a.pickRows+1;
 	}
 }
@@ -63,10 +62,11 @@ ACCEPT [return] {
 			, deliverDone=a.deliverDone
 			, deliverReturn=a.deliverReturn
 			, returnDone=a.returnDone
-			FROM DxOrderDetail as a WHERE a.id=[orderDetail];
+			FROM DxDeliverDetail as a WHERE a.orderDetail = [orderDetail];
 		SET warehouse=a.warehouse FROM OrderDetail as a WHERE a.id=[orderDetail];
 		SET retQuantity = quantity;
-		WITH DxOrderDetail ID=id SET deliverReturn=retQuantity;
+        -- TODO: 这儿的id不对
+		WITH DxDeliverDetail ID=id SET deliverReturn=retQuantity;
 		-- 做return相关操作
 		IF exists(SELECT xi FROM IxPendingDeliver WHERE ixx=warehouse AND ix=customerAccount AND xi=[orderdetail]) {
 			IF deliverShould - deliverReturn - retQuantity <= 0 {
