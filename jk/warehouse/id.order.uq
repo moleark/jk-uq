@@ -13,7 +13,6 @@ ID OrderDetail ver 0.1 (
 	quantity DEC(12,2),
 	amount DEC(12,2),
 	price DEC(12,2),
-	warehouse ID,						-- 库房
 );
 
 IDX OrderDetailX (

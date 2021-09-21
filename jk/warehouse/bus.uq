@@ -11,53 +11,45 @@ ACCEPT order {
 				, a.quantity=quantity, a.amount=amount, a.price=price;
 	}
 }
-ACCEPT deliver {
+-- 这儿要接收deliver-pickup bus，即要求出库的bus，接收后，写入pending，开始出库，记账(shelfBlockInventory/ShelfBlockLotInventory及历史)
+-- 形成拣货单。 
+-- 替代方案是从老系统接收ShelfInOutBoundHistory bus，接收后，写入pending（暂存发货单号），不进行出库操作，直接记账
+-- 还需要一个 截单 bus，用来通知warehouse，该截单中的出库记录可以形成拣货单了（拣货单中要有对应的deliverDetail，需要从上面的pending中获取）
+ACCEPT pickup {
 	FOR detail {
-		--VAR quantity DEC(12,2);
-		WITH OrderDetail as a ID=id SET a.warehouse=warehouse;
-		WITH IxPendingPickup ix=warehouse xi=id;
+		WITH IxPendingPickup ixx = warehouse ix = id xi = id 
+        set orderDetail = orderDetail, quantity = quantity, lotNumber = lotNumber;
 	}
-	SCHEDULE AutoPick DELAY 2; -- 2分钟以后执行一次
-}
-ACCEPT [deliver-ext] {
-	FOR detail {
-		WITH OrderDetailX as a ID=id SET a.needInsuredWhenDelivery = needInsuredWhenDelivery,
-             a.showPrice = showPrice, a.lotNumber = lotNumber, a.json = json;
-	}
+	-- SCHEDULE AutoPick DELAY 2; -- 2分钟以后执行一次
 };
 
 BUS warehouseBus from [百灵威系统工程部]/warehouse
     ACCEPT productInventory {
         book ProductInventory at (warehouse, product, pack) set quantity = quantity;
-    };
-/*
-BUS warehouseShelfBus from [百灵威系统工程部]/warehouse
+    }
     ACCEPT shelfInOutBoundHistory {
-        if(inOutType = 1){
-
-            BOOK ShelfBlockInventory at(shelfBlock) set quantity += Quantity;
-            BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity += Quantity;
-        }else {
-
-            BOOK ShelfBlockInventory at(shelfBlock) set quantity -= Quantity;
-            BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity -= Quantity;
+        var bQuantity dec(18, 4) = Quantity;
+        if(inOutType = -1){
+            set bQuantity = bQuantity * -1;
         }
+        BOOK ShelfBlockInventory at(shelfBlock) set quantity += bQuantity;
+        BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity += bQuantity;
 
         history ShelfInOutBoundHistory set shelfBlock = ShelfBlock, product = Product, pack = Pack,
                 inOutType = InOutType, quantity = Quantity, inOutBoundTime = InOutBoundTime;
-    };
-
-BUS warehouseShelfLotUpdateBus from [百灵威系统工程部]/warehouse
+    }
     ACCEPT shelfLotUpdateHistory {
         
         -- 数量匹配进行修改，不存在数量不匹配的情况，因为数据来源有判断数量相等的情况出发bus，不相等则增加货架出入记录处理；
-        if exists ( select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity ) {
+        if exists (select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product 
+        and s.pack = pack and s.quantity = quantity) {
             set lotNumber = lotNumber
             from ShelfBlockLotInventory as s
             where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity;
         }
     };
 
+/*
 BUS outBoundTaskHandoverBus from [百灵威系统工程部]/warehouse2
     ACCEPT warehouseOutBoundTaskHandover {
 
@@ -70,9 +62,7 @@ BUS outBoundTaskHandoverBus from [百灵威系统工程部]/warehouse2
                 purchaseBillQuantity: purchaseBillQuantity, showPriceWhenPrintReceipt: showPriceWhenPrintReceipt, isAppointLot: isAppointLot, appointLot: appointLot, 
                 deliveryNotes: deliveryNotes, outBoundReason: outBoundReason, relationId: relationId, handovertime: createTime 
                 ) to rid;
-    };
-
-BUS outboundResultSync from [百灵威系统工程部]/warehouse2
+    }
     ACCEPT warehouseOutBoundResultSync {
 
         var cId bigint, tId bigint, tWarehouse bigint, tShelfBlock bigint, tProduct bigint, tPack bigint,
@@ -104,4 +94,4 @@ BUS outboundResultSync from [百灵威系统工程部]/warehouse2
 
         delete t from OutBoundHandoverTask as t where t.id = tId;
     };
-*/
+    */

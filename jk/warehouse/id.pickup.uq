@@ -11,7 +11,10 @@ ID Pickup (
 ID PickupDetail (
 	id,
 	main ID Pickup,			-- Pickup id
+	deliverDetail ID,
 	orderDetail ID,
+    -- storePoint ID,
+    shelfBlock ID,
 	quantity DEC(12,2),
 );
 
@@ -27,8 +30,12 @@ IX IxUserWarehouse (
 );
 
 IX IxPendingPickup (
-	ix, -- Warehouse,
-	xi OrderDetail,
+	ixx, -- Warehouse,
+    ix, -- cutOffMain
+	xi, -- deliver detail id,
+    orderDetail ID,
+    quantity dec(18, 4),
+    lotNumber char(50),
 );
 
 ACT TrySchedule(p INT)
@@ -118,16 +125,22 @@ RETURNS delivers (
 
 
 -- 把当前所有待发货条目，生成发运单和拣货单
-ACT AutoPick ver 0.1 ()
+-- 这个里面还缺少“出库”的记账操作，正好暂时不做
+ACT AutoPick ver 0.1 (
+    aWarehouse ID,
+    cutOffMain ID,
+)
 {
 	-- 生成拣货单
 	VAR pickupMaxRows INT = 100;
 	TABLE tblWarehousePickup(key warehouse ID, pickup ID, rows INT);
 	WHILE 1=1 {
-		VAR warehouse ID, orderDetail ID;
+		VAR warehouse ID, deliverDetail ID, orderDetail ID, quantity dec(18, 4), lotNumber char(50);
 		SET warehouse=NULL;
-		SET warehouse=a.ix, orderDetail=a.xi
+		SET warehouse = a.ix, deliverDetail = a.xi, orderDetail = a.orderDetail
+            , quantity = a.quantity, lotNumber = a.lotNumber
 			FROM IxPendingPickup as a
+            where a.ixx = aWarehouse and a.ix = cutOffMain
 			ORDER BY a.ix, a.xi
 			LIMIT 1;
 		IF warehouse IS NULL {
@@ -135,7 +148,12 @@ ACT AutoPick ver 0.1 ()
 		}
 		-- DELETE a FROM IxPendingPickup as a WHERE a.ix=warehouse AND a.xi=orderDetail;
 		-- 另外一种删除的语法
-		WITH IxPendingPickup IX=warehouse XI=orderDetail DEL;
+		WITH IxPendingPickup IXX = warehouse ix = cutOffMain xi = deliverDetail DEL;
+
+        /*
+        TODO: 这儿要添加出库的逻辑，出库后得到货架号及其数量，写入pickupdetail
+        */
+
 		VAR pickup ID, pickupNo CHAR(20), rows INT;
 		SET pickup=NULL;
 		SET pickup=a.pickup, rows=a.rows FROM tblWarehousePickup as a WHERE a.warehouse=warehouse;
@@ -151,10 +169,10 @@ ACT AutoPick ver 0.1 ()
 			SET rows=1;
 			INTO tblWarehousePickup SELECT warehouse, pickup, rows;
 		}
-		VAR quantity DEC(12,2);
-		SET quantity=a.quantity FROM OrderDetail as a WHERE a.id=orderDetail;
-		WITH PickupDetail as a ID=orderDetail
-			SET a.main=pickup, a.orderDetail=orderDetail, a.quantity=quantity;
+        VAR pickupDetail ID;
+        set pickupDetail = ID(PickupDetail new);
+		WITH PickupDetail as a ID=pickupDetail
+			SET a.main=pickup, a.deliverDetail = deliverDetail, a.orderDetail=orderDetail, a.shelfBlock = null, a.quantity=quantity;
 	}
 };
 
@@ -195,10 +213,12 @@ RETURNS detail (
 		FROM Pickup as a WHERE a.id=pickup;
 	INTO detail SELECT a.id,
 		a.main,			-- Pickup id
+        a.deliverDetail,
 		a.orderDetail,
-		b.quantity,
+        a.shelfBlock,
+		a.quantity,
 		b.item, b.product,
-		b.quantity as shouldQuantity
+		a.quantity as shouldQuantity
 		FROM PickupDetail as a JOIN OrderDetail as b ON a.orderDetail=b.id
 		WHERE a.main=pickup;
 };
