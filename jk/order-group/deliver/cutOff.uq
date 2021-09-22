@@ -90,7 +90,7 @@ RETURNS ret (
  * 下一步要完善考虑根据不同业务类型的截单：例如：客户订单截单、河北质检截单...
  */
 ACT CutOff(
-    warehouse ID,
+    aWarehouse ID,
     cutOffType ID,
 )
 RETURNS main (
@@ -120,7 +120,7 @@ RETURNS main (
             JOIN IxUserWarehouse as b on b.ix = $user AND b.xi = a.ixx
             JOIN OrderDetail as c ON c.id = a.xi
             JOIN OrderMain as d ON d.id = c.main
-        WHERE a.ixx = warehouse and a.ix = cutOffType
+        WHERE a.ixx = aWarehouse and a.ix = cutOffType
         ORDER BY a.ixx, a.ix, d.contact, a.xi
         LIMIT 1;
 
@@ -152,12 +152,12 @@ RETURNS main (
                 SET a.customer = customerAccount, a.contact=contact, a.warehouse=warehouse
                 , a.cutOffMain = cutOffMain, a.trayNumber = trayNumber;
 
-			WITH IxWarehouseDeliverMain IX = warehouse XI = deliver;
 			INTO tblCutOff SELECT warehouse, customerAccount, contact, deliver;
 
 			SET trayNumber = trayNumber + 1;
 		}
 		WITH DeliverDetail ID = orderDetail SET main = deliver, quantity = quantity;
+        WITH DxDelivering as a ID = deliver;
 		WITH DxDeliverMain as a ID = deliver SET a.rows = a.rows + 1;
 	}
 	LOG 'CutOff' SUBJECT 'end';

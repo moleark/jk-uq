@@ -42,7 +42,11 @@ IDX DxDeliverDetail (
     returnDone dec(12, 2) DEFAULT 0,
 );
 
--- 处理中的发货单？
+-- 处理中的发货单
+IDX DxDelivering (
+    id,
+);
+
 IX IxWarehouseDeliverMain (
 	ix Warehouse,
 	xi DeliverMain,

@@ -21,12 +21,7 @@ ACCEPT order {
 */
 ACCEPT deliver {
 	WITH OrderMain as a ID=id SET a.contact = contact;
-
-	VAR customerAccount ID;
-	SET customerAccount = a.customerAccount FROM OrderMain as a WHERE a.id=id;
 	FOR detail {
-		WITH OrderDetail as a ID = id SET a.warehouse = warehouse;
-		
 		-- todo:接收bus时候保存cutOffType（截单类型）,
 		-- IX表目前保存无法超过3列。可考虑取消掉此表中的customer替换为cutOffType，orderMain中已存在customer
 		WITH IxPendingDeliver ixx = warehouse ix = 1 xi = id quantity = quantity;
