@@ -11,8 +11,8 @@ ID CutOffMain (
 -- 正在处理中的截单
 IX CutOffProcessing (
     ixx warehouse,
-    ix CutOffType
-    xi CutOffMain, 
+    ix CutOffType,
+    xi CutOffMain
 );
 
 /* 截单扩展信息 */
