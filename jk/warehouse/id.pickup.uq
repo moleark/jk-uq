@@ -29,11 +29,23 @@ IX IxUserWarehouse (
 	xi WarehouseN, -- Warehouse,
 );
 
-IX IxPendingPickup (
-	ixx, -- Warehouse,
+-- 待出库的pending
+IX IxPendingOutBound (
+    ixx, -- Warehouse,
     ix, -- cutOffMain
-	xi, -- deliver detail id,
+    xi, -- deliver detail id,
     orderDetail ID,
+    quantity dec(18, 4),
+    lotNumber char(50),
+);
+
+-- 出库后待拣货的pending
+IX IxPendingPickup (
+    ixx, -- Warehouse,
+    ix, -- cutOffMain
+    xi, -- deliver detail id,
+    orderDetail ID,
+    shelfBlock ID,
     quantity dec(18, 4),
     lotNumber char(50),
 );
@@ -72,7 +84,7 @@ ACT Picked (
 };
 
 -- 把当前所有待发货条目，生成发运单和拣货单
-ACT Pick(
+ACT OutBound(
 	warehouse ID,
 	pickupMaxRows INT
 )
@@ -97,7 +109,7 @@ RETURNS delivers (
 	WHILE 1=1 { 
 		DELETE FROM tblPickup as a WHERE 1=1;
 		INTO tblPickup SELECT a.xi as orderDetail 
-				FROM IxPendingPickup as a
+				FROM IxPendingOutBound as a
 					LEFT JOIN PickupDetail as b ON a.xi=b.id
 					LEFT JOIN DxPicking as c ON b.main=c.id
 				WHERE a.ix=warehouse
@@ -106,7 +118,7 @@ RETURNS delivers (
 			BREAK;
 		}
 		DELETE a 
-			FROM IxPendingPickup as a JOIN tblPickup as b ON a.xi=b.orderDetail
+			FROM IxPendingOutBound as a JOIN tblPickup as b ON a.xi=b.orderDetail
 			WHERE a.ix=warehouse;
 		VAR pickup ID, pickupNo CHAR(20);
 		SET pickupNo=NO(Pickup);
@@ -126,54 +138,83 @@ RETURNS delivers (
 
 -- 把当前所有待发货条目，生成发运单和拣货单
 -- 这个里面还缺少“出库”的记账操作，正好暂时不做
-ACT AutoPick ver 0.1 (
+ACT AutoOutBound ver 0.1 (
     aWarehouse ID,
     cutOffMain ID,
 )
 {
-	-- 生成拣货单
-	VAR pickupMaxRows INT = 100;
-	TABLE tblWarehousePickup(key warehouse ID, pickup ID, rows INT);
 	WHILE 1=1 {
 		VAR warehouse ID, deliverDetail ID, orderDetail ID, quantity dec(18, 4), lotNumber char(50);
 		SET warehouse=NULL;
 		SET warehouse = a.ix, deliverDetail = a.xi, orderDetail = a.orderDetail
             , quantity = a.quantity, lotNumber = a.lotNumber
-			FROM IxPendingPickup as a
+			FROM IxPendingOutBound as a
             where a.ixx = aWarehouse and a.ix = cutOffMain
 			ORDER BY a.ix, a.xi
 			LIMIT 1;
 		IF warehouse IS NULL {
 			BREAK;
 		}
-		-- DELETE a FROM IxPendingPickup as a WHERE a.ix=warehouse AND a.xi=orderDetail;
+		-- DELETE a FROM IxPendingOutbound as a WHERE a.ix=warehouse AND a.xi=orderDetail;
 		-- 另外一种删除的语法
-		WITH IxPendingPickup IXX = warehouse ix = cutOffMain xi = deliverDetail DEL;
+		WITH IxPendingOutBound IXX = warehouse ix = cutOffMain xi = deliverDetail DEL;
 
         /*
         TODO: 这儿要添加出库的逻辑，出库后得到货架号及其数量，写入pickupdetail
         */
+        WITH IxPendingPickup ixx = warehouse ix = cutOffMain xi = deliverDetail
+        set orderDetail = orderDetail, shelfBlock = null, quantity = quantity, lotNumber = lotNumber;
+	}
+};
 
-		VAR pickup ID, pickupNo CHAR(20), rows INT;
-		SET pickup=NULL;
-		SET pickup=a.pickup, rows=a.rows FROM tblWarehousePickup as a WHERE a.warehouse=warehouse;
-		IF rows>pickupMaxRows {
-			SET pickup=NULL;
-			DELETE a FROM tblWarehousePickup as a WHERE a.warehouse=warehouse;
-		}
-		IF pickup IS NULL {
-			SET pickupNo=NO(Pickup);
-			SET pickup=ID(Pickup new, pickupNo);
-			WITH Pickup as a ID=pickup SET a.warehouse=warehouse;
-			WITH DxPicking as a ID=pickup;
-			SET rows=1;
-			INTO tblWarehousePickup SELECT warehouse, pickup, rows;
-		}
+ACT AutoPick (
+    aWarehouse ID,
+    cutOffMain ID,
+) {
+	-- 生成拣货单
+	VAR pickupMaxRows INT = 100;
+	TABLE tblWarehousePickup(key warehouse ID, key cutOffMain ID, pickup ID, rows INT);
+    WHILE 1 = 1 {
+        VAR warehouse ID, deliverDetail ID, orderDetail ID, shelfBlock ID, quantity dec(18, 4), lotNumber char(50);
+        SET warehouse = NULL;
+        SET warehouse = a.ix, deliverDetail = a.xi, orderDetail = a.orderDetail
+            , shelfBlock = a.shelfBlock, quantity = a.quantity, lotNumber = a.lotNumber
+            FROM IxPendingPickup as a
+            where a.ixx = aWarehouse and a.ix = cutOffMain
+            ORDER BY a.ix, a.xi
+            LIMIT 1;
+        IF warehouse IS NULL {
+            BREAK;
+        }
+        DELETE a FROM IxPendingOutbound as a WHERE a.ixx = warehouse AND a.ix = deliverDetail 
+        AND orderDetail = orderDetail and shelfBlock = shelfBlock;
+
+        VAR pickup ID, pickupNo CHAR(20), rows INT;
+        SET pickup=NULL;
+        SET pickup=a.pickup, rows=a.rows FROM tblWarehousePickup as a 
+        WHERE a.warehouse=warehouse and a.cutOffMain = cutOffMain;
+        IF rows>pickupMaxRows {
+            SET pickup=NULL;
+            DELETE a FROM tblWarehousePickup as a WHERE a.warehouse = warehouse and a.cutOffMain = cutOffMain;
+        }
+        IF pickup IS NULL {
+            SET pickupNo=NO(Pickup);
+            SET pickup=ID(Pickup new, pickupNo);
+            WITH Pickup as a ID=pickup SET a.warehouse=warehouse;
+            WITH DxPicking as a ID=pickup;
+            SET rows=1;
+            INTO tblWarehousePickup SELECT warehouse, pickup, rows;
+        }else {
+            SET rows += 1;
+            INTO tblWarehousePickup SELECT warehouse, pickup, rows;
+        }
+
         VAR pickupDetail ID;
         set pickupDetail = ID(PickupDetail new);
-		WITH PickupDetail as a ID=pickupDetail
-			SET a.main=pickup, a.deliverDetail = deliverDetail, a.orderDetail=orderDetail, a.shelfBlock = null, a.quantity=quantity;
-	}
+        WITH PickupDetail as a ID=pickupDetail
+            SET a.main=pickup, a.deliverDetail = deliverDetail, a.orderDetail=orderDetail
+            , a.shelfBlock = shelfBlock, a.quantity=quantity a.lotNumber = lotNumber;
+    }
 };
 
 QUERY WarehousePickups(
