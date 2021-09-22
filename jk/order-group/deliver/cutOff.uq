@@ -77,11 +77,11 @@ RETURNS ret (
 	create TIMESTAMP,
 	staff ID,
 ) {
-    INTO ret SELECT uw.xi as warehouse
+    INTO ret SELECT b.warehouse
         , b.id as cutOffMain, b.no
-        , b.cutter, b.[$create] as create, c.staff
+        , b.cutter, b.[$create] as create, c.ix as staff
     FROM    CutOffProcessing as a
-        join cutOffMain as b on a.id = b.id
+        join cutOffMain as b on a.xi = b.id
         join IxUserWarehouse as c on c.xi = b.warehouse
     WHERE c.ix = $user;
 };
@@ -98,12 +98,13 @@ RETURNS main (
 	no CHAR(20),			-- 截单号
 ) {
     -- 1、操作权限检查
-    IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi = warehouse) {
+    IF NOT exists(SELECT ix FROM IxUserWarehouse WHERE ix=$user AND xi = aWarehouse) {
         RETURN;
     }
 
     -- 2、生成截单号
     VAR cutOffMain ID;
+	var cutOffMainNo CHAR(20);
 
     -- 3、生成发运单、临时理货号, 并删除已截单的数据
     LOG 'CutOff' SUBJECT 'start';
@@ -129,7 +130,6 @@ RETURNS main (
 		}
 
         if cutOffMain is null {
-            var cutOffMainNo CHAR(20);
             SET cutOffMainNo = NO(CutOffMain);
             SET cutOffMain = ID(CutOffMain new, cutOffMainNo);
             WITH CutOffMain as a ID = cutOffMain SET a.no = cutOffMainNo, a.warehouse = warehouse, a.cutter = $user;
@@ -161,7 +161,7 @@ RETURNS main (
 		WITH DxDeliverMain as a ID = deliver SET a.rows = a.rows + 1;
 	}
 	LOG 'CutOff' SUBJECT 'end';
-	WITH CutOffProcessing ixx = warehouse ix = cutOffType xi = cutOffMain;
+	WITH CutOffProcessing ixx = aWarehouse ix = cutOffType xi = cutOffMain;
     INTO main SELECT cutOffMain as id, cutOffMainNo as no;
 };
 
@@ -199,13 +199,13 @@ RETURNS detail (
 
 	INTO detail SELECT b.id as delivermain, b.trayNumber,
 		b.contact, b.customer, f.carrier, f.waybillNumber, f.deliverTime,
-		c.id as deliverDetail, d.item, d.product, e.deliverShould as tallyShould, 
+		c.id as deliverDetail, d.item, d.product, e.pickDone as tallyShould, 
 		d.price, d.lotNumber, g.json as content
 		FROM CutOffMain as a
 			JOIN DeliverMain as b on a.id=b.cutOffMain
 			JOIN DeliverDetail as c on b.id=c.main
 			JOIN OrderDetail as d ON c.id=d.id
-			LEFT JOIN DxDeliverDetail as e ON d.id=e.orderDetail
+			LEFT JOIN DxDeliverDetail as e ON d.id=e.id
 			LEFT JOIN DxDeliverMain as f on f.id=b.id
 			LEFT JOIN OrderDetailX as g ON g.id=e.id
 		WHERE a.id=cutOffMain;

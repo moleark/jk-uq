@@ -37,6 +37,7 @@ ID DeliverDetail GLOBAL(
 IDX DxDeliverDetail (
     id,
 	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
+	deliverShould DEC(12,2) DEFAULT 0,
     pickDone dec(12, 2) DEFAULT 0 SUM, 
 	deliverReturn DEC(12,2) SUM,			-- 应退货
     returnDone dec(12, 2) DEFAULT 0,
@@ -204,7 +205,7 @@ RETURNS detail (
 		b.item, b.product,
 		a.quantity as deliverShould, c.pickDone, c.deliverDone, c.returnDone 
 		FROM DeliverDetail as a 
-			JOIN OrderDetail as b ON a.id = b.orderDetail
+			JOIN OrderDetail as b ON a.id = b.id
 			LEFT JOIN DxDeliverDetail as c ON a.id = c.id
 		WHERE a.main = deliver;
 };
