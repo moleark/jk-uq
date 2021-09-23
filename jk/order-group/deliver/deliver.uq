@@ -37,7 +37,6 @@ ID DeliverDetail GLOBAL(
 IDX DxDeliverDetail (
     id,
 	deliverDone DEC(12,2) DEFAULT 0,		-- 已发
-	deliverShould DEC(12,2) DEFAULT 0,
     pickDone dec(12, 2) DEFAULT 0 SUM, 
 	deliverReturn DEC(12,2) SUM,			-- 应退货
     returnDone dec(12, 2) DEFAULT 0,
