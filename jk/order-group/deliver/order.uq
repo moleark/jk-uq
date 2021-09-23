@@ -2,8 +2,8 @@ ID OrderMain ver 0.3 (
 	id,
 	KEY no,
 	customerAccount ID,
-	currency ID Currency,
-	contact ID
+	contact ID,
+	currency ID
 );
 
 ID OrderDetail ver 0.1 (
