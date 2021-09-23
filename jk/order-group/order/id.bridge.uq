@@ -3,7 +3,6 @@ ID OrderMainEx GLOBAL (
     seller CHAR(50),
     salesman ID,
     salesRegion ID,
-    buyerAccount ID,
     organization ID,
     currency ID,
     poNumber char(100),             -- 对应Termsa.CPONr
@@ -17,10 +16,6 @@ ID OrderDetailEx GLOBAL (
     KEY orderItemId CHAR(50),       -- 对应Ex系统的orderItemId
     endUser ID,
     brand ID,                       -- 品牌id，应该在product里面带
-    -- product ID,                  -- OrderDetail 有这个字段
-    -- pack ID,                     -- OrderDetail 有这个字段
-    -- quantity DEC(12,2),          -- OrderDetail 有这个字段
-    -- price  DEC(12,2),            -- OrderDetail 有这个字段
     retail DEC(12,2),               -- TODO:下面的6个字段应该转移到OrderDetail的一个专门的IDX中，不应该放在这个Ex大杂烩中
     retailCurrency ID,
     bottomPrice DEC(12,2),
@@ -59,7 +54,6 @@ BUS couponBus.getMatchedCredits as q into tb {
     WITH OrderMainEx ID=orderMainId SET seller=seller
         , salesman=salesman
         , salesRegion=salesRegion
-        , buyerAccount = buyerAccount
         , organization=organization
         , currency=currency
         , poNumber = poNumber
@@ -130,23 +124,15 @@ BUS couponBus.getMatchedCredits as q into tb {
                     , amount = quantity*price;  -- TODO:缺少lotNumber等
     }
 
-    -- BUS JkOrderBus.deliver SET id=mainId, contact=contact;
-    -- BUS JkOrderBus.deliver INTO detail 
-    --    ADD id = detailId, warehouse = warehouse;
-    -- BUS JkOrderBus.[deliver-ext] SET id=mainId;
-    -- BUS JkOrderBus.[deliver-ext] INTO detail 
-    --    ADD id = detailId, needInsuredWhenDelivery = 0;
-
     if((ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) > 0.001) or (ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) < -0.001)){
-        BUS JkOrderBus.[order-bottom-price] set order = orderMainId;
-        BUS JkOrderBus.[order-bottom-price] into [detail]
-            ADD [order-detail] = orderDetailId, [bottom-price] = bottomPrice;
+        BUS JkOrderBus.[order-sale-cost] set order = orderMainId;
+        BUS JkOrderBus.[order-sale-cost] into [detail]
+            ADD [order-detail] = orderDetailId, [cost] = bottomPrice;
     }
 
     if(ifnull(lSalesman, 0) <> ifnull(salesman, 0)){
-        BUS JkOrderBus.[order-bound] set order = orderMainId;
-        BUS JkOrderBus.[order-bound] into [to]
-            ADD [type] = 'staff-sales', [id] = salesman, [id-type] = 'staff';
+        BUS JkOrderBus.[order-bound-staff-sales] set order = orderMainId;
+        BUS JkOrderBus.[order-bound-staff-sales] into [to] ADD [id] = salesman;
     }
 }
 ACCEPT returnChanged {
@@ -169,7 +155,7 @@ ACCEPT returnChanged {
     BUS JkOrderBus.return SET id = returnMainId;
     BUS JkOrderBus.return INTO detail 
         ADD id = returnDetailId
-                , [order-detail-id] = orderDetailId
+                , [orderdetail] = orderDetailId
                 , quantity = quantity
                 , amount = quantity*price;
 };

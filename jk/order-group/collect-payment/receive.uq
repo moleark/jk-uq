@@ -1,4 +1,4 @@
-ID ReceiveMain (
+ID ReceiveMain GLOBAL (
     id,
     organization ID Organization,
     customer ID Customer,
@@ -22,9 +22,10 @@ IDX DxReceiveMain (
 );
 
 -- 收款/退款均记录在该表中，这个好像是DxOrderDetail.receiveDone/receiveReturnDone的history，也是DxReceiveMain.usedAmount/returnAmount的history
-ID ReceiveDetail (
-    id,             -- orderDetail
+ID ReceiveDetail GLOBAL (
+    id,             
     main ID ReceiveMain,
+    orderDetail ID OrderDetail,
     amount DEC(18,4),
     createDate TIMESTAMP,
 );

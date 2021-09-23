@@ -33,12 +33,12 @@ ACCEPT [receive-done] {
 }
 ACCEPT [deliver-done] {
     FOR detail {
-        WITH DxOrderDetail ID = id SET deliverDone = value, deliverTime = $date;
+        WITH DxOrderDetail ID = orderdetail SET deliverDone += value, deliverTime = $date;
 
         var orderMain ID;
-        set orderMain = a.main from OrderDetail as a where a.id = id;
+        set orderMain = a.main from OrderDetail as a where a.id = orderdetail;
         if not exists(select 1 from DxOrderDetail as a 
-        join OrderDetail as b on a.id = b.id where b.main = orderMain and a.deliver < a.deliverDone) {
+        join OrderDetail as b on a.id = b.id where b.main = orderMain and a.deliver <= a.deliverDone) {
             WITH DxOrderMainState ID = orderMain set state = EnumOrderState.delivered;
         }
     }
