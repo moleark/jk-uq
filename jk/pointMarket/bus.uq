@@ -76,14 +76,14 @@ BUS webUserBus from [百灵威系统工程部]/WebUser
             from PointBook as a where a.webUser = webUser
         ) {
             book PointBookByCustomer at (customer, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
-            delete t from PointBookBy as t where t.webuser = webuser and t.pointYear = pointYear;
+            delete t from PointBook as t where t.webuser = webuser and t.pointYear = pointYear;
         }
         foreach (
-            var pointYear int, point int, comments int, source int, date
-            of select a.pointYear, a.point , a.comments, a.source, date
+            var pointYear int, point int, comments int, source int, date datetime
+            of select a.pointYear, a.point, a.comments, a.source, a.date
             from PointHistory as a where a.webUser = webUser
         ) {
-            book PointHistoryByCustomer set customer = customer, pointYear = pointYear, point = point
+            history PointHistoryByCustomer set customer = customer, pointYear = pointYear, point = point
             , comments = comments, source = source;
             delete t from PointHistory as t where t.date = date;
         }

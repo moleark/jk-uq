@@ -96,7 +96,8 @@ HISTORY PointHistory (
     date,                       --生成时间
     pointYear int,              --积分年度
     point int,                  --积分数(100 or -100)
-    source int,                 --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 4:兑换取消；
+    pointType ENUM EnumPointType, 
+    source ENUM EnumPointChangingSource, --积分来源: 1：使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 5:订单积分;
     comments char(1000) ,       --备注
     webUser ID [$user],         --客户
     sheet,                      --单据
@@ -257,7 +258,7 @@ STATE Shipping {
             book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
             history PointHistoryByCustomer
                 set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no
-                , pointType = EnumPointType.used, source = EnumPointChangingSource.exchangeCanceled;            
+                , pointType = EnumPointType.used, source = EnumPointChangingSource.exchange;            
         } 
         STATE TO CANCELED;
     }
