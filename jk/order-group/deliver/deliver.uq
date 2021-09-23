@@ -63,6 +63,8 @@ IX IxPendingDeliver (
     xi OrderDetail,
     quantity dec(18, 4),
     -- 其实要加上此次发货的特殊要求，即deliver-ext的内容
+	showPrice tinyint,
+	json text
 );
 
 QUERY WarehousePendingDeliver(
