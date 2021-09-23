@@ -89,13 +89,13 @@ RETURNS ret (
 	pickRows SMALLINT,
 	staff ID,
 ) {
-	INTO ret SELECT uw.xi as warehouse
+	INTO ret SELECT b.warehouse
 		, b.id as deliverMain, b.no
 		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
 		FROM IxUserWarehouse as a
 			JOIN DeliverMain as b ON a.xi=b.warehouse
 			LEFT JOIN DxDeliverMain as c ON b.id=c.id
-		WHERE uw.ix=$user;
+		WHERE a.ix=$user;
 };
 
 QUERY CustomerPendingDeliver(
