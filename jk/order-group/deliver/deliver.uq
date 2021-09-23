@@ -47,11 +47,6 @@ IDX DxDelivering (
     id,
 );
 
-IX IxWarehouseDeliverMain (
-	ix Warehouse,
-	xi DeliverMain,
-);
-
 IX IxUserWarehouse (
 	ix User,
 	xi Warehouse,
@@ -97,9 +92,8 @@ RETURNS ret (
 	INTO ret SELECT uw.xi as warehouse
 		, b.id as deliverMain, b.no
 		, b.customer, b.[$create] as create, c.rows, c.pickRows, c.staff
-		FROM IxUserWarehouse as uw
-			LEFT JOIN IxWarehouseDeliverMain as a ON uw.xi=a.ix
-			JOIN DeliverMain as b ON a.xi=b.id
+		FROM IxUserWarehouse as a
+			JOIN DeliverMain as b ON a.xi=b.warehouse
 			LEFT JOIN DxDeliverMain as c ON b.id=c.id
 		WHERE uw.ix=$user;
 };
@@ -160,7 +154,6 @@ ACT AutoWarehouseDeliver()
 			SET deliverNo=NO(DeliverMain);
 			SET deliver=ID(DeliverMain new, deliverNo);
 			WITH DeliverMain as a ID=deliver SET a.customer=customer, a.warehouse=warehouse;
-			WITH IxWarehouseDeliverMain IX=warehouse XI=deliver;
 			INTO tblWarehouseDeliver SELECT warehouse, customer, deliver;
 			-- 对于有增1的字段，必须用下一句，保证这一行在表中存在
 			WITH DxDeliverMain as a ID=deliver;

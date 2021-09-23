@@ -14,7 +14,6 @@ ACT DonePickup (
 ) {
 	VAR warehouse ID;
 	SET warehouse=a.warehouse FROM DeliverMain as a WHERE a.id=deliver;
-	WITH IxWarehouseDeliverMain IX=warehouse XI=deliver DEL;
 	BUS JkOrderBus.[deliver-done] SET id=deliver;
 	FOR detail {
 		WITH DxDeliverDetail ID = id SET deliverDone=quantity;
