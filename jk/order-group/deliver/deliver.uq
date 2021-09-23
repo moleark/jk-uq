@@ -62,6 +62,19 @@ IX IxPendingDeliver (
 	json text
 );
 
+ACT Delivering (
+	deliver ID,
+) {
+	WITH DxDelivering ID=deliver;
+	WITH DxDeliverMain ID=deliver SET staff=$user;
+};
+
+/*ACT Delivered(
+	deliver ID,
+){
+	WITH DxDelivering ID=deliver DEL;
+};*/
+
 QUERY WarehousePendingDeliver(
 )
 RETURNS ret (

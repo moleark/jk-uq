@@ -116,13 +116,12 @@ RETURNS main (
         -- 循环获取 limit1数据
 		VAR warehouse ID, customerAccount ID, contact ID, orderDetail ID, quantity dec(18, 4);
 		SET warehouse=NULL;
-		SET warehouse = a.ixx, customerAccount=a.ix, contact=d.contact, orderDetail=a.xi
+		SET warehouse = a.ixx, customerAccount=a.ix, contact=c.contact, orderDetail=a.xi
         FROM IxPendingDeliver as a
-            JOIN IxUserWarehouse as b on b.ix = $user AND b.xi = a.ixx
-            JOIN OrderDetail as c ON c.id = a.xi
-            JOIN OrderMain as d ON d.id = c.main
+            JOIN OrderDetail as b ON b.id = a.xi
+            JOIN OrderMain as c ON c.id = b.main
         WHERE a.ixx = aWarehouse and a.ix = cutOffType
-        ORDER BY a.ixx, a.ix, d.contact, a.xi
+        ORDER BY a.ixx, a.ix, c.contact, a.xi
         LIMIT 1;
 
 		IF warehouse IS NULL {
@@ -157,7 +156,6 @@ RETURNS main (
 			SET trayNumber = trayNumber + 1;
 		}
 		WITH DeliverDetail ID = orderDetail SET main = deliver, quantity = quantity;
-        WITH DxDelivering as a ID = deliver;
 		WITH DxDeliverMain as a ID = deliver SET a.rows = a.rows + 1;
 	}
 	LOG 'CutOff' SUBJECT 'end';

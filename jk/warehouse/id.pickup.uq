@@ -230,9 +230,9 @@ RETURNS ret (
 	INTO ret SELECT b.warehouse, b.id as pickup, b.no
 		, b.[$create] as create
 		, b.picker
-		FROM IxUserWarehouse as uw
-			LEFT JOIN Pickup as b ON uw.xi=b.warehouse
-			LEFT JOIN DxPicking as a ON a.id=b.id
+		FROM IxUserWarehouse as a
+			JOIN Pickup as b ON a.xi=b.warehouse
+			LEFT JOIN DxPicking as c ON c.id=b.id
 		WHERE uw.ix=$user;
 };
 
