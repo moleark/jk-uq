@@ -131,9 +131,9 @@ BUS couponBus.getMatchedCredits as q into tb {
     }
 
     if((ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) > 0.001) or (ifnull(lBottomPrice, 0) - ifnull(bottomPrice, 0) < -0.001)){
-        BUS JkOrderBus.[order-bottom-price] set order = orderMainId;
-        BUS JkOrderBus.[order-bottom-price] into [detail]
-            ADD [order-detail] = orderDetailId, [bottom-price] = bottomPrice;
+        BUS JkOrderBus.[order-sale-cost] set order = orderMainId;
+        BUS JkOrderBus.[order-sale-cost] into [detail]
+            ADD [order-detail] = orderDetailId, [cost] = bottomPrice;
     }
 
     if(ifnull(lSalesman, 0) <> ifnull(salesman, 0)){
