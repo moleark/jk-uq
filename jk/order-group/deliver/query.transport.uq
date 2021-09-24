@@ -5,8 +5,8 @@ returns ret (
     waybillNumber char(50),
     deliverTime TIMESTAMP,
 ){
-    into ret select  a.id as orderDetail, b.carrier, b.waybillNumber, b.deliverTime
+    into ret select  a.orderDetail, b.carrier, b.waybillNumber, b.deliverTime
     from    DeliverDetail as a
             JOIN DxDeliverMain as b on a.main = b.id
-    where   a.id = orderDetail;
+    where   a.orderDetail = orderDetail;
 };
