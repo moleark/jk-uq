@@ -1,0 +1,13 @@
+IX CustomerSalesman(
+    ix,     -- customer
+    xi,     -- salesman webuser? employeeid? 
+    unLockOn TIMESTAMP,
+);
+
+HISTORY CustomerSalesmanHistory (
+    date,
+    customer    ID,
+    salesman    ID,
+    operation   tinyint,    -- 1:绑定；0:解绑
+    createDate TIMESTAMP,
+);
