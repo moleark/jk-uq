@@ -236,6 +236,11 @@ Action submit {
         }
     }
 
+    var mainId ID;
+    set mainId = ID(ExchangeMain new, $sheet_no);
+    WITH ExchangeMain as a ID mainId set a.no = $sheet_no, a.customer = customer, a.shippingContact = shippingContact
+        , a.amount = amount, a.sheetId = $id, a.createDate = now();
+
     bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
         shippingContact = shippingContact, amount = amount;
     var source char(8), sourceId int;
@@ -243,6 +248,9 @@ Action submit {
         set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
         bus pointBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
             quantity = quantity, point = point, subAmount = subAmount;
+        var detailId ID = ID(ExchangeDetail new);
+        WITH ExchangeDetail as a ID detailId set a.main = mainId, a.item = product
+            , a.quantity = quantity, a.point = point, a.subAmount = subAmount;
     }
     STATE TO Shipping;
 }
