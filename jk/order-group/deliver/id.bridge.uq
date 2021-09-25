@@ -35,8 +35,7 @@ ACCEPT deliveryConfirm {
     WITH DxDeliverMain ID = deliverId set carrier=logisticsCompanyId
         , waybillNumber = logisticsNumber
         , deliverTime = from_unixtime(deliveryGoodsTime/1000);
-    WITH DeliverMainEx id = deliverId set deliverId = outBoundItemId
-        , warehouseName=warehouseName
+    WITH DeliverMainEx id = deliverId set warehouseName = warehouseName
         , addressString = deliveryAddress;
 
     WITH DeliverDetail ID = deliverDetailId set main=deliverId, orderDetail = orderDetailId, quantity = quantity;
