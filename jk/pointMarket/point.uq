@@ -110,7 +110,7 @@ ENUM EnumPointType (
     total = 1, point = 2, used = 3
 );
 
--- 1: 使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 5:订单积分; 8:中奖积分;
+-- 1: 使用积分券下单积分；2：签到积分；3:积分兑换; 5:订单积分; 8:中奖积分;
 ENUM EnumPointChangingSource (
     ordermultiple = 1, signIn = 2, exchange = 3, order = 5, lottery = 8, return = 9
 );
