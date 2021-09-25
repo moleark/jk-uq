@@ -209,7 +209,7 @@ Action submit {
     foreach (var mPoint int, pointYear int of
         select  (p.point - p.usedPoint) as mPoint, p.pointYear
         from    PointBookByCustomer as p
-        where   p.customer = webUser and p.pointYear > YEAR(NOW()) - 3
+        where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3
                 and (p.point - p.usedPoint) > 0
         order by p.pointYear
     ) {
@@ -225,7 +225,7 @@ Action submit {
             if (customer > 0) {
                 book PointBookByCustomer at (customer, pointYear) set usedPoint += p;
                 history PointHistoryByCustomer
-                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no
+                    set customer = customer, pointYear = pointYear, point = p, comments=$sheet_no
                     , pointType = EnumPointType.used, source = EnumPointChangingSource.exchange;
             }
 
@@ -255,7 +255,7 @@ STATE Shipping {
             where p.customer = customer and p.source = EnumPointChangingSource.exchange and p.comments = $sheet_no
         ){
             --添加客户积分兑换取消
-            book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
+            book PointBookByCustomer at (customer, pointYear) set usedPoint -= point;
             history PointHistoryByCustomer
                 set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no
                 , pointType = EnumPointType.used, source = EnumPointChangingSource.exchange;            
