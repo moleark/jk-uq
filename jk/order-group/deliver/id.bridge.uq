@@ -38,9 +38,15 @@ ACCEPT deliveryConfirm {
     WITH DeliverMainEx id = deliverId set warehouseName = warehouseName
         , addressString = deliveryAddress;
 
-    WITH DeliverDetail ID = deliverDetailId set main=deliverId, orderDetail = orderDetailId, quantity = quantity;
-    WITH DxDeliverDetail ID = orderDetailId set deliverDone = quantity;
+    WITH DeliverDetail ID = deliverDetailId set main = deliverId, quantity = quantity;
+    WITH DxDeliverDetail ID = deliverDetailId set deliverDone = quantity;
+    if(source = 'orderDetail'){
+        WITH DeliverDetailOrderDetail ix = deliverDetailId xi = orderDetailId; 
 
-    BUS JkOrderBus.[deliver-done] set id = deliverId;
-    BUS JkOrderBus.[deliver-done] into detail ADD id = deliverDetailId, orderdetail = orderDetailId, value = quantity; 
+        BUS JkOrderBus.[deliver-done] set id = deliverId;
+        BUS JkOrderBus.[deliver-done] into detail ADD id = deliverDetailId, orderdetail = orderDetailId, value = quantity; 
+    }
+    if(source = 'pointExchangeDetail'){
+        WITH DeliverDetailExchangeDetail ix = deliverDetailId xi = orderDetailId; 
+    }
 };

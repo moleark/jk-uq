@@ -22,9 +22,7 @@ IDX DxDeliverMain (
 ID DeliverDetail GLOBAL(
     id,                     -- 
     main ID DeliverMain,    -- DeliverMain id	
-    orderDetail ID orderDetail,
     quantity dec(18, 4),
-    INDEX idx_orderDetail(orderDetail),
 );
 
 IDX DxDeliverDetail (
