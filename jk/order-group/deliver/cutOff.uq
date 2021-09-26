@@ -53,15 +53,16 @@ RETURNS list (
 QUERY GetCutOffMainList(
 	warehouse ID
 )
-RETURNS list (
-	id ID,
+PAGE (
+	id bigint start 0,
 	no CHAR(20),
-	cutter ID
+	cutter bigint
 ) {
-	INTO list SELECT a.id, a.no, a.cutter
+	page SELECT a.id, a.no, a.cutter
     FROM CutOffMain AS a
-    WHERE a.warehouse=warehouse AND a.cutter=$user
-    ORDER BY a.id DESC;
+    WHERE a.warehouse=warehouse AND a.cutter=$user and a.id > $pageStart
+    ORDER BY a.id DESC
+	limit $pageSize;
 };
 
 /* 
