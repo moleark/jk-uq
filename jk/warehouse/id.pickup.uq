@@ -177,16 +177,16 @@ ACT AutoPick (
     WHILE 1 = 1 {
         VAR warehouse ID, deliverDetail ID, orderDetail ID, shelfBlock ID, quantity dec(18, 4), lotNumber char(50);
         SET warehouse = NULL;
-        SET warehouse = a.ix, deliverDetail = a.xi, orderDetail = a.orderDetail
+        SET warehouse = a.ixx, deliverDetail = a.xi, orderDetail = a.orderDetail
             , shelfBlock = a.shelfBlock, quantity = a.quantity, lotNumber = a.lotNumber
             FROM IxPendingPickup as a
             where a.ixx = aWarehouse and a.ix = cutOffMain
-            ORDER BY a.ix, a.xi
+            ORDER BY a.ixx, a.xi
             LIMIT 1;
         IF warehouse IS NULL {
             BREAK;
         }
-        DELETE a FROM IxPendingOutbound as a WHERE a.ixx = warehouse AND a.ix = deliverDetail 
+        DELETE a FROM IxPendingPickup as a WHERE a.ixx = warehouse AND a.xi = deliverDetail 
         AND a.orderDetail = orderDetail and a.shelfBlock = shelfBlock;
 
         VAR pickup ID, pickupNo CHAR(20), rows INT;
@@ -205,15 +205,15 @@ ACT AutoPick (
             SET rows=1;
             INTO tblWarehousePickup SELECT warehouse, cutOffMain, pickup, rows;
         }else {
-            SET rows += 1;
+            SET rows = rows + 1;
             INTO tblWarehousePickup SELECT warehouse, cutOffMain, pickup, rows;
         }
 
         VAR pickupDetail ID;
         set pickupDetail = ID(PickupDetail new);
         WITH PickupDetail as a ID=pickupDetail
-            SET a.main=pickup, a.deliverDetail = deliverDetail, a.orderDetail=orderDetail
-            , a.shelfBlock = shelfBlock, a.quantity=quantity a.lotNumber = lotNumber;
+            SET a.main=pickup, a.deliverDetail = deliverDetail, a.orderDetail = orderDetail
+            , a.shelfBlock = shelfBlock, a.quantity = quantity;  --a.lotNumber = lotNumber
     }
 };
 
@@ -233,7 +233,7 @@ RETURNS ret (
 		FROM IxUserWarehouse as a
 			JOIN Pickup as b ON a.xi=b.warehouse
 			LEFT JOIN DxPicking as c ON c.id=b.id
-		WHERE uw.ix=$user;
+		WHERE a.ix=$user;
 };
 
 QUERY GetPickup(

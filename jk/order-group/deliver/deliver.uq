@@ -38,6 +38,9 @@ IDX DxDeliverDetail (
     pickDone dec(12, 2) DEFAULT 0 SUM, 
 	deliverReturn DEC(12,2) SUM,			-- 应退货
     returnDone dec(12, 2) DEFAULT 0,
+	-- 此次发货的特殊要求保存在此处
+	showPrice tinyint,
+	json text
 );
 
 -- 处理中的发货单
