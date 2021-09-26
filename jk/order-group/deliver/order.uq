@@ -17,15 +17,9 @@ ID OrderDetail ver 0.1 (
 	lotNumber char(50)	-- 指定lot批次
 );
 
-IDX OrderDetailX (
-	id,
-	needInsuredWhenDelivery TINYINT,
-	showPrice tinyint,
-	lotNumber char(20),
-	json text
-);
+-- 从订单中发送过来的有关 发货的具体要求，应该保存在 DxOrderDetail 还是 DxDeliverDetail中？
 
-IDX DxReturnDetail (
-	id,									-- return detail
-	quantityDone DEC(12,2) SUM,			-- 已退货数量
+IX DeliverDetailOrderDetail (
+    ix,     -- deliverDetail
+    xi,     -- orderDetail
 );

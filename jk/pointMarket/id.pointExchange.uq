@@ -1,0 +1,22 @@
+ID ExchangeMain GLOBAL (
+    id,
+    KEY no,
+    customer ID,                        -- Customer
+
+    shippingContact ID,                 -- 发货地址
+
+    amount DEC(12,2),	                -- 总积分
+    sheetId ID,
+    createDate TIMESTAMP,
+    INDEX customer_id(customer, id) UNIQUE,
+    INDEX sheetId(sheetId) UNIQUE,
+);
+
+ID ExchangeDetail GLOBAL (
+	id,
+	main ID ExchangeMain,
+	item ID,
+	quantity DEC(12,2),
+	point DEC(12,2),                    -- 
+    subAmount dec(12, 2)
+);
