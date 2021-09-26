@@ -5,8 +5,24 @@ returns ret (
     waybillNumber char(50),
     deliverTime TIMESTAMP,
 ){
-    into ret select  a.orderDetail, b.carrier, b.waybillNumber, b.deliverTime
-    from    DeliverDetail as a
+    into ret select  c.xi as orderDetail, b.carrier, b.waybillNumber, b.deliverTime
+    from    DeliverDetailOrderDetail as c
+            JOIN DeliverDetail as a on a.id = c.ix
             JOIN DxDeliverMain as b on a.main = b.id
-    where   a.orderDetail = orderDetail;
+    where   c.xi = orderDetail;
+};
+
+
+QUERY GetPointExchangeDetailTransportation(pointExchangeDetail ID)
+returns ret (
+    pointExchangeDetail ID,
+    carrier ID Carrier,
+    waybillNumber char(50),
+    deliverTime TIMESTAMP,
+){
+    into ret select  c.xi as pointExchangeDetail, b.carrier, b.waybillNumber, b.deliverTime
+    from    DeliverDetailExchangeDetail as c
+            JOIN DeliverDetail as a on a.id = c.ix
+            JOIN DxDeliverMain as b on a.main = b.id
+    where   c.xi = pointExchangeDetail;
 };

@@ -37,3 +37,9 @@ IDX DxReturnDetail (
 	id,									-- return detail
 	quantityDone DEC(12,2) SUM,			-- 已退货数量
 );
+-- 从订单中发送过来的有关 发货的具体要求，应该保存在 DxOrderDetail 还是 DxDeliverDetail中？
+
+IX DeliverDetailOrderDetail (
+    ix,     -- deliverDetail
+    xi,     -- orderDetail
+);

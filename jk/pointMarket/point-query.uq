@@ -33,21 +33,21 @@ PAGE (
     point int,
     pointYear int,              
     comments char(1000),
-    type int,
+    pointType int,
     source int
 ){
     var key2 char(102);
     set key2 = concat('%', key, '%');
 
     if(not customer is null){
-        PAGE select  unix_timestamp(p.date) as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        PAGE select  unix_timestamp(p.date) as id, p.date, p.point, p.pointYear, p.comments, p.pointType, p.source
         from    PointHistoryByCustomer as p
         where   p.customer = customer and unix_timestamp(p.date) < $pageStart
                 and ( p.comments like key2 or key is null )
         order by  unix_timestamp(p.date) desc
         limit $pageSize;
     } else {
-        PAGE select  unix_timestamp(p.date) as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        PAGE select  unix_timestamp(p.date) as id, p.date, p.point, p.pointYear, p.comments, p.pointType, p.source
         from    PointHistory as p
         where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
                 and ( p.comments like key2 or key is null )

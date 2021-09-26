@@ -1,0 +1,5 @@
+
+IX DeliverDetailExchangeDetail (
+    ix,     -- deliverDetail
+    xi,     -- pointExchangeDetail
+);

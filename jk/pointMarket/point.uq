@@ -110,7 +110,7 @@ ENUM EnumPointType (
     total = 1, point = 2, used = 3
 );
 
--- 1: 使用积分券下单积分；2：签到积分；3:积分兑换(积分为负); 5:订单积分; 8:中奖积分;
+-- 1: 使用积分券下单积分；2：签到积分；3:积分兑换; 5:订单积分; 8:中奖积分;
 ENUM EnumPointChangingSource (
     ordermultiple = 1, signIn = 2, exchange = 3, order = 5, lottery = 8, return = 9
 );
@@ -203,13 +203,21 @@ SHEET PointExchangeSheet ver 0.1 (
     shippingContact ID Contact,             --收货地址
 )
 Action submit {
+    var allPoint bigint;
+    set allPoint = sum(p.point - p.usedPoint) from PointBookByCustomer as p
+    where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
+    if(ifnull(allPoint, 0) < amount){
+        STATE TO CANCELED;
+        return;
+    }
+
     var leftAmount bigint;
     set leftAmount = amount;
 
     foreach (var mPoint int, pointYear int of
         select  (p.point - p.usedPoint) as mPoint, p.pointYear
         from    PointBookByCustomer as p
-        where   p.customer = webUser and p.pointYear > YEAR(NOW()) - 3
+        where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3
                 and (p.point - p.usedPoint) > 0
         order by p.pointYear
     ) {
@@ -225,7 +233,7 @@ Action submit {
             if (customer > 0) {
                 book PointBookByCustomer at (customer, pointYear) set usedPoint += p;
                 history PointHistoryByCustomer
-                    set customer = customer, pointYear = pointYear, point = (0-p), comments=$sheet_no
+                    set customer = customer, pointYear = pointYear, point = p, comments=$sheet_no
                     , pointType = EnumPointType.used, source = EnumPointChangingSource.exchange;
             }
 
@@ -236,13 +244,23 @@ Action submit {
         }
     }
 
-    bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, customer = customer,
+    var mainId ID;
+    set mainId = ID(ExchangeMain new, $sheet_no);
+    WITH ExchangeMain as a ID mainId set a.no = $sheet_no, a.customer = customer, a.shippingContact = shippingContact
+        , a.amount = amount, a.sheetId = $id, a.createDate = now();
+
+    bus pointBus.pointExchangeSheet set id = $id, no = $sheet_no, ExchangeMainId = mainId, customer = customer,
         shippingContact = shippingContact, amount = amount;
     var source char(8), sourceId int;
     foreach exchangeItems {
         set source = type, sourceId = sourceId from PointProductSource where pointProduct = product;
-        bus pointBus.pointExchangeSheet into exchangeItems add product = product, source = source, sourceId = sourceId,
-            quantity = quantity, point = point, subAmount = subAmount;
+
+        var detailId ID = ID(ExchangeDetail new);
+        WITH ExchangeDetail as a ID detailId set a.main = mainId, a.item = product
+            , a.quantity = quantity, a.point = point, a.subAmount = subAmount;
+
+        bus pointBus.pointExchangeSheet into exchangeItems add exchangeDetailId = detailId, product = product
+            , source = source, sourceId = sourceId, quantity = quantity, point = point, subAmount = subAmount;
     }
     STATE TO Shipping;
 }
@@ -255,7 +273,7 @@ STATE Shipping {
             where p.customer = customer and p.source = EnumPointChangingSource.exchange and p.comments = $sheet_no
         ){
             --添加客户积分兑换取消
-            book PointBookByCustomer at (customer, pointYear) set usedPoint -= point * -1;
+            book PointBookByCustomer at (customer, pointYear) set usedPoint -= point;
             history PointHistoryByCustomer
                 set customer = customer, pointYear = pointYear, point = point * -1, comments=$sheet_no
                 , pointType = EnumPointType.used, source = EnumPointChangingSource.exchange;            
