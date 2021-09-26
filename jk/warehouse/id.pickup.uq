@@ -2,10 +2,14 @@ ID Pickup (
 	id,
 	KEY no,
 	warehouse ID,
-	picker ID,
+	sys(create),	
+);
+
+IDX DxPickup (
+    id,										-- pickup id
+    staff ID,								-- 拣货人
 	startTime TIMESTAMP,
-	finishTime TIMESTAMP,
-	sys(create, owner),	
+	finishTime TIMESTAMP
 );
 
 ID PickupDetail (
@@ -16,6 +20,11 @@ ID PickupDetail (
     -- storePoint ID,
     shelfBlock ID,
 	quantity DEC(12,2),
+);
+
+IDX DxPickupDetail(
+	id,
+	pickDone dec(12, 2) DEFAULT 0 SUM, 
 );
 
 IDX DxPicking (
@@ -64,22 +73,22 @@ ACT Picking (
 	pickup ID,
 ) {
 	WITH DxPicking ID=pickup;
-	WITH Pickup ID=pickup SET picker=$user;
+	WITH DxPickup ID=pickup SET staff=$user, startTime=$date;
 };
 
 ACT Picked (
 	pickup ID,
 	-- 实际拣货数量。
 	ARR detail (
+		id ID,
 		orderDetail ID,
 		quantity DEC(12,2),
 	)
 ) {
 	WITH DxPicking ID=pickup DEL;
-	WITH Pickup ID=pickup SET finishTime=$date;
-	-- BUS JkOrderBus.[pickup-done];
+	WITH DxPickup ID=pickup SET finishTime=$date;
 	FOR detail {
-		BUS JkOrderBus.[pickup-done] INTO detail ADD id=orderDetail, value=quantity;
+		BUS JkOrderBus.[pickup-done] INTO detail ADD id=id, orderDetail=orderDetail, value=quantity;
 	}
 };
 
