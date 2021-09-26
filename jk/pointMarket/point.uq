@@ -203,6 +203,14 @@ SHEET PointExchangeSheet ver 0.1 (
     shippingContact ID Contact,             --收货地址
 )
 Action submit {
+    var allPoint bigint;
+    set allPoint = sum(p.point - p.usedPoint) from PointBookByCustomer as p
+    where   p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
+    if(ifnull(allPoint, 0) < amount){
+        STATE TO CANCELED;
+        return;
+    }
+
     var leftAmount bigint;
     set leftAmount = amount;
 
