@@ -39,9 +39,9 @@ BUS warehouseBus from [百灵威系统工程部]/warehouse
         history ShelfInOutBoundHistory set shelfBlock = ShelfBlock, product = Product, pack = Pack,
                 inOutType = InOutType, quantity = Quantity, inOutBoundTime = InOutBoundTime;
 
-        VAR cutOffMain ID, deliverDetail ID;
+        VAR cutOffMain ID, deliverDetail ID, warehouse ID;
         SET cutOffMain = NULL;
-        SET cutOffMain = a.ix, deliverDetail = a.xi
+        SET cutOffMain = a.ix, deliverDetail = a.xi, warehouse = a.ixx
             FROM IxPendingOutBound as a
             WHERE a.orderdetail = orderDetail AND a.quanity >= quantity
             LIMIT 1;
