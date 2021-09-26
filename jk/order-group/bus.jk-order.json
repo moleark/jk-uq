@@ -38,15 +38,26 @@
 	"deliver-detail": [
 		"id: id  -- order detail id",
 		"quantity: number  -- 同一个合同明细可能会分多次不同数量发送",
-		"warehouse: id",
-		"showPrice: number                  -- 单据上是否显示价格, 需要则1",
-		"json: string                       -- 只需要在界面展示的信息以json格式存储"
+		"warehouse: id"
 	],
 	"deliver": [
 		"-- 通用些的发运字段，一般不会变化",
 		"id: id  -- order id",
 		"contact: id -- 发货地址id。",
 		"detail: deliver-detail"
+	],
+	"deliver-detail-ext": [
+		"-- ext是对deliver的扩展，都是具体业务相关内容。变化可能性比较大",
+		"id: id  -- order detail id",
+		"needInsuredWhenDelivery: number    -- 发货时候是否保价, 需要则1",
+		"showPrice: number                  -- 单据上是否显示价格, 需要则1",
+		"lotNumber: string                  -- 指定Lot批次",
+		"json: string                       -- 只需要在界面展示的信息以json格式存储"
+	],
+	"deliver-ext": [
+		"-- 这个bus消息必须在deliver消息之前发。是附加消息，可能根据业务的形态发生变化",
+		"id: id  -- order id",
+		"detail: deliver-detail-ext"
 	],
 	"deliver-done": [
 		"note",
@@ -90,19 +101,19 @@
 	"-- invoice-return-done": [
 		"-- invoice-done 出现负值，就是return invoice",
 		"note"
-	],   
-    "order-inventory-cost": [
-        "order: id",
-        "detail: order-cost-detail"
-    ],
-    "order-sale-cost": [
-        "order: id",
-        "detail: order-cost-detail"
-    ],
-    "order-cost-detail": [
-        "order-detail: id",
-        "cost: number"
-    ],
+	],
+        "order-inventory-cost": [
+            "order: id",
+            "detail: order-cost-detail"
+        ],
+        "order-sale-cost": [
+            "order: id",
+            "detail: order-cost-detail"
+        ],
+	"order-cost-detail": [
+            "order-detail: id",
+            "cost: number"
+        ],
 	"order-binding": [
 		"-- order id, binding可以是coupon，也可以是userid，或者其它标志。如果网页点击，可以直接带id",
 		"order: id",
