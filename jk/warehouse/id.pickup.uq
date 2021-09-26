@@ -187,7 +187,7 @@ ACT AutoPick (
             BREAK;
         }
         DELETE a FROM IxPendingOutbound as a WHERE a.ixx = warehouse AND a.ix = deliverDetail 
-        AND orderDetail = orderDetail and shelfBlock = shelfBlock;
+        AND a.orderDetail = orderDetail and a.shelfBlock = shelfBlock;
 
         VAR pickup ID, pickupNo CHAR(20), rows INT;
         SET pickup=NULL;
@@ -203,10 +203,10 @@ ACT AutoPick (
             WITH Pickup as a ID=pickup SET a.warehouse=warehouse;
             WITH DxPicking as a ID=pickup;
             SET rows=1;
-            INTO tblWarehousePickup SELECT warehouse, pickup, rows;
+            INTO tblWarehousePickup SELECT warehouse, cutOffMain, pickup, rows;
         }else {
             SET rows += 1;
-            INTO tblWarehousePickup SELECT warehouse, pickup, rows;
+            INTO tblWarehousePickup SELECT warehouse, cutOffMain, pickup, rows;
         }
 
         VAR pickupDetail ID;
