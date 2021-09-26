@@ -4,7 +4,7 @@ BUS warehouseBus from [百灵威系统工程部]/warehouse
     }
     ACCEPT shelfInOutBoundHistory {
         var bQuantity dec(18, 4) = Quantity;
-        if(inOutType = -1){
+        if(inOutType = 0){
             set bQuantity = bQuantity * -1;
         }
         BOOK ShelfBlockInventory at(shelfBlock) set quantity += bQuantity;
@@ -12,6 +12,20 @@ BUS warehouseBus from [百灵威系统工程部]/warehouse
 
         history ShelfInOutBoundHistory set shelfBlock = ShelfBlock, product = Product, pack = Pack,
                 inOutType = InOutType, quantity = Quantity, inOutBoundTime = InOutBoundTime;
+
+        VAR cutOffMain ID, deliverDetail ID, warehouse ID;
+        SET cutOffMain = NULL;
+        SET cutOffMain = a.ix, deliverDetail = a.xi, warehouse = a.ixx
+            FROM IxPendingOutBound as a
+            WHERE a.orderDetail = orderDetail AND a.quantity >= quantity
+            LIMIT 1;
+        IF(NOT cutOffMain IS NULL) {
+            -- 直接写入pickupDetail可以吗？
+            WITH IxPendingPickup ixx = warehouse ix = cutOffMain xi = deliverDetail
+            set orderDetail = orderDetail, shelfBlock = shelfBlock, quantity = quantity, lotNumber = lotNumber;
+            -- 是否在此删除 IxPendingOutBound 待出库数据？
+            SCHEDULE AutoPick(warehouse,cutOffMain) DELAY 2; -- 2分钟以后执行一次
+        }
     }
     ACCEPT shelfLotUpdateHistory {
         
