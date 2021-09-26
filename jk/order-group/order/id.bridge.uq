@@ -37,6 +37,9 @@ BUS couponBus.getMatchedCredits as q into tb {
     set q.orderItemId = orderItemId;
     set q.createDate = createDate;
 } {
+    if(source <> 'orderDetail')
+        return;
+        
     var lSalesman ID, lCustomerAccount ID;
     set lSalesman = a.salesman, lCustomerAccount = b.buyerAccount
     from    OrderMainEx as a

@@ -1,0 +1,26 @@
+BUS oChangeBus ver 0.7 FROM 百灵威系统工程部/orderChanged
+ACCEPT orderChanged {
+    if(source <> 'pointExchangeDetail')
+        return;
+    
+    if(mark = 'C'){
+        -- 兑换单取消
+        VAR sheetId ID, sheet_no char(20), customerx ID;
+        set sheetId = a.sheetId, sheet_no = a.no, customerx = a.customer
+        from    ExchangeMain as a 
+        where   a.id = orderMainId; 
+
+        WITH DxExchagneMainState as a ID = orderMainId set a.state = EnumExchangeState.canceled, a.createDate = now();
+        foreach(var pointYear int, point int of 
+            select p.pointYear, p.point
+            from PointHistoryByCustomer as p
+            where p.customer = customerx and p.source = EnumPointChangingSource.exchange and p.comments = sheet_no
+        ){
+            --添加客户积分兑换取消
+            book PointBookByCustomer at (customerx, pointYear) set usedPoint -= point;
+            history PointHistoryByCustomer
+                set customer = customerx, pointYear = pointYear, point = point * -1, comments = sheet_no
+                , pointType = EnumPointType.used, source = EnumPointChangingSource.exchange;         
+        } 
+    } 
+};

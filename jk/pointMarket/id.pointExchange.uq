@@ -20,3 +20,11 @@ ID ExchangeDetail GLOBAL (
 	point DEC(12,2),                    -- 
     subAmount dec(12, 2)
 );
+
+ENUM EnumExchangeState (delivering=12, delivered=13, completed=14, canceled=15);
+IDX DxExchagneMainState (
+    ID,	                -- ExchangeMain
+    state ENUM EnumExchangeState,
+    createDate datetime,
+    index idx_state,
+);
