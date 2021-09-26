@@ -69,27 +69,23 @@ bus couponBus from 百灵威系统工程部/coupon
 
 BUS webUserBus from [百灵威系统工程部]/WebUser
     ACCEPT WebUserAuditPass {
-        /*
-        -- 审核后Customer的积分导入到webuser
-        if(not exists(select 1 from PointBook as pb where pb.webUser = webUser)) {
-            foreach (
-                var pointYear int, point int, usedPoint int ,totalPoint int
-                of select a.pointYear, a.point , a.usedPoint, a.totalPoint
-                from PointBookByCustomer as a where a.customer = customer
-            ) {
-                book PointBook at (webUser, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
-            }
-        }
-        */
-
-        -- 审核后webUser的签到积分导入到内部
-        foreach(
-            var pointYear2 int, signInPoint int
-            of  select pointYear2, sum(h.point) as signInPoint from PointHistory as h 
-            where h.webUser = webUser and h.pointYear > year(now()) - 3 and h.source = 2
-            group by h.pointYear as pointYear2
+        -- 审核后WebUser的积分导入到Customer
+        foreach (
+            var pointYear int, point int, usedPoint int ,totalPoint int
+            of select a.pointYear, a.point , a.usedPoint, a.totalPoint
+            from PointBook as a where a.webUser = webUser
         ) {
-            bus ps2Bus.customerSignIn set customer = customer, webUser = webUser, pointYear = pointYear2, point = signInPoint, comments = '';
+            book PointBookByCustomer at (customer, pointYear) set  point = point, usedPoint = usedPoint, totalPoint = totalPoint;
+            delete t from PointBook as t where t.webuser = webuser and t.pointYear = pointYear;
+        }
+        foreach (
+            var pointYear int, point int, comments int, source int, date datetime
+            of select a.pointYear, a.point, a.comments, a.source, a.date
+            from PointHistory as a where a.webUser = webUser
+        ) {
+            history PointHistoryByCustomer set customer = customer, pointYear = pointYear, point = point
+            , comments = comments, source = source;
+            delete t from PointHistory as t where t.date = date;
         }
     };
 

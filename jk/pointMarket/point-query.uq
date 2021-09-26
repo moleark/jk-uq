@@ -1,5 +1,5 @@
 QUERY getPoints(
-    webuser ID [$user]
+    customer ID Customer
 )
 returns ret(
     totalLeftPoint int,
@@ -7,56 +7,81 @@ returns ret(
     usedPoint int,
     pointYear int
 ) {
-    into ret SELECT (p.totalPoint + p.tempPoint - p.usedPoint) as totalLeftPoint,
-                    (p.point - p.usedPoint) as effectiveLeftPoint,
-                    p.usedPoint, p.pointYear
-    FROM PointBook as p
-    WHERE p.webUser = webuser and p.pointYear > YEAR(NOW()) - 3;
+    if(not customer is null) {
+        into ret SELECT (p.totalPoint - p.usedPoint) as totalLeftPoint,
+                        (p.point - p.usedPoint) as effectiveLeftPoint,
+                        p.usedPoint, p.pointYear
+        FROM PointBookByCustomer as p
+        WHERE p.customer = customer and p.pointYear > YEAR(NOW()) - 3;
+    }else{
+        into ret SELECT (p.totalPoint + p.tempPoint - p.usedPoint) as totalLeftPoint,
+                        (p.point - p.usedPoint) as effectiveLeftPoint,
+                        p.usedPoint, p.pointYear
+        FROM PointBook as p
+        WHERE p.webUser = $user and p.pointYear > YEAR(NOW()) - 3;
+    }
 };
 
 
 QUERY GetPointHistory(
-     key char(100)
+    customer ID Customer,
+    key char(100)
 )
 PAGE (
     id bigint desc,
     date DATETIME,
     point int,
     pointYear int,              
-    comments char(1000) ,        
-    webUser ID [$user],                       
+    comments char(1000),
     type int,
-    source int                      
+    source int
 ){
     var key2 char(102);
     set key2 = concat('%', key, '%');
 
-    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.webUser, p.type, p.source
-    from    PointHistory as p
-    where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
-            and ( p.comments like key2 or key is null )
-    order by  unix_timestamp(p.date) desc
-    limit $pageSize;
+    if(not customer is null){
+        PAGE select  unix_timestamp(p.date) as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        from    PointHistoryByCustomer as p
+        where   p.customer = customer and unix_timestamp(p.date) < $pageStart
+                and ( p.comments like key2 or key is null )
+        order by  unix_timestamp(p.date) desc
+        limit $pageSize;
+    } else {
+        PAGE select  unix_timestamp(p.date) as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        from    PointHistory as p
+        where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
+                and ( p.comments like key2 or key is null )
+        order by  unix_timestamp(p.date) desc
+        limit $pageSize;
+    }
 };
 
 
-QUERY GetPointSigninHistory()
+QUERY GetPointSigninHistory(customer ID)
 PAGE (
     id bigint desc,
     date DATETIME,
     point int,
-    pointYear int,              
-    comments char(1000) ,        
-    webUser ID [$user],                       
+    pointYear int,
+    comments char(1000),
     type int,
     source int
 ){
-    PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.webUser, p.type, p.source
-    from    PointHistory as p
-    where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
-            and p.source = 2
-    order by  unix_timestamp(p.date) desc
-    limit $pageSize;
+    if(NOT customer is null) {
+        PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        from    PointHistoryByCustomer as p
+        where   p.customer = customer and unix_timestamp(p.date) < $pageStart
+                and p.source = EnumPointChangingSource.signIn
+        order by  unix_timestamp(p.date) desc
+        limit $pageSize;
+    }else{
+        PAGE select  unix_timestamp(p.date)  as id, p.date, p.point, p.pointYear, p.comments, p.type, p.source
+        from    PointHistory as p
+        where   p.webUser = $user and unix_timestamp(p.date) < $pageStart
+                and p.source = EnumPointChangingSource.signIn
+        order by  unix_timestamp(p.date) desc
+        limit $pageSize;
+    }
 };
 
 -- 获取当前最大的积分数，用于界面上的区间计算

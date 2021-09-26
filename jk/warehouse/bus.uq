@@ -29,29 +29,23 @@ ACCEPT [deliver-ext] {
 BUS warehouseBus from [百灵威系统工程部]/warehouse
     ACCEPT productInventory {
         book ProductInventory at (warehouse, product, pack) set quantity = quantity;
-    };
-
-BUS warehouseShelfBus from [百灵威系统工程部]/warehouse
+    }
     ACCEPT shelfInOutBoundHistory {
-        if(inOutType = 1){
-
-            BOOK ShelfBlockInventory at(shelfBlock) set quantity += Quantity;
-            BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity += Quantity;
-        }else {
-
-            BOOK ShelfBlockInventory at(shelfBlock) set quantity -= Quantity;
-            BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity -= Quantity;
+        var bQuantity dec(18, 4) = Quantity;
+        if(inOutType = -1){
+            set bQuantity = bQuantity * -1;
         }
+        BOOK ShelfBlockInventory at(shelfBlock) set quantity += bQuantity;
+        BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity += bQuantity;
 
         history ShelfInOutBoundHistory set shelfBlock = ShelfBlock, product = Product, pack = Pack,
                 inOutType = InOutType, quantity = Quantity, inOutBoundTime = InOutBoundTime;
-    };
-
-BUS warehouseShelfLotUpdateBus from [百灵威系统工程部]/warehouse
+    }
     ACCEPT shelfLotUpdateHistory {
         
         -- 数量匹配进行修改，不存在数量不匹配的情况，因为数据来源有判断数量相等的情况出发bus，不相等则增加货架出入记录处理；
-        if exists ( select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity ) {
+        if exists (select 1 from ShelfBlockLotInventory as s where s.shelfBlock = shelfBlock and s.Product = product 
+        and s.pack = pack and s.quantity = quantity) {
             set lotNumber = lotNumber
             from ShelfBlockLotInventory as s
             where s.shelfBlock = shelfBlock and s.Product = product and s.pack = pack and s.quantity = quantity;
@@ -70,9 +64,7 @@ BUS outBoundTaskHandoverBus from [百灵威系统工程部]/warehouse2
                 purchaseBillQuantity: purchaseBillQuantity, showPriceWhenPrintReceipt: showPriceWhenPrintReceipt, isAppointLot: isAppointLot, appointLot: appointLot, 
                 deliveryNotes: deliveryNotes, outBoundReason: outBoundReason, relationId: relationId, handovertime: createTime 
                 ) to rid;
-    };
-
-BUS outboundResultSync from [百灵威系统工程部]/warehouse2
+    }
     ACCEPT warehouseOutBoundResultSync {
 
         var cId bigint, tId bigint, tWarehouse bigint, tShelfBlock bigint, tProduct bigint, tPack bigint,
@@ -104,4 +96,3 @@ BUS outboundResultSync from [百灵威系统工程部]/warehouse2
 
         delete t from OutBoundHandoverTask as t where t.id = tId;
     };
-
