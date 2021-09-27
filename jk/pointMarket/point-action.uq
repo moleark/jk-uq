@@ -1,35 +1,34 @@
 -- 允许在未审核的状态下签到，此时积分暂存在pointBook中，待审核后，积分转入pointBookByCustomer
 Action Signin(
     webuser ID [$user],     -- WebUser非Customer
+    customer ID,
     amount int not null     -- 积分
-)
-BUS webUserBus.getCuByWu as q into tb {
-    set q.webUser = webUser;
-} {
+){
     var pointYear int;
     set pointYear = year(now());
 
-    --签到添加客户积分
-    var customerId int;
-    foreach tb {
-        set customerId = customer;
-    }
-    if(customerId > 0){
-        book PointBookByCustomer at (customerId, pointYear) set point += amount, totalpoint += amount;
-        history PointHistoryByCustomer 
-            set pointYear = pointYear, point = amount, pointType = EnumPointType.total
-            , source = EnumPointChangingSource.signIn, comments = '签到', customer = customerId;
-        history PointHistoryByCustomer 
-            set pointYear = pointYear, point = amount, pointType = EnumPointType.point
-            , source = EnumPointChangingSource.signIn, comments = '签到', customer = customerId;
+    if(customer > 0){
+        if not exists(select 1 from PointHistoryByCustomer as a where a.source = EnumPointChangingSource.signIn 
+        and a.customer = customer and a.date > DATE(NOW())){
+            book PointBookByCustomer at (customer, pointYear) set point += amount, totalpoint += amount;
+            history PointHistoryByCustomer 
+                set pointYear = pointYear, point = amount, pointType = EnumPointType.total
+                , source = EnumPointChangingSource.signIn, comments = '签到', customer = customer;
+            history PointHistoryByCustomer 
+                set pointYear = pointYear, point = amount, pointType = EnumPointType.point
+                , source = EnumPointChangingSource.signIn, comments = '签到', customer = customer;
+        }
     }else{
-        book PointBook at (webuser, pointYear) set point += amount, totalPoint += amount;
-        history PointHistory
-            set webUser = webuser, pointYear = pointYear, pointType = EnumPointType.total
-            , source = EnumPointChangingSource.signIn, point = amount, comments = '签到';
-        history PointHistory
-            set webUser = webuser, pointYear = pointYear, pointType = EnumPointType.point
-            , source = EnumPointChangingSource.signIn, point = amount, comments = '签到';
+        if not exists(select 1 from PointHistory as a where a.source = EnumPointChangingSource.signIn 
+        and a.webUser = $user and a.date > DATE(NOW())){
+            book PointBook at (webuser, pointYear) set point += amount, totalPoint += amount;
+            history PointHistory
+                set webUser = webuser, pointYear = pointYear, pointType = EnumPointType.total
+                , source = EnumPointChangingSource.signIn, point = amount, comments = '签到';
+            history PointHistory
+                set webUser = webuser, pointYear = pointYear, pointType = EnumPointType.point
+                , source = EnumPointChangingSource.signIn, point = amount, comments = '签到';
+        }
     }
 };
 
@@ -39,14 +38,14 @@ returns ret (
 ){
     if(not customer is null){
         if exists(select 1 from PointHistoryByCustomer as a where a.source = EnumPointChangingSource.signIn 
-            and a.customer = customer and DATE(a.date) =  DATE(NOW())){
+            and a.customer = customer and a.date > DATE(NOW())){
             into ret select 1 as result;
         }else{
             into ret select 0 as result;
         }
     } else {
         if exists(select 1 from PointHistory as a where a.source = EnumPointChangingSource.signIn 
-            and a.webUser = $user and DATE(a.date) =  DATE(NOW())){
+            and a.webUser = $user and a.date > DATE(NOW())){
             into ret select 1 as result;
         }else{
             into ret select 0 as result;
