@@ -52,16 +52,16 @@
         "note",
         "warehouse: id"
     ],
-    "pickup": [
-        "warehouse",
-        "id   -- 截单号",
-        "detail: pick-detail"
-        ],
     "pickup-detail":[
-        "id    -- 发运单明细",
-        "orderDetail",
-        "quantity",
-        "lotNumber"
+        "id: id    -- 发运单明细",
+        "orderDetail: id",
+        "quantity: number",
+        "lotNumber: string"
+    ],
+    "pickup": [
+        "warehouse: id",
+        "cutOffMain: id   -- 截单号",
+        "detail: pickup-detail"
     ],
     "pickup-done": [
         "detail: note-detail"
