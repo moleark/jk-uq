@@ -17,7 +17,11 @@ BUS webUserBus.getCuByWu as q into tb {
     if(customerId > 0){
         book PointBookByCustomer at (customerId, pointYear) set point += amount, totalpoint += amount;
         history PointHistoryByCustomer 
-            set pointYear = pointYear, point = amount, source = EnumPointChangingSource.signIn, comments = '签到', customer = customerId;
+            set pointYear = pointYear, point = amount, pointType = EnumPointType.total
+            , source = EnumPointChangingSource.signIn, comments = '签到', customer = customerId;
+        history PointHistoryByCustomer 
+            set pointYear = pointYear, point = amount, pointType = EnumPointType.point
+            , source = EnumPointChangingSource.signIn, comments = '签到', customer = customerId;
     }else{
         book PointBook at (webuser, pointYear) set point += amount, totalPoint += amount;
         history PointHistory
