@@ -3,15 +3,31 @@ BUS warehouseBus from [百灵威系统工程部]/warehouse
         book ProductInventory at (warehouse, product, pack) set quantity = quantity;
     }
     ACCEPT shelfInOutBoundHistory {
-        var bQuantity dec(18, 4) = Quantity;
-        if(inOutType = -1){
+        var bQuantity dec(18, 4) = quantity;
+        if(inOutType = 0) {
             set bQuantity = bQuantity * -1;
         }
         BOOK ShelfBlockInventory at(shelfBlock) set quantity += bQuantity;
-        BOOK ShelfBlockLotInventory at(shelfBlock, Product, pack) set lotNumber = LotNumber, quantity += bQuantity;
+        BOOK ShelfBlockLotInventory at(shelfBlock, product, pack) set lotNumber = lotNumber, quantity += bQuantity;
 
-        history ShelfInOutBoundHistory set shelfBlock = ShelfBlock, product = Product, pack = Pack,
-                inOutType = InOutType, quantity = Quantity, inOutBoundTime = InOutBoundTime;
+        history ShelfInOutBoundHistory set shelfBlock = shelfBlock, product = product, pack = pack,
+                inOutType = inOutType, quantity = quantity, inOutBoundTime = inOutBoundTime;
+        if(inOutType = 0) {
+            VAR cutOffMain ID, deliverDetail ID, warehouse ID;
+            SET cutOffMain = NULL;
+            SET cutOffMain = a.ix, deliverDetail = a.xi, warehouse = a.ixx
+                FROM IxPendingOutBound as a
+                WHERE a.orderDetail = orderDetail AND a.quantity >= quantity
+                LIMIT 1;
+    
+            IF(NOT cutOffMain IS NULL) {
+                -- 直接写入pickupDetail可以吗？
+                WITH IxPendingPickup ixx = warehouse ix = cutOffMain xi = deliverDetail
+                set orderDetail = orderDetail, shelfBlock = shelfBlock, quantity = quantity, lotNumber = lotNumber;
+                -- 是否在此删除 IxPendingOutBound 待出库数据？
+                SCHEDULE AutoPick(warehouse,cutOffMain) DELAY 2; -- 2分钟以后执行一次
+            }
+        }
     }
     ACCEPT shelfLotUpdateHistory {
         
