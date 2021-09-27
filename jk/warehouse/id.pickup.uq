@@ -2,14 +2,10 @@ ID Pickup (
 	id,
 	KEY no,
 	warehouse ID,
-	sys(create),	
-);
-
-IDX DxPickup (
-    id,										-- pickup id
-    staff ID,								-- 拣货人
+	picker ID,				-- 拣货人
 	startTime TIMESTAMP,
-	finishTime TIMESTAMP
+	finishTime TIMESTAMP,
+	sys(create)
 );
 
 ID PickupDetail (
@@ -20,15 +16,11 @@ ID PickupDetail (
     -- storePoint ID,
     shelfBlock ID,
 	quantity DEC(12,2),
-);
-
-IDX DxPickupDetail(
-	id,
-	pickDone dec(12, 2) DEFAULT 0 SUM, 
+	pickQuantity DEC(12,2)
 );
 
 IDX DxPicking (
-	id,							-- pickup id
+	id,						-- pickup id
 );
 
 ID WarehouseN;
@@ -73,7 +65,7 @@ ACT Picking (
 	pickup ID,
 ) {
 	WITH DxPicking ID=pickup;
-	WITH DxPickup ID=pickup SET staff=$user, startTime=$date;
+	WITH Pickup ID=pickup SET picker=$user, startTime=$date;
 };
 
 ACT Picked (
@@ -86,7 +78,7 @@ ACT Picked (
 	)
 ) {
 	WITH DxPicking ID=pickup DEL;
-	WITH DxPickup ID=pickup SET finishTime=$date;
+	WITH Pickup ID=pickup SET finishTime=$date;
 	FOR detail {
 		BUS JkOrderBus.[pickup-done] INTO detail ADD id=id, orderDetail=orderDetail, value=quantity;
 	}
@@ -249,13 +241,23 @@ QUERY GetPickup(
 	pickup ID,
 )
 RETURNS main (
-	# [Pickup],
+	id ID,
+	no CHAR(20),
+	warehouse ID,
+	picker ID,
+	startTime TIMESTAMP,
+	finishTime TIMESTAMP
 )
 RETURNS detail (
-	# [PickupDetail],
+	id ID,
+	main ID,
+	deliverDetail ID,
+	orderDetail ID,
+	shelfBlock ID,
+	quantity DEC(12,2),
 	item ID,
 	product ID,
-	shouldQuantity DEC(12,2),
+	shouldQuantity DEC(12,2)
 ) {
 	INTO main SELECT a.id, a.no
 		, a.warehouse, a.picker, a.startTime, a.finishTime

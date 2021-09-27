@@ -14,8 +14,8 @@ ACT DoneDeliver (
     FOR detail {
         VAR deliverDetailId ID = ID(DeliverDetail new);
         WITH DeliverDetail as a ID=deliverDetailId
-            SET a.main=deliverMainId, a.orderDetail=orderDetail, a.quantity=quantity;
+            SET a.main=deliverMainId, a.quantity=quantity;  -- a.orderDetail=orderDetail,
         BUS JkOrderBus.[deliver-done] INTO detail
-            ADD id=deliverDetailId, orderDetail=orderDetail, value=quantity;
+            ADD id=deliverDetailId, value=quantity; -- orderDetail=orderDetail,
     }
 };

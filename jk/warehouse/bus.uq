@@ -15,13 +15,13 @@ BUS JkOrderBus ver 0.9 from 百灵威系统工程部/[jk-order]
     -- 形成拣货单。 
     -- 替代方案是从老系统接收ShelfInOutBoundHistory bus，接收后，写入pending（暂存发货单号），不进行出库操作，直接记账
     -- 还需要一个 截单 bus，用来通知warehouse，该截单中的出库记录可以形成拣货单了（拣货单中要有对应的deliverDetail，需要从上面的pending中获取）
-    ACCEPT pickup {
+    /*ACCEPT pickup {
         FOR detail {
             WITH IxPendingOutBound ixx = warehouse ix = id xi = id 
             set orderDetail = orderDetail, quantity = quantity, lotNumber = lotNumber;
         }
         -- SCHEDULE AutoOutBound DELAY 2; -- 2分钟以后执行一次
-    };
+    }*/;
 
 BUS warehouseBus from [百灵威系统工程部]/warehouse
     ACCEPT productInventory {
