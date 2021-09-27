@@ -1,0 +1,11 @@
+{
+    "$": "百灵威系统工程部/jk-hr",
+    "webuser-employee":[
+        "webuser: id",
+        "employee: id"
+    ],
+    "webuser-employee-deleted":[
+        "webuser: id",
+        "employee: id"
+    ]
+}

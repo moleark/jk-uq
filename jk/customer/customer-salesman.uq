@@ -1,0 +1,14 @@
+IX CustomerBound (
+    ix,     -- customer
+    xi,     -- salesman webuser? employeeid? 
+    boundDate   date,
+    boundDays   smallint,
+);
+
+HISTORY CustomerBoundHistory (
+    date,
+    customer    ID,
+    boundTo    ID,
+    operation   tinyint,    -- 1:绑定；0:解绑
+    createDate TIMESTAMP,
+);

@@ -1,0 +1,11 @@
+BUS busA from [百灵威系统工程部]/Adapter
+    ACCEPT customerSalesmanBounded {
+        var oldSalesman ID;
+        set oldSalesman = a.xi from CustomerSalesman as a where a.ix = customer and a.xi <> salesman;
+        if(not oldSalesman is null){
+            WITH CustomerSalesman ix = customer xi = oldSalesman DEL;
+            HISTORY CustomerSalesmanHistory set customer = customer, salesman = oldSalesman, operation = 0, createDate = now();
+        }
+        WITH CustomerSalesman ix = customer xi = salesman set unLockOn = unLockOn;
+        HISTORY CustomerSalesmanHistory set customer = customer, salesman = salesman, operation = 1, createDate = now();
+    };
