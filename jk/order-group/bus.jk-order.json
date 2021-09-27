@@ -1,0 +1,161 @@
+{
+    "--1": "说明：order可以在主表加其它字段，来分解成note。",
+    "$": "百灵威系统工程部/jk-order",
+    "order": [
+        "-- this is comments. starts with #. order pushed when comfirmed or paid",
+        "id: id",
+        "customerAccount: id",
+        "no: string",
+        "currency: id",
+        "detail: order-detail -- { name: detail, type: array, fields: order-detail }"
+    ],
+    "order-detail": [
+        "id: id",
+        { "name": "item", "type": "id", "-": "if item is ID, the item is pack ID, include product ID, else item is pack, product must have value" },
+        { "name": "product", "type": "id", "-": "my be undefined when item is ID" },
+        { "name": "quantity", "type": "number" },
+        { "name": "price", "type": "number" },
+        { "name": "amount", "type": "number" }
+    ],
+    "return-detail": [
+        "-- return detail id",
+        "id: id",
+        "-- 对应的 order detail id",
+        "orderdetail: id",
+        "quantity: number",
+        "amount: number",
+        "-- price不需要, 在order detail id 里面可以获得"
+    ],
+    "note": [
+        "id: id",
+        "detail: note-detail"
+    ],
+    "note-detail": [
+        "id: id",
+        "orderdetail: id",
+        "value: number"
+    ],
+    "deliver-detail": [
+        "id: id  -- order detail id",
+        "quantity: number  -- 同一个合同明细可能会分多次不同数量发送",
+        "warehouse: id",
+        "showPrice: number                  -- 单据上是否显示价格, 需要则1",
+        "json: string                       -- 只需要在界面展示的信息以json格式存储"
+    ],
+    "deliver": [
+        "-- 通用些的发运字段，一般不会变化",
+        "id: id  -- order id",
+        "contact: id -- 发货地址id。",
+        "detail: deliver-detail"
+    ],
+    "deliver-done": [
+        "note",
+        "warehouse: id"
+    ],
+    "pickup": [
+        "warehouse",
+        "id   -- 截单号",
+        "detail: pick-detail"
+        ],
+    "pickup-detail":[
+        "id    -- 发运单明细",
+        "orderDetail",
+        "quantity",
+        "lotNumber"
+    ],
+    "pickup-done": [
+        "detail: note-detail"
+    ],
+    "receive": [
+        "note"
+    ],
+    "receive-done": [
+        "note"
+    ],
+    "invoice": [
+        "note"
+    ],
+    "invoice-done": [
+        "note"
+    ],
+    "return": [
+        "-- 下发退货指令", 
+        "id: id",
+        "-- order-id: id -- ?? 可以没有 应该是直接没有",
+        "detail: return-detail"
+    ],
+    "receive-return": [
+        "note"
+    ],
+    "invoice-return": [
+        "note"
+    ],
+    "return-accept-done": [
+        "-- 退货接收",
+        "note"
+    ],
+    "-- receive-return-done": [
+        "-- receive-done 出现负值，就是return receive",
+        "note"
+    ],
+    "-- invoice-return-done": [
+        "-- invoice-done 出现负值，就是return invoice",
+        "note"
+    ],
+    "order-inventory-cost": [
+        "order: id",
+        "detail: order-cost-detail"
+    ],
+    "order-sale-cost": [
+        "order: id",
+        "detail: order-cost-detail"
+    ],
+    "order-cost-detail": [
+        "order-detail: id",
+        "cost: number"
+    ],
+    "order-binding": [
+        "-- order id, binding可以是coupon，也可以是userid，或者其它标志。如果网页点击，可以直接带id",
+        "order: id",
+        "binding: string"
+    ],
+    "order-bound-detail":[
+        "type: string  -- sales, person-client, 预定义的类型",
+        "id: id  -- 指定类型的id",
+        "id-type: string -- staff, customer, 如果没有值，id表示webUser"
+    ],
+    "order-bound": [
+        "-- order id, coupon体系根据coupon，找到order的绑定人",
+        "order: id",
+        "-- promoter: id  -- 推销人，销售，或者外部人员", 
+        "to: order-bound-detail -- type: sales|client, id is sales id or client id"
+    ],
+    "order-bound-profit": [
+        "order: id",
+        "to: order-bound-detail -- type: sales|client, id is sales id or client id"
+    ],
+    "order-bound-amount": [
+        "order: id",
+        "to: order-bound-detail -- type: sales|client, id is sales id or client id"
+    ],
+    "order-customer-points": [
+        "order: id",
+        "to: order-bound-detail -- type: customer, id is customer person id"
+    ],
+    "order-bound-staff-sales": [
+        "order: id",
+        "to: order-bound-detail -- id is sales id or agent id"
+    ],
+    "order-bound-agent": [
+        "order: id",
+        "to: order-bound-detail -- id is sales id or agent id"
+    ],
+    "order-bound-distributor": [
+        "order: id",
+        "to: order-bound-detail -- id is sales id or agent id"
+    ],
+    "order-bound-customer": [
+        "order: id",
+        "to: order-bound-detail -- id is sales id or agent id"
+    ]
+}
